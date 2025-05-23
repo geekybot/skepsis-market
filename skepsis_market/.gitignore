@@ -1,0 +1,11 @@
+build
+node_modules/*
+coverage/*
+*.log
+*.env
+*.tsbuildinfo
+*.tgz
+*.zip
+*/node_modules
+*/*.key
+*/package-lock.json

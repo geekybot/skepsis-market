@@ -1,0 +1,24 @@
+{
+  "name": "skepsis-market-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for interacting with the Skepsis Market protocol on Sui blockchain",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "read": "ts-node src/read-examples.ts",
+    "write": "ts-node src/write-examples.ts",
+    "create-market": "ts-node src/create-market.ts",
+    "market-info": "ts-node src/market-info.ts",
+    "read-all-states": "ts-node src/read-all-states.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["sui", "blockchain", "skepsis", "market"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mysten/sui": "^1.30.1",
+    "dotenv": "^16.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}
