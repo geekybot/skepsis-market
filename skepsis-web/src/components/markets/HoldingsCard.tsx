@@ -53,7 +53,7 @@ export const HoldingsCard: React.FC<HoldingsCardProps> = ({
         {isLoading ? (
           <p className="text-white/70">Loading positions...</p>
         ) : (
-          <p className="text-white/70">You don't have any positions in this market yet.</p>
+          <p className="text-white/70">You don&apos;t have any positions in this market yet.</p>
         )}
       </div>
     );
