@@ -7,8 +7,7 @@ module skepsis_market::distribution_market {
     use sui::event;
     use skepsis_market::distribution_math;
 
-    // Global constants are declared at the module level using the 'const' keyword
-    // The naming convention for constants typically uses UPPER_SNAKE_CASE
+    
     const MIN_LIQUIDITY: u64 = 1000_000_000; // Example: minimum liquidity requirement
     const PRECISION: u64 = 1000000; // Add global PRECISION constant for price calculations
 
@@ -115,36 +114,6 @@ module skepsis_market::distribution_market {
         winning_spread: u64,
     }
 
-    // Initialization function for the module
-    // public entry fun init_module<CoinType>(
-    //     ctx: &mut TxContext
-    // ) {
-    //     // Initialize the market with some parameters
-    //     let _market = Market<CoinType> {
-    //         id: object::new(ctx),
-    //         question: vector::empty(),
-    //         resolution_criteria: vector::empty(),
-    //         steps: 0,
-    //         creation_time: 0,
-    //         bidding_deadline: 0,
-    //         resolution_time: 0,
-    //         market_state: 0,
-    //         spreads: vector::empty(),
-    //         resolved_value: 0,
-    //         total_shares: 0,
-    //         total_liquidity: coin::into_balance(coin::zero<CoinType>()),
-    //         cumulative_shares_sold: 0,
-    //     };
-        
-    //     // Initialize position registry - this should be done once
-    //     let registry = UserPositionRegistry {
-    //         id: object::new(ctx),
-    //         positions: table::new(ctx),
-    //     };
-        
-    //     transfer::share_object(registry);
-    // }
-
     public entry fun create_market<CoinType>(
         question: vector<u8>,
         resolution_criteria: vector<u8>,
@@ -214,26 +183,8 @@ module skepsis_market::distribution_market {
         transfer::transfer(liquidity_share, user);
     }
 
-    // Update unused parameters with underscores
-    public entry fun buy_shares<CoinType>(
-        _market: &mut Market<CoinType>,
-        _shares: u64,
-        _ctx: &mut TxContext,
-    ) {
-        // Empty implementation for now
-    }
-
-    // Update unused parameters with underscores
-    public entry fun sale_shares<CoinType>(
-        _market: &mut Market<CoinType>,
-        _shares: u64,
-        _ctx: &mut TxContext,
-    ) {
-        // Empty implementation for now
-    }
 
     // thinking of doing amm maths here
-   
 
 
     fun calculate_spread(
@@ -281,7 +232,7 @@ module skepsis_market::distribution_market {
         assert!(market.cumulative_shares_sold + shares_out <= market.total_shares, ERROR_SHARE_CAP_EXCEEDED);
 
         // Calculate the cost for buying the specified shares including premium
-        let cost = get_buy_quote_with_premium<CoinType>(market, spread_index, shares_out);
+        let cost = get_buy_quote<CoinType>(market, spread_index, shares_out);
         
         // Check if the provided amount is sufficient
         let input_value = coin::value(&max_input_amount);
@@ -363,33 +314,7 @@ module skepsis_market::distribution_market {
         }
     }
     
-    /// Get buy quote with liquidity premium
-    public fun get_buy_quote_with_premium<CoinType>(
-        market: &Market<CoinType>,
-        spread_index: u64,
-        amount: u64
-    ): u64 {
-        let base_cost = get_buy_quote<CoinType>(market, spread_index, amount);
-        // Calculate premium but don't add it to the base cost
-        // let _premium = calculate_liquidity_premium<CoinType>(market, spread_index, amount);
-        
-        // Return just the base cost without the premium
-        base_cost
-    }
     
-    /// Get sell quote with liquidity premium
-    public fun get_sell_quote_with_premium<CoinType>(
-        market: &Market<CoinType>,
-        spread_index: u64,
-        amount: u64
-    ): u64 {
-        let base_proceeds = get_sell_quote<CoinType>(market, spread_index, amount);
-        // Calculate premium but don't subtract it from the base proceeds
-        // let _premium = calculate_liquidity_premium<CoinType>(market, spread_index, amount);
-        
-        // Return just the base proceeds without adjusting for premium
-        base_proceeds
-    }
 
     /// Sell exact amount of outcome shares for a minimum output amount (with slippage protection)
     /// Now using the premium-adjusted price
@@ -423,7 +348,7 @@ module skepsis_market::distribution_market {
         assert!(user_shares >= shares_in, ERROR_INSUFFICIENT_SHARES);
         
         // Calculate the proceeds from selling the specified shares including premium
-        let proceeds = get_sell_quote_with_premium<CoinType>(market, spread_index, shares_in);
+        let proceeds = get_sell_quote<CoinType>(market, spread_index, shares_in);
         
         // Verify minimum output constraint
         assert!(proceeds >= min_output_amount, 1011); // Slippage too high
@@ -1180,32 +1105,6 @@ module skepsis_market::distribution_market {
         
         (spread_indices, share_amounts)
     }
-
-    // Get all user positions for a specific market
-    // public fun get_all_market_positions<CoinType>(
-    //     registry: &UserPositionRegistry,
-    //     market_id: ID
-    // ): vector<address> {
-    //     let mut users_with_positions = vector::empty<address>();
-        
-    //     let table_size = table::length(&registry.positions);
-    //     let mut i = 0;
-        
-    //     // Iterate through all table keys (user addresses)
-    //     while (i < table_size) {
-    //         let user = *table::borrow_key_by_index(&registry.positions, i);
-    //         let user_markets = table::borrow(&registry.positions, user);
-            
-    //         // Check if this user has a position in the specified market
-    //         if (table::contains(user_markets, market_id)) {
-    //             vector::push_back(&mut users_with_positions, user);
-    //         };
-            
-    //         i = i + 1;
-    //     };
-        
-    //     users_with_positions
-    // }
 
     /// Get basic market information
     public fun get_market_info<CoinType>(market: &Market<CoinType>): (vector<u8>, vector<u8>, u64, u64, u64) {

@@ -590,7 +590,7 @@ async function getBuyQuoteWithPremium(client: SuiClient, marketId: string, sprea
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote_with_premium`,
+      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId),

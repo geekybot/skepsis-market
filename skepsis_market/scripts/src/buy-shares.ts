@@ -202,7 +202,6 @@ async function buySharesFromMarket(
         txb.pure.u64(spreadIndex),
         txb.pure.u64(sharesAmount),
         paymentCoin,
-        txb.object(CONSTANTS.OBJECTS.CLOCK),
       ],
     });
     

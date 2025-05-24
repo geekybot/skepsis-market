@@ -12,7 +12,7 @@ dotenv.config();
  * @param network The network to connect to (default: LOCAL)
  * @returns A configured SuiClient instance
  */
-export function getSuiClient(network: keyof typeof CONSTANTS.NETWORKS = 'LOCAL'): SuiClient {
+export function getSuiClient(network: keyof typeof CONSTANTS.NETWORKS = 'TESTNET'): SuiClient {
   return new SuiClient({ url: CONSTANTS.NETWORKS[network] });
 }
 

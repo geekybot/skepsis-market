@@ -68,7 +68,7 @@ module skepsis_market::excess_shares_tests {
            // // debug::print(&shares_amount);
             
             // This will get the quote but should fail on the actual purchase
-            let cost = skepsis_market::distribution_market::get_buy_quote_with_premium<TestCoin>(&market, spread_index, shares_amount);
+            let cost = skepsis_market::distribution_market::get_buy_quote<TestCoin>(&market, spread_index, shares_amount);
             let coins = mint<TestCoin>(cost + 100_000_000, ctx(scenario)); // Plenty of funds
             
             // NOTE: For an #[expected_failure] test, we need a variable to receive the return value,

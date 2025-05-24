@@ -43,8 +43,8 @@ async function main() {
     upperBound: 100, // Maximum value (e.g., 100%)
     initialLiquidity: 1000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)
     // Calculate timestamps (in milliseconds) for deadlines
-    resolutionTimeMs: Date.now() + 90 * 24 * 60 * 60 * 1000, // 90 days from now
-    biddingDeadlineMs: Date.now() + 60 * 24 * 60 * 60 * 1000, // 60 days from now
+    resolutionTimeMs: Date.now() +  30 * 60 * 1000, // 30 minutes from now
+    biddingDeadlineMs: Date.now() +  25 * 60 * 1000, // 25 minutes from now
   };
   
   console.log('\n📊 Market Parameters:');
@@ -220,18 +220,20 @@ async function createMarket(
     
     // Call the create_market function directly without the factory
     txb.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::distribution_market::create_market`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::distribution_market_factory::create_market_and_add_liquidity`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`], // USDC type
       arguments: [
+        txb.object(adminCap), // AdminCap parameter
+        txb.object(CONSTANTS.OBJECTS.FACTORY), // Factory parameter
         txb.pure.string(params.question),
         txb.pure.string(params.resolutionCriteria),
-        txb.pure.u64(params.lowerBound),
-        txb.pure.u64(params.upperBound),
         txb.pure.u64(params.steps),
         txb.pure.u64(resolutionTimeMs),
         txb.pure.u64(biddingDeadlineMs),
         initialLiquidityCoin,
         txb.object(CONSTANTS.OBJECTS.CLOCK),
+        txb.pure.u64(params.lowerBound),
+        txb.pure.u64(params.upperBound),
       ],
     });
     
