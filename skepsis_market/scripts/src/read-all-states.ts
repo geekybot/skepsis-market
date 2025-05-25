@@ -40,7 +40,7 @@ async function getMarketInfo(client: SuiClient, marketId: string): Promise<void>
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_info`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_info`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId)
@@ -140,7 +140,7 @@ async function getMarketTiming(client: SuiClient, marketId: string): Promise<voi
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_timing`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_timing`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId)
@@ -217,7 +217,7 @@ async function getMarketLiquidityInfo(client: SuiClient, marketId: string): Prom
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_liquidity_info`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_liquidity_info`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId)
@@ -284,7 +284,7 @@ async function getSpreadsCount(client: SuiClient, marketId: string): Promise<voi
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_spreads_count`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_spreads_count`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId)
@@ -341,7 +341,7 @@ async function getSpreadInfo(client: SuiClient, marketId: string, spreadIndex: S
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_spread_info`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_spread_info`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId),
@@ -424,15 +424,16 @@ async function getSpreadInfo(client: SuiClient, marketId: string, spreadIndex: S
  */
 async function getLiquidityShares(client: SuiClient, marketId: string): Promise<void> {
   try {
-    console.log(`\n🧾 Querying get_liquidity_shares for market ${marketId}`);
+    const liquidityShare = process.argv[3];
+    console.log(`\n🧾 Querying get_liquidity_shares for market ${liquidityShare}`);
     
     const tx = new Transaction();
     
+    
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_liquidity_shares`,
-      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_liquidity_shares`,
       arguments: [
-        tx.object(marketId)
+        tx.object(liquidityShare)
       ],
     });
     
@@ -486,8 +487,7 @@ async function getLiquidityShareMarketId(client: SuiClient, sharesId: string): P
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_liquidity_share_market_id`,
-      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_liquidity_share_market_id`,
       arguments: [
         tx.object(sharesId)
       ],
@@ -538,7 +538,7 @@ async function getLiquidityShareUser(client: SuiClient, sharesId: string): Promi
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_liquidity_share_user`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_liquidity_share_user`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(sharesId)
@@ -590,7 +590,7 @@ async function getBuyQuoteWithPremium(client: SuiClient, marketId: string, sprea
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId),
@@ -641,31 +641,19 @@ async function getBuyQuoteWithPremium(client: SuiClient, marketId: string, sprea
 
 /**
  * 10. Query user position information using get_user_position function
+ * Returns data in JSON format for frontend use
  */
-async function getUserPosition(client: SuiClient, marketId: string, userAddress: UserAddress): Promise<void> {
+async function getUserPosition(client: SuiClient, marketId: string, userAddress: UserAddress): Promise<any> {
   try {
     console.log(`\n👤 Querying get_user_position for market ${marketId}, user ${userAddress}`);
     
     const tx = new Transaction();
     
-    // We need to take the registry first
-    const registry = await client.getObject({
-      id: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::UserPositionRegistry`,
-      options: { showType: true }
-    });
-    
-    if (!registry.data) {
-      console.error('Could not find UserPositionRegistry');
-      return;
-    }
-    
-    const registryId = registry.data.objectId;
-    
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_user_position`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_user_position`,
       typeArguments: [],
       arguments: [
-        tx.object(registryId),
+        tx.object(CONSTANTS.OBJECTS.POSITION_REGISTRY),
         tx.pure.address(userAddress),
         tx.object(marketId)
       ],
@@ -676,66 +664,215 @@ async function getUserPosition(client: SuiClient, marketId: string, userAddress:
       sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
     });
     
-    if (response.results && response.results[0]) {
-      const returnValues = response.results[0].returnValues;
-      
-      if (returnValues && returnValues.length >= 1) {
-        try {
-          console.log('\nUser Position Information:');
-          console.log('------------------------');
-          
-          try {
-            // Parse has position (bool)
-            if (returnValues[0]) {
-              console.log(`Has Position: ${returnValues[0][0] ? "Yes" : "No"}`);
-            }
-            
-            // Parse invested amount (u64)
-            if (returnValues[1]) {
-              const investedBytes = returnValues[1][0];
-              let invested = 0;
-              for (let i = 0; i < Math.min(investedBytes.length, 8); i++) {
-                invested += investedBytes[i] * Math.pow(256, i);
-              }
-              console.log(`Invested Amount: ${invested / 1_000_000} USDC (${invested} units with 6 decimals)`);
-            }
-            
-            // Parse claimed flag (bool)
-            if (returnValues[2]) {
-              console.log(`Claimed: ${returnValues[2][0] ? "Yes" : "No"}`);
-            }
-            
-            // Parse spread indices (vector<u64>)
-            if (returnValues[3] && returnValues[3][0]) {
-              const spreadIndices = returnValues[3][0];
-              console.log(`Spread Indices: ${spreadIndices}`);
-            }
-            
-            // Parse entry prices (vector<u64>)
-            if (returnValues[4] && returnValues[4][0]) {
-              const entryPrices = returnValues[4][0];
-              console.log(`Entry Prices: ${entryPrices}`);
-            }
-            
-            // Parse share amounts (vector<u64>)
-            if (returnValues[5] && returnValues[5][0]) {
-              const shareAmounts = returnValues[5][0];
-              console.log(`Share Amounts: ${shareAmounts}`);
-            }
-          } catch (e) {
-            console.error('Error parsing values:', e);
-          }
-        } catch (parseError) {
-          console.error('Failed to parse return values:', parseError);
-        }
-      } else {
-        console.log('No return values in the response');
-      }
-    } else {
-      console.error('No results returned or error in transaction');
+    // Prepare response object
+    const result: {
+      success: boolean;
+      data: {
+        hasPosition: boolean;
+        totalInvested: number;
+        totalInvestedDisplay: string;
+        claimed: boolean;
+        winningsClaimed: number;
+        winningsClaimedDisplay: string;
+        numSpreads: number;
+        totalShares: number;
+        totalSharesDisplay: string;
+        spreads: Array<{
+          spreadIndex: number;
+          shareAmount: number;
+          shareAmountDisplay: string;
+          percentage: string;
+        }>;
+        status: string;
+        user: string;
+        marketId: string;
+      };
+      error: string | null;
+      rawData: any;
+    } = {
+      success: false,
+      data: {
+        hasPosition: false,
+        totalInvested: 0,
+        totalInvestedDisplay: "0.000000",
+        claimed: false,
+        winningsClaimed: 0,
+        winningsClaimedDisplay: "0.000000",
+        numSpreads: 0,
+        totalShares: 0,
+        totalSharesDisplay: "0.000000",
+        spreads: [],
+        status: "no_position",
+        user: userAddress,
+        marketId: marketId
+      },
+      error: null,
+      rawData: null
+    };
+    
+    // For debugging
+    console.log("Raw response:", JSON.stringify(response));
+    
+    if (!response.results || response.results.length === 0 || !response.results[0]) {
+      result.error = 'No results returned or error in transaction';
+      result.rawData = response;
+      return result;
     }
+    
+    const returnValues = response.results[0].returnValues;
+    if (!returnValues || returnValues.length < 6) {
+      result.error = 'Not enough return values to parse user position';
+      result.rawData = response.results;
+      return result;
+    }
+    
+    // For debugging
+    console.log("Return values:", JSON.stringify(returnValues));
+    
+    try {
+      // Parse has position (bool) - Index 0
+      const hasPositionData = returnValues[0] && returnValues[0][0];
+      // For boolean values, check if it's 1
+      const hasPosition = Array.isArray(hasPositionData) && hasPositionData.length > 0 && hasPositionData[0] === 1;
+      result.data.hasPosition = hasPosition;
+      
+      // Early return if no position
+      if (!hasPosition) {
+        result.success = true;
+        return result;
+      }
+      
+      // Parse total invested amount (u64) - Index 1
+      let totalInvested = 0;
+      const investedData = returnValues[1] && returnValues[1][0];
+      
+      // Handle array case for byte data
+      if (Array.isArray(investedData)) {
+        for (let i = 0; i < Math.min(investedData.length, 8); i++) {
+          totalInvested += Number(investedData[i]) * Math.pow(256, i);
+        }
+      }
+      
+      result.data.totalInvested = totalInvested;
+      result.data.totalInvestedDisplay = (totalInvested / 1_000_000).toFixed(6);
+      
+      // Parse claimed flag (bool) - Index 2
+      const claimedData = returnValues[2] && returnValues[2][0];
+      // For boolean values, check if it's 1
+      const claimed = Array.isArray(claimedData) && claimedData.length > 0 && claimedData[0] === 1;
+      result.data.claimed = claimed;
+      
+      // Parse winnings claimed amount (u64) - Index 3
+      let winningsClaimed = 0;
+      const winningsData = returnValues[3] && returnValues[3][0];
+      
+      // Handle array case for byte data
+      if (Array.isArray(winningsData)) {
+        for (let i = 0; i < Math.min(winningsData.length, 8); i++) {
+          winningsClaimed += Number(winningsData[i]) * Math.pow(256, i);
+        }
+      }
+      
+      result.data.winningsClaimed = winningsClaimed;
+      result.data.winningsClaimedDisplay = (winningsClaimed / 1_000_000).toFixed(6);
+      
+      // Parse spread indices (vector<u64>) - Index 4
+      const spreadIndicesData = returnValues[4] && returnValues[4][0];
+      
+      // If no spread data, return early
+      if (!spreadIndicesData || (Array.isArray(spreadIndicesData) && spreadIndicesData.length === 0)) {
+        result.success = true;
+        return result;
+      }
+      
+      // Parse number of spreads and prepare array for indices
+      const spreadIndices: number[] = [];
+      let numSpreads = 0;
+      
+      // Handle vector structure - first byte indicates the length
+      if (Array.isArray(spreadIndicesData)) {
+        numSpreads = spreadIndicesData[0]; // First byte is the vector length
+        
+        // Extract each spread index (each u64 takes 8 bytes)
+        for (let i = 0; i < numSpreads; i++) {
+          let spreadIndex = 0;
+          // For each spread, read 8 bytes starting after the vector length
+          for (let j = 0; j < 8; j++) {
+            const byteIndex = 1 + (i * 8) + j;
+            if (byteIndex < spreadIndicesData.length) {
+              spreadIndex += Number(spreadIndicesData[byteIndex]) * Math.pow(256, j);
+            }
+          }
+          spreadIndices.push(spreadIndex);
+        }
+      }
+      
+      result.data.numSpreads = numSpreads;
+      
+      // Parse share amounts (vector<u64>) - Index 5
+      const shareAmountsData = returnValues[5] && returnValues[5][0];
+      const shareAmounts: number[] = [];
+      
+      // Extract share amounts using the same logic as spread indices
+      if (Array.isArray(shareAmountsData)) {
+        // We already know numSpreads from above, so we can skip reading the first byte
+        for (let i = 0; i < numSpreads; i++) {
+          let shareAmount = 0;
+          // For each amount, read 8 bytes starting after the vector length
+          for (let j = 0; j < 8; j++) {
+            const byteIndex = 1 + (i * 8) + j;
+            if (byteIndex < shareAmountsData.length) {
+              shareAmount += Number(shareAmountsData[byteIndex]) * Math.pow(256, j);
+            }
+          }
+          shareAmounts.push(shareAmount);
+        }
+      }
+      
+      // Calculate total shares
+      const totalShares = shareAmounts.reduce((sum, amount) => sum + amount, 0);
+      result.data.totalShares = totalShares;
+      result.data.totalSharesDisplay = (totalShares / 1_000_000).toFixed(6);
+      
+      // Add spreads to result
+      for (let i = 0; i < spreadIndices.length; i++) {
+        const spreadIndex = spreadIndices[i];
+        const shareAmount = shareAmounts[i] || 0;
+        const percentage = totalShares > 0 ? (shareAmount / totalShares * 100).toFixed(2) : "0.00";
+        
+        result.data.spreads.push({
+          spreadIndex,
+          shareAmount,
+          shareAmountDisplay: (shareAmount / 1_000_000).toFixed(6),
+          percentage
+        });
+      }
+      
+      // Set position status
+      if (claimed && winningsClaimed > 0) {
+        result.data.status = "claimed_with_winnings";
+      } else if (claimed && winningsClaimed === 0) {
+        result.data.status = "claimed_no_winnings";
+      } else if (totalInvested > 0) {
+        result.data.status = "active";
+      }
+      
+      result.success = true;
+      
+    } catch (e) {
+      result.error = `Error parsing user position data: ${e}`;
+      result.rawData = returnValues;
+    }
+    
+    return result;
+    
   } catch (error) {
-    console.error('Error in getUserPosition:', error);
+    return {
+      success: false,
+      data: null,
+      error: `Error in getUserPosition: ${error}`,
+      rawData: null
+    };
   }
 }
 
@@ -749,7 +886,7 @@ async function getSellQuoteWithPremium(client: SuiClient, marketId: string, spre
     const tx = new Transaction();
     
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_sell_quote_with_premium`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_sell_quote`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId),
@@ -819,12 +956,14 @@ function getMarketStateString(state: number): string {
  */
 async function main(): Promise<void> {
   console.log("🔍 Skepsis Market Module Query Tool");
-  console.log("Package ID:", CONSTANTS.PACKAGES.SKEPSIS_MARKET);
+  console.log("Package ID:", CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY);
   console.log("Module:", CONSTANTS.MODULES.DISTRIBUTION_MARKET);
+  console.log("USDC Package ID:", CONSTANTS.PACKAGES.USDC);
+  console.log("Market ID:", CONSTANTS.OBJECTS.MARKET);
 
   // Get command line arguments
   const funcNum = parseInt(process.argv[2] || '1', 10);
-  const marketId = process.argv[3] || '0x60211d72f879da7cafe5b5af09f39feb3815ed770000fef3878c3b495e1baac7';
+  const marketId = CONSTANTS.OBJECTS.MARKET;
   
   // Initialize Sui client
   const client = getSuiClient();
@@ -865,7 +1004,7 @@ async function main(): Promise<void> {
         await getSpreadsCount(client, marketId);
         break;
       case 5:
-        const spreadIndex = parseInt(process.argv[4] || '0', 10);
+        const spreadIndex = parseInt(process.argv[3] || '0', 10);
         await getSpreadInfo(client, marketId, spreadIndex);
         break;
       case 6:
@@ -893,8 +1032,9 @@ async function main(): Promise<void> {
         await getBuyQuoteWithPremium(client, marketId, buySpreadIndex, buyShareAmount);
         break;
       case 10:
-        const userAddress = process.argv[4] || '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724';
-        await getUserPosition(client, marketId, userAddress);
+        const userAddress = process.argv[4] || '0x57400cf44ad97dac479671bb58b96d444e87972f09a6e17fa9650a2c60fbc054';
+        const userPositionResult = await getUserPosition(client, marketId, userAddress);
+        console.log(JSON.stringify(userPositionResult, null, 2));
         break;
       case 11:
         const sellSpreadIndex = parseInt(process.argv[4] || '0', 10);

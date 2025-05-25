@@ -21,6 +21,8 @@ module skepsis_market::distribution_market {
     const ERROR_NOT_OWNER: u64 = 1021;
     const ERROR_MARKET_CLOSED: u64 = 1022;
     const ERROR_MARKET_MISMATCH: u64 = 1023;
+    const ERROR_MARKET_BIDDING_IS_OVER: u64 = 1024;
+    const ERROR_MARKET_RESOLUTION_IS_NOT_OVER: u64 = 1025;
     
     // Share cap errors
     const ERROR_SHARE_CAP_EXCEEDED: u64 = 1030;
@@ -33,6 +35,7 @@ module skepsis_market::distribution_market {
     // const ERROR_INVALID_RESOLUTION_VALUE: u64 = 1044;
     const ERROR_MARKET_NOT_RESOLVED_YET: u64 = 1045;
     const ERROR_ALREADY_CLAIMED: u64 = 1046;
+    const ERROR_BIDDING_DEADLINE_PASSED: u64 = 1047;
 
     public struct SpreadInfo has key, store {
         id: UID,
@@ -187,7 +190,7 @@ module skepsis_market::distribution_market {
     // thinking of doing amm maths here
 
 
-    fun calculate_spread(
+    public fun calculate_spread(
         min_value: u64,
         max_value: u64,
         steps: u64,
@@ -215,19 +218,24 @@ module skepsis_market::distribution_market {
     }
 
     /// Buy exact amount of outcome shares by providing a maximum input amount (with slippage protection)
-    public fun buy_exact_shares_with_max_input<CoinType>(
+    public entry fun buy_exact_shares_with_max_input<CoinType>(
         registry: &mut UserPositionRegistry,
         market: &mut Market<CoinType>,
         spread_index: u64,
         shares_out: u64,
         mut max_input_amount: Coin<CoinType>,  // Maximum amount willing to spend (includes slippage)
+        clock: &Clock,
         ctx: &mut TxContext
-    ): Coin<CoinType> {
+    ) {
         // Validate inputs
         assert!(spread_index < vector::length(&market.spreads), 1004);
         assert!(market.market_state == 0, 1007); // Market must be open
+        
         assert!(shares_out > 0, 1008); // Must buy at least 1 share
-
+        // Check current time against bidding deadline
+        let current_time = timestamp_ms(clock);
+        assert!(current_time < market.bidding_deadline, ERROR_BIDDING_DEADLINE_PASSED);
+    
         // Check share cap
         assert!(market.cumulative_shares_sold + shares_out <= market.total_shares, ERROR_SHARE_CAP_EXCEEDED);
 
@@ -256,80 +264,30 @@ module skepsis_market::distribution_market {
         record_share_purchase(registry, market, spread_index, shares_out, cost, ctx);
         
         // Return any excess funds
-        max_input_amount
-    }
-
-    /// Calculate the liquidity premium for a trade
-    /// Premium = (cost / amount) - marginal_price_before
-    public fun calculate_liquidity_premium<CoinType>(
-        market: &Market<CoinType>,
-        spread_index: u64,
-        amount: u64
-    ): u64 {
-        assert!(amount > 0, 1020);
-        assert!(spread_index < vector::length(&market.spreads), 1004);
-        
-        // Get current quantities for all spreads
-        let mut quantities = vector::empty<u64>();
-        let mut i = 0;
-        let spreads_count = vector::length(&market.spreads);
-        
-        while (i < spreads_count) {
-            let spread = vector::borrow(&market.spreads, i);
-            let quantity = spread.outstanding_shares;
-            vector::push_back(&mut quantities, quantity);
-            i = i + 1;
-        };
-        
-        // Calculate liquidity parameter b
-        let b = market.total_shares / spreads_count;
-        
-        // Calculate marginal price before the trade (using LMSR formula)
-        // The marginal price is the derivative of the cost function with respect to quantity
-        // For LMSR, marginal price = e^(q_i/b) / sum(e^(q_j/b))
-        let mut exp_sum = 0;
-        i = 0;
-        while (i < spreads_count) {
-            let quantity = *vector::borrow(&quantities, i);
-            let q_div_b = (quantity * PRECISION) / b;
-            let exp_result = distribution_math::exp_fixed_safe(q_div_b);
-            exp_sum = exp_sum + exp_result;
-            i = i + 1;
-        };
-        
-        let spread_quantity = *vector::borrow(&quantities, spread_index);
-        let q_div_b = (spread_quantity * PRECISION) / b;
-        let numerator = distribution_math::exp_fixed_safe(q_div_b);
-        let marginal_price = (numerator * PRECISION) / exp_sum;
-        
-        // Calculate average price per token for buying 'amount' tokens
-        let cost = get_buy_quote<CoinType>(market, spread_index, amount);
-        let avg_price = (cost * PRECISION) / amount;
-        
-        // Premium = average price - marginal price (if positive)
-        if (avg_price > marginal_price) {
-            avg_price - marginal_price
-        } else {
-            0
-        }
+        transfer::public_transfer(max_input_amount, tx_context::sender(ctx));
     }
     
     
 
     /// Sell exact amount of outcome shares for a minimum output amount (with slippage protection)
     /// Now using the premium-adjusted price
-    public fun sell_exact_shares_for_min_output<CoinType>(
+    public entry fun sell_exact_shares_for_min_output<CoinType>(
         registry: &mut UserPositionRegistry,
         market: &mut Market<CoinType>,
         spread_index: u64,
         shares_in: u64,              // Exact amount of outcome shares to sell
         min_output_amount: u64,      // Minimum amount to receive (slippage protection)
+        clock: &Clock,
         ctx: &mut TxContext
-    ): Coin<CoinType> {
+    ) {
         // Validate inputs
         assert!(spread_index < vector::length(&market.spreads), 1004);
         assert!(market.market_state == 0, 1007); // Market must be open
         assert!(shares_in > 0, 1008); // Must sell at least 1 share
+        // Check current time against bidding deadline
+        let current_time = timestamp_ms(clock);
+        assert!(current_time < market.bidding_deadline, ERROR_MARKET_BIDDING_IS_OVER);
+    
         
         // Verify user has enough shares to sell
         let user = tx_context::sender(ctx);
@@ -371,9 +329,8 @@ module skepsis_market::distribution_market {
         
         // Extract the proceeds from the market's liquidity
         let output_coin = coin::take(&mut market.total_liquidity, proceeds, ctx);
-        
-        // Return the proceeds
-        output_coin
+        // Return the proceeds to the user
+        transfer::public_transfer(output_coin, tx_context::sender(ctx));
     }
 
     /// Calculate the cost to buy a specific amount of outcome shares
@@ -448,39 +405,6 @@ module skepsis_market::distribution_market {
         before_cost - after_cost
     }
 
-    /// Calculate the amount of shares received for a specific input amount
-    public fun get_shares_out_quote<CoinType>(
-        market: &Market<CoinType>,
-        spread_index: u64,
-        input_amount: u64
-    ): u64 {
-        assert!(spread_index < vector::length(&market.spreads), 1004);
-        
-        // Use binary search to find maximum shares we can buy with input_amount
-        // Fix: Use mut for mutable variables
-        let mut max_shares = 1000000000; // Start with a large number as upper bound
-        let mut min_shares = 0; // Lower bound
-        let mut shares = 0;
-        
-        // Binary search to find the maximum shares we can buy with input_amount
-        while (min_shares <= max_shares) {
-            let mid_shares = min_shares + (max_shares - min_shares) / 2;
-            
-            let cost = get_buy_quote<CoinType>(market, spread_index, mid_shares);
-            
-            if (cost == input_amount) {
-                return mid_shares
-            } else if (cost < input_amount) {
-                shares = mid_shares;
-                min_shares = mid_shares + 1;
-            } else {
-                max_shares = mid_shares - 1;
-            }
-        };
-        
-        shares // Return the maximum shares that can be purchased with input_amount
-    }
-
     /// Get the current price of a specific spread in the market
     /// @param market The market object
     /// @param spread_index The index of the spread
@@ -519,78 +443,23 @@ module skepsis_market::distribution_market {
         }
     }
 
-    /// Get the amount of slippage for a specific trade
-    /// @param market The market object
-    /// @param spread_index The index of the spread
-    /// @param shares_amount The amount of shares to trade
-    /// @param is_buy Whether this is a buy (true) or sell (false)
-    /// @return The expected slippage percentage (fixed point)
-    public fun get_expected_slippage<CoinType>(
-        market: &Market<CoinType>,
-        spread_index: u64,
-        shares_amount: u64,
-        is_buy: bool
-    ): u64 {
-        assert!(spread_index < vector::length(&market.spreads), 1004);
-        
-        if (is_buy) {
-            // For buy: calculate cost for 1 unit and for the full amount,
-            // then compare the average price
-            let cost_one = get_buy_quote<CoinType>(market, spread_index, 1);
-            let cost_full = get_buy_quote<CoinType>(market, spread_index, shares_amount);
-            
-            // No slippage if buying 1 or 0 shares
-            if (shares_amount <= 1) {
-                return 0
-            };
-            
-            // Average price per share for the full amount
-            let avg_price = cost_full / shares_amount;
-            
-            // Slippage is the percentage increase from the spot price to the average price
-            if (avg_price > cost_one) {
-                // ((avg_price / cost_one) - 1) * PRECISION
-                return ((avg_price * PRECISION) / cost_one) - PRECISION
-            } else {
-                return 0
-            }
-        } else {
-            // For sell: calculate proceeds for 1 unit and for the full amount,
-            // then compare the average price
-            let proceeds_one = get_sell_quote<CoinType>(market, spread_index, 1);
-            let proceeds_full = get_sell_quote<CoinType>(market, spread_index, shares_amount);
-            
-            // No slippage if selling 1 or 0 shares
-            if (shares_amount <= 1) {
-                return 0
-            };
-            
-            // Average price per share for the full amount
-            let avg_price = proceeds_full / shares_amount;
-            
-            // Slippage is the percentage decrease from the spot price to the average price
-            if (proceeds_one > avg_price) {
-                // (1 - (avg_price / proceeds_one)) * PRECISION
-                return PRECISION - ((avg_price * PRECISION) / proceeds_one)
-            } else {
-                return 0
-            }
-        }
-    }
-
     /// Multi-spread buy to get exact shares in multiple spreads (with slippage protection)
     public fun buy_exact_multi_spread_shares<CoinType>(
         market: &mut Market<CoinType>,
         spread_indices: vector<u64>,
         shares_out: vector<u64>,     // Exact amounts of outcome shares to buy for each spread
         mut max_input_amount: Coin<CoinType>,  // Fix: Use mut for mutable parameter
+        clock: &Clock,
         ctx: &mut TxContext
     ): Coin<CoinType> {
         // Validate inputs
         assert!(vector::length(&spread_indices) == vector::length(&shares_out), 1012);
         assert!(vector::length(&spread_indices) > 0, 1013);
         assert!(market.market_state == 0, 1007); // Market must be open
-        
+        // Check current time against bidding deadline
+        let current_time = timestamp_ms(clock);
+        assert!(current_time < market.bidding_deadline, ERROR_INVALID_BIDDING_DEADLINE);
+    
         // Calculate total cost across all spreads
         let mut total_cost: u64 = 0;
         let mut i = 0;
@@ -642,12 +511,15 @@ module skepsis_market::distribution_market {
         market: &mut Market<CoinType>,
         liquidity_amount: Coin<CoinType>,     // Amount to add as liquidity
         min_lp_tokens: u64,                   // Minimum LP tokens to receive (slippage protection)
+        clock: &Clock,
         ctx: &mut TxContext
     ): u64 {
         // Validate inputs
         assert!(market.market_state == 0, 1007); // Market must be open
         assert!(coin::value(&liquidity_amount) > 0, 1008); // Must add positive liquidity
-        
+        let current_time = timestamp_ms(clock);
+        assert!(current_time < market.bidding_deadline, ERROR_MARKET_BIDDING_IS_OVER);
+    
         // Calculate the proportion of new liquidity to existing liquidity
         let new_amount = coin::value(&liquidity_amount);
         let existing_liquidity = balance::value(&market.total_liquidity);
@@ -671,48 +543,6 @@ module skepsis_market::distribution_market {
         lp_tokens_to_mint
     }
 
-    /// Remove liquidity from the market with slippage protection
-    public fun remove_liquidity<CoinType>(
-        market: &mut Market<CoinType>,
-        lp_tokens_in: u64,           // LP tokens to burn
-        min_output_amount: u64,      // Minimum base tokens to receive (slippage protection)
-        ctx: &mut tx_context::TxContext
-    ): Coin<CoinType> {
-        // Validate inputs
-        assert!(market.market_state == 0, 1007); // Market must be open
-        assert!(lp_tokens_in > 0, 1008); // Must burn some LP tokens
-        assert!(lp_tokens_in <= market.total_shares, 1015); // Cannot burn more than total shares
-        
-        // Calculate the proportion of liquidity to remove
-        // amount_to_return = (lp_tokens_in * total_liquidity) / total_shares
-        let total_liquidity = balance::value(&market.total_liquidity);
-        let amount_to_return = (lp_tokens_in * total_liquidity) / market.total_shares;
-        
-        // Check minimum return amount constraint
-        assert!(amount_to_return >= min_output_amount, 1016); // Slippage too high
-        
-        // Remove liquidity proportionally from each spread
-        let spreads_count = vector::length(&market.spreads);
-        let tokens_per_spread = lp_tokens_in / spreads_count;
-        
-        let mut i = 0;
-        while (i < spreads_count) {
-            let spread = vector::borrow_mut(&mut market.spreads, i);
-            assert!(spread.outstanding_shares >= tokens_per_spread, 1017); // Safety check
-            spread.outstanding_shares = spread.outstanding_shares - tokens_per_spread;
-            i = i + 1;
-        };
-        
-        // Update total shares
-        market.total_shares = market.total_shares - lp_tokens_in;
-        
-        // Extract the funds to return
-        let output_coin = coin::take(&mut market.total_liquidity, amount_to_return, ctx);
-        
-        // Return the base tokens
-        output_coin
-    }
-
     /// Add additional liquidity to an existing position
     /// This function allows a user to add more liquidity to a market where they already have a position
     public entry fun add_liquidity_to_existing_position<CoinType>(
@@ -720,6 +550,7 @@ module skepsis_market::distribution_market {
         liquidity_share: &mut LiquidityShare,
         additional_liquidity: Coin<CoinType>,
         min_lp_tokens: u64,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
         // Validate the user and market match
@@ -728,7 +559,7 @@ module skepsis_market::distribution_market {
         assert!(market.market_state == 0, ERROR_MARKET_CLOSED); // Market must be open
         
         // Calculate new LP tokens based on the proportion of added liquidity
-        let lp_tokens_to_mint = add_liquidity<CoinType>(market, additional_liquidity, min_lp_tokens, ctx);
+        let lp_tokens_to_mint = add_liquidity<CoinType>(market, additional_liquidity, min_lp_tokens, clock, ctx);
         
         // Update the user's liquidity shares
         liquidity_share.shares = liquidity_share.shares + lp_tokens_to_mint;
@@ -739,6 +570,7 @@ module skepsis_market::distribution_market {
     public entry fun withdraw_liquidity<CoinType>(
         market: &mut Market<CoinType>,
         liquidity_share: &mut LiquidityShare,
+        clock: &Clock,
         ctx: &mut TxContext
     ): u64 {
         // Validate the user and market match
@@ -746,10 +578,19 @@ module skepsis_market::distribution_market {
         assert!(tx_context::sender(ctx) == liquidity_share.user, ERROR_NOT_OWNER);
         assert!(market.market_state == 1, ERROR_MARKET_NOT_RESOLVED); // Market must be resolved
         
+        let current_time = timestamp_ms(clock);
+        assert!(current_time >= market.bidding_deadline, ERROR_MARKET_RESOLUTION_IS_NOT_OVER);
+    
         let total_liquidity = balance::value(&market.total_liquidity);
+        // calculate the winning spread and lock liquidity of the winning spread before distributing the
+        // liquidity back to the LPs
+        let winning_spread_index = find_winning_spread(market, market.resolved_value);
+        let (_,_,_,outstanding_amount) = get_spread_info(market, winning_spread_index);
         
+
+        // get the wiiing spread's total outstanding shares
         // Calculate the user's share of the total liquidity
-        let amount_to_withdraw = (liquidity_share.shares * total_liquidity) / market.total_shares;
+        let amount_to_withdraw = (liquidity_share.shares * (total_liquidity - outstanding_amount)) / market.total_shares;
         
         // Take the funds from the market
         let output_coin = coin::take(&mut market.total_liquidity, amount_to_withdraw, ctx);
@@ -768,32 +609,22 @@ module skepsis_market::distribution_market {
         amount_to_withdraw
     }
     
-    /// Check if a user can withdraw liquidity (market is resolved)
-    public fun can_withdraw_liquidity<CoinType>(
-        market: &Market<CoinType>,
-        liquidity_share: &LiquidityShare
-    ): bool {
-        // Verify market ID matches
-        if (object::id(market) != liquidity_share.market) {
-            return false
-        };
-        
-        // Can only withdraw after resolution
-        market.market_state == 1
-    }
     
-    /// Get the amount of liquidity shares owned by a user
-    public fun get_liquidity_shares(liquidity_share: &LiquidityShare): u64 {
-        liquidity_share.shares
-    }
     
     /// Resolve the market by setting the final outcome value
     /// This allows liquidity providers to withdraw their funds
     public entry fun resolve_market<CoinType>(
         market: &mut Market<CoinType>,
         resolved_value: u64,
+        clock: &Clock,
         _ctx: &mut TxContext
     ) {
+        // Ensure the market can only be resolved after the resolution time has passed
+        let current_time = timestamp_ms(clock);
+        assert!(current_time >= market.resolution_time, ERROR_MARKET_RESOLUTION_IS_NOT_OVER);
+        
+        // Ensure the market state is open (0) before resolving
+        assert!(market.market_state == 0, ERROR_MARKET_CLOSED);
         // Set the resolved value
         market.resolved_value = resolved_value;
         
@@ -814,7 +645,7 @@ module skepsis_market::distribution_market {
     }
 
     // Create or update a user position when buying shares
-    public fun record_share_purchase<CoinType>(
+    fun record_share_purchase<CoinType>(
         registry: &mut UserPositionRegistry,
         market: &Market<CoinType>,
         spread_index: u64,
@@ -1040,7 +871,7 @@ module skepsis_market::distribution_market {
             let spread = vector::borrow(&market.spreads, i);
             
             // Check if resolved value falls within this spread
-            if (resolved_value >= spread.lower_bound && resolved_value < spread.upper_bound) {
+            if (resolved_value > spread.lower_bound && resolved_value <= spread.upper_bound) {
                 return i
             };
             
@@ -1106,40 +937,37 @@ module skepsis_market::distribution_market {
         (spread_indices, share_amounts)
     }
 
-    /// Get basic market information
+    /// Get basic market information, @comment: not required can read the Market object directly
     public fun get_market_info<CoinType>(market: &Market<CoinType>): (vector<u8>, vector<u8>, u64, u64, u64) {
         (market.question, market.resolution_criteria, market.steps, market.creation_time, market.market_state)
     }
     
-    /// Get market timing information
+    /// Get market timing information, , @comment: not required can read the Market object directly
     public fun get_market_timing<CoinType>(market: &Market<CoinType>): (u64, u64, u64) {
         (market.bidding_deadline, market.resolution_time, market.resolved_value)
     }
     
-    /// Get market liquidity and shares information
+    /// Get market liquidity and shares information, , @comment: not required can read the Market object directly
     public fun get_market_liquidity_info<CoinType>(market: &Market<CoinType>): (u64, u64) {
         (market.total_shares, market.cumulative_shares_sold)
     }
     
-    /// Get number of spreads in the market
+    /// Get number of spreads in the market, @comment: not required can read the Market object directly
     public fun get_spreads_count<CoinType>(market: &Market<CoinType>): u64 {
         vector::length(&market.spreads)
     }
     
-    /// Get spread information by index
+    /// Get spread information by index, @comment: not required can read the Market object directly
     public fun get_spread_info<CoinType>(market: &Market<CoinType>, spread_index: u64): (u64, u64, u64, u64) {
         assert!(spread_index < vector::length(&market.spreads), 1004);
         let spread = vector::borrow(&market.spreads, spread_index);
         (spread.precision, spread.lower_bound, spread.upper_bound, spread.outstanding_shares)
     }
+
+
     
-    /// Get the market ID from a liquidity share
-    public fun get_liquidity_share_market_id(liquidity_share: &LiquidityShare): ID {
-        liquidity_share.market
-    }
-    
-    /// Get the user address from a liquidity share
-    public fun get_liquidity_share_user(liquidity_share: &LiquidityShare): address {
-        liquidity_share.user
+    /// Get the market's total liquidity, @comment: not required can read the Market object directly
+    public fun get_total_liquidity<CoinType>(market: &Market<CoinType>): u64 {
+        balance::value(&market.total_liquidity)
     }
 }

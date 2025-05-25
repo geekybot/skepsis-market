@@ -140,7 +140,7 @@ async function sellSharesFromPosition(
     
     // Call the sell_exact_shares_for_min_output function
     const [coinOut] = txb.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::distribution_market::sell_exact_shares_for_min_output`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::distribution_market::sell_exact_shares_for_min_output`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         txb.object(positionId),

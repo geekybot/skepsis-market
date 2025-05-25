@@ -15,23 +15,16 @@ dotenv.config();
  */
 async function main() {
   console.log('🛒 Skepsis Market - Buy Shares Tool');
-  
-  // Get command line arguments
-  const marketId = process.argv[2];
-  const spreadIndex = process.argv[3] ? Number(process.argv[3]) : 0;
-  const sharesAmount = process.argv[4] ? Number(process.argv[4]) * 1_000_000 : 10_000_000; // Default 10 shares
-  const maxUsdcInput = process.argv[5] ? Number(process.argv[5]) * 1_000_000 : 20_000_000; // Default 20 USDC max input
-  
-  if (!marketId) {
-    console.error('❌ No market ID provided. Usage: npm run buy-shares [marketId] [spreadIndex] [sharesAmount] [maxUsdcInput]');
-    console.error('Example: npm run buy-shares 0x123...abc 3 10 20');
-    return;
-  }
+
+  // Use marketId from constants
+  const marketId = CONSTANTS.OBJECTS.MARKET;
+  // Get command line arguments: [spreadIndex] [sharesAmount]
+  const spreadIndex = process.argv[2] ? Number(process.argv[2]) : 0;
+  const sharesAmount = process.argv[3] ? Number(process.argv[3]) : 1_000_000; // Default 1 share (6 decimals)
 
   console.log(`📊 Target Market: ${marketId}`);
   console.log(`📈 Spread Index: ${spreadIndex}`);
   console.log(`🎫 Shares to buy: ${sharesAmount / 1_000_000} shares`);
-  console.log(`💵 Maximum USDC input: ${maxUsdcInput / 1_000_000} USDC`);
 
   // Initialize the SUI client
   const client = getSuiClient();
@@ -39,37 +32,37 @@ async function main() {
 
   // Get keypair for signing transactions
   const keypair = getKeypairFromEnv();
-  
   if (!keypair) {
     console.error('❌ No keypair available. Please add SUI_PRIVATE_KEY to your .env file.');
     return;
   }
-  
   const senderAddress = keypair.getPublicKey().toSuiAddress();
   console.log(`👤 Using address: ${senderAddress}`);
-  
+
   // Check balances
   await checkSuiBalance(client, senderAddress);
 
   try {
+    // Calculate required USDC for the purchase
+    const maxUsdcInput = await getBuyQuote(client, marketId, spreadIndex, sharesAmount);
+    console.log(`💵 Required USDC input: ${maxUsdcInput / 1_000_000} USDC`);
+
     // Check if user has enough USDC before proceeding
     const hasEnoughCoins = await checkUserUsdcBalance(client, senderAddress, maxUsdcInput);
-    
     if (!hasEnoughCoins) {
       console.log('\n⚠️ You may need to get USDC tokens from the faucet first.');
       console.log('Run the USDC faucet script or uncomment the getUsdcFromFaucet() call in this script.');
       return;
     }
-    
+
     // Verify the market exists and get spread info
     const marketExists = await verifyMarketAndSpread(client, marketId, spreadIndex);
     if (!marketExists) {
       return;
     }
-    
+
     // Buy shares from the market
     await buySharesFromMarket(client, keypair, marketId, spreadIndex, sharesAmount, maxUsdcInput);
-    
   } catch (error) {
     console.error('❌ Error buying shares:', error);
   }
@@ -194,7 +187,7 @@ async function buySharesFromMarket(
     
     // Call the buy_exact_shares_with_max_input function
     const [shareOut, coinReturn] = txb.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::distribution_market::buy_exact_shares_with_max_input`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::distribution_market::buy_exact_shares_with_max_input`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         txb.object(positionRegistry),
@@ -202,6 +195,7 @@ async function buySharesFromMarket(
         txb.pure.u64(spreadIndex),
         txb.pure.u64(sharesAmount),
         paymentCoin,
+        txb.object('0x6'),
       ],
     });
     
@@ -284,6 +278,38 @@ async function checkSuiBalance(
   } catch (error) {
     console.error('Error checking SUI balance:', error);
   }
+}
+
+/**
+ * Gets the buy quote for a given market, spread index, and shares amount
+ */
+async function getBuyQuote(client: SuiClient, marketId: string, spreadIndex: number, sharesAmount: number): Promise<number> {
+  // Calls the on-chain get_buy_quote function and returns the required USDC (in 6 decimals)
+  const tx = new Transaction();
+  tx.moveCall({
+    target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
+    typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+    arguments: [
+      tx.object(marketId),
+      tx.pure.u64(spreadIndex),
+      tx.pure.u64(sharesAmount*1_000_000), // Convert shares to 6 decimals
+    ],
+  });
+  console.log('DEBUG: getBuyQuote args', { marketId, spreadIndex, sharesAmount });
+  const response = await client.devInspectTransactionBlock({
+    transactionBlock: tx,
+    sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724',
+  });
+  console.log('DEBUG: devInspect response', JSON.stringify(response, null, 2));
+  if (response.results && response.results[0] && response.results[0].returnValues && response.results[0].returnValues[0]) {
+    const quoteBytes = response.results[0].returnValues[0][0];
+    let quote = 0;
+    for (let i = 0; i < Math.min(quoteBytes.length, 8); i++) {
+      quote += quoteBytes[i] * Math.pow(256, i);
+    }
+    return quote;
+  }
+  throw new Error('Failed to get buy quote');
 }
 
 // Execute the main function

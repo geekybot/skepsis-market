@@ -11,15 +11,25 @@
     "buy-shares": "ts-node src/buy-shares.ts",
     "market-info": "ts-node src/market-info.ts",
     "read-all-states": "ts-node src/read-all-states.ts",
+    "deploy": "ts-node src/deploy.ts",
     "clean": "rm -rf dist"
   },
-  "keywords": ["sui", "blockchain", "skepsis", "market"],
+  "keywords": [
+    "sui",
+    "blockchain",
+    "skepsis",
+    "market"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@mysten/sui": "^1.30.1",
+    "bip39": "^3.1.0",
     "dotenv": "^16.0.3",
-    "ts-node": "^10.9.1",
+    "ed25519-hd-key": "^1.3.0",
     "typescript": "^5.0.4"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
   }
 }
