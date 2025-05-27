@@ -16,6 +16,26 @@ export function formatNumber(
   });
   return formatter.format(parseFloat(roundedNumber));
 }
+
+/**
+ * Format a number as currency (USD)
+ * @param value Number to format as currency
+ * @param maxFractionDigits Maximum fraction digits to display
+ * @returns Formatted currency string
+ */
+export function formatCurrency(value: number | null, maxFractionDigits = 2): string {
+  if (value === null) return '$0';
+  
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxFractionDigits
+  });
+  
+  return formatter.format(value);
+}
+
 export const formatUnits = (value: bigint, decimals: number) => {
   let display = value.toString();
 

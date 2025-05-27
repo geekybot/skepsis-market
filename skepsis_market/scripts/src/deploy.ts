@@ -39,7 +39,15 @@ async function main() {
   const published = publishJson.objectChanges.find((o: any) => o.type === 'published');
   const packageId = published?.packageId;
   if (!packageId) throw new Error('PackageId not found in publish output');
+  
+  // Find the UserPositionRegistry object
+  const positionRegistryObj = publishJson.objectChanges.find(
+    (o: any) => o.objectType && o.objectType.includes('UserPositionRegistry')
+  );
+  const positionRegistryId = positionRegistryObj?.objectId;
+
   console.log('AdminCap:', adminCapId, 'Package:', packageId);
+  console.log('UserPositionRegistry:', positionRegistryId || 'Not found');
 
   console.log('PackageId:', packageId); // Log for user inspection
 
@@ -163,13 +171,89 @@ async function main() {
   });
   const liquidityShare = result2.objectChanges?.find((o: any) => (o.type === 'created' || o.type === 'mutated') && o.objectType && o.objectType.includes('LiquidityShare'));
   const marketObj = result2.objectChanges?.find((o: any) => (o.type === 'created' || o.type === 'mutated') && o.objectType && o.objectType.includes('Market'));
-  if (liquidityShare && 'objectId' in liquidityShare) {
-    console.log('LiquidityShare:', liquidityShare.objectId);
+  
+  // Use 'as any' to avoid TypeScript errors or properly type the objects
+  const liquidityShareId = liquidityShare ? (liquidityShare as any).objectId : null;
+  const marketId = marketObj ? (marketObj as any).objectId : null;
+  
+  if (liquidityShareId) {
+    console.log('LiquidityShare:', liquidityShareId);
   } else {
     console.log('LiquidityShare: not found or missing objectId');
   }
-  if (marketObj && 'objectId' in marketObj) {
-    console.log('MarketId:', marketObj.objectId);
+  
+  if (marketId) {
+    console.log('MarketId:', marketId);
+    
+    // Create deployment info JSON with all important objects and package IDs
+    const fs = require('fs');
+    const path = require('path');
+    const deploymentInfo = {
+      deployment_date: new Date().toISOString(),
+      network: process.env.SUI_NETWORK || 'devnet',
+      packages: {
+        distribution_market_factory: packageId,
+        usdc: CONSTANTS.PACKAGES.USDC
+      },
+      objects: {
+        factory: factoryId,
+        market: marketId,
+        admin_cap: adminCapId,
+        liquidity_share: liquidityShareId,
+        position_registry: positionRegistryId || null
+      },
+      market_params: {
+        ...marketParams,
+        resolution_time: new Date(marketParams.resolutionTimeMs).toISOString(),
+        bidding_deadline: new Date(marketParams.biddingDeadlineMs).toISOString(),
+        initial_liquidity_usdc: marketParams.initialLiquidity / 1_000_000
+      }
+    };
+    
+    // Ensure scripts directory exists
+    const outputDir = path.join(__dirname, '../');
+    const outputPath = path.join(outputDir, 'deployment-info.json');
+    
+    // Write the JSON file
+    fs.writeFileSync(
+      outputPath, 
+      JSON.stringify(deploymentInfo, null, 2)
+    );
+    console.log(`\n✅ Deployment info written to ${outputPath}`);
+    
+    // Also update constants.ts with the new information
+    try {
+      const constantsPath = path.join(__dirname, 'config', 'constants.ts');
+      let constantsContent = fs.readFileSync(constantsPath, 'utf8');
+      
+      // Create updated constants content
+      const updatedConstants = `export const CONSTANTS = {
+  PACKAGES: {
+    DISTRIBUTION_MARKET_FACTORY: '${packageId}',
+    USDC: '${CONSTANTS.PACKAGES.USDC}'
+  },
+  MODULES: {
+    DISTRIBUTION_MARKET_FACTORY: 'distribution_market_factory',
+    DISTRIBUTION_MARKET: 'distribution_market',
+    DISTRIBUTION_MATH: 'distribution_math',
+    USDC: 'usdc'
+  },
+  OBJECTS: {
+    FACTORY: '${factoryId}',
+    MARKET: '${marketId}',
+    ADMIN_CAP: '${adminCapId}',
+    LIQUIDITY_SHARE: '${liquidityShareId || ''}',
+    POSITION_REGISTRY: '${positionRegistryId || ''}'
+  }
+};
+`;
+      
+      // Write updated constants file
+      fs.writeFileSync(constantsPath, updatedConstants);
+      console.log(`✅ Constants updated in ${constantsPath}`);
+    } catch (error) {
+      console.error('Failed to update constants.ts:', error);
+    }
   } else {
     console.log('MarketId: not found or missing objectId');
   }

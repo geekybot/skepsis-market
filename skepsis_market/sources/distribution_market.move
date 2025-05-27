@@ -7,6 +7,9 @@ module skepsis_market::distribution_market {
     use sui::event;
     use skepsis_market::distribution_math;
 
+    // Fee configuration constants moved from factory
+    const BASIS_POINTS_DENOMINATOR: u64 = 1000;
+    const DEFAULT_FEE_BPS: u64 = 3; // 0.3%
     
     const MIN_LIQUIDITY: u64 = 1000_000_000; // Example: minimum liquidity requirement
     const PRECISION: u64 = 1000000; // Add global PRECISION constant for price calculations
@@ -15,6 +18,7 @@ module skepsis_market::distribution_market {
     const ERROR_INVALID_RESOLUTION_TIME: u64 = 1000;
     const ERROR_INVALID_BIDDING_DEADLINE: u64 = 1001;
     const ERROR_MINIMUM_LIQUIDITY: u64 = 1003;
+    const ERROR_VECTOR_INDEX_OUT_OF_BOUND: u64 = 1004;
 
     // Error codes for liquidity operations
     const ERROR_MARKET_NOT_RESOLVED: u64 = 1020;
@@ -23,6 +27,7 @@ module skepsis_market::distribution_market {
     const ERROR_MARKET_MISMATCH: u64 = 1023;
     const ERROR_MARKET_BIDDING_IS_OVER: u64 = 1024;
     const ERROR_MARKET_RESOLUTION_IS_NOT_OVER: u64 = 1025;
+    const ERROR_POSITIVE_LIQUIDITY: u64 = 1026;
     
     // Share cap errors
     const ERROR_SHARE_CAP_EXCEEDED: u64 = 1030;
@@ -31,11 +36,20 @@ module skepsis_market::distribution_market {
     const ERROR_POSITION_NOT_FOUND: u64 = 1040;
     const ERROR_SPREAD_NOT_FOUND: u64 = 1041;
     const ERROR_INSUFFICIENT_SHARES: u64 = 1042;
-    // const ERROR_MARKET_ALREADY_RESOLVED: u64 = 1043;
-    // const ERROR_INVALID_RESOLUTION_VALUE: u64 = 1044;
+    const ERROR_INSUFFICIENT_FUNDS: u64 = 1043;
+    const ERROR_MARKET_IS_NOT_OPEN: u64 = 1044;
     const ERROR_MARKET_NOT_RESOLVED_YET: u64 = 1045;
     const ERROR_ALREADY_CLAIMED: u64 = 1046;
     const ERROR_BIDDING_DEADLINE_PASSED: u64 = 1047;
+    const ERROR_INVALID_SHARE_AMOUNT_TO_BUY: u64 = 1048;
+    const ERROR_INVALID_SHARE_AMOUNT_TO_SELL: u64 = 1049;
+    const ERROR_SLIPPAGE_TOO_HIGH: u64 = 1050;
+
+    // Event for fee configuration updates
+    public struct FeeConfigUpdatedEvent has copy, drop {
+        market_id: ID,
+        new_fee_bps: u64
+    }
 
     public struct SpreadInfo has key, store {
         id: UID,
@@ -60,6 +74,9 @@ module skepsis_market::distribution_market {
         total_shares: u64,                  // maximum number of shares
         total_liquidity: Balance<CoinType>,
         cumulative_shares_sold: u64,        // Total shares sold so far (for enforcing share cap)
+        // Added fee configuration
+        fees_collected: Balance<CoinType>,  // Fees collected in this market
+        fee_bps: u64,                      // Basis points for the fee (0.03% = 3 basis points)
     }
 
    
@@ -160,6 +177,8 @@ module skepsis_market::distribution_market {
             total_shares,
             total_liquidity: coin::into_balance(initial_liquidity),
             cumulative_shares_sold: 0,
+            fees_collected: balance::zero<CoinType>(), // Initialize fees collected
+            fee_bps: DEFAULT_FEE_BPS, // Set default fee basis points
         };
         let market_id = object::id(&market);
         
@@ -228,10 +247,10 @@ module skepsis_market::distribution_market {
         ctx: &mut TxContext
     ) {
         // Validate inputs
-        assert!(spread_index < vector::length(&market.spreads), 1004);
-        assert!(market.market_state == 0, 1007); // Market must be open
+        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
+        assert!(market.market_state == 0, ERROR_MARKET_IS_NOT_OPEN); // Market must be open
         
-        assert!(shares_out > 0, 1008); // Must buy at least 1 share
+        assert!(shares_out > 0, ERROR_INVALID_SHARE_AMOUNT_TO_BUY); // Must buy at least 1 share
         // Check current time against bidding deadline
         let current_time = timestamp_ms(clock);
         assert!(current_time < market.bidding_deadline, ERROR_BIDDING_DEADLINE_PASSED);
@@ -244,7 +263,7 @@ module skepsis_market::distribution_market {
         
         // Check if the provided amount is sufficient
         let input_value = coin::value(&max_input_amount);
-        assert!(input_value >= cost, 1009); // Insufficient funds
+        assert!(input_value >= cost, ERROR_INSUFFICIENT_FUNDS); // Insufficient funds
         
         // Split the exact amount needed for the purchase
         let payment = coin::split(&mut max_input_amount, cost, ctx);
@@ -281,9 +300,9 @@ module skepsis_market::distribution_market {
         ctx: &mut TxContext
     ) {
         // Validate inputs
-        assert!(spread_index < vector::length(&market.spreads), 1004);
-        assert!(market.market_state == 0, 1007); // Market must be open
-        assert!(shares_in > 0, 1008); // Must sell at least 1 share
+        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
+        assert!(market.market_state == 0, ERROR_MARKET_CLOSED); // Market must be open
+        assert!(shares_in > 0, ERROR_INVALID_SHARE_AMOUNT_TO_SELL); // Must sell at least 1 share
         // Check current time against bidding deadline
         let current_time = timestamp_ms(clock);
         assert!(current_time < market.bidding_deadline, ERROR_MARKET_BIDDING_IS_OVER);
@@ -309,11 +328,11 @@ module skepsis_market::distribution_market {
         let proceeds = get_sell_quote<CoinType>(market, spread_index, shares_in);
         
         // Verify minimum output constraint
-        assert!(proceeds >= min_output_amount, 1011); // Slippage too high
+        assert!(proceeds >= min_output_amount, ERROR_SLIPPAGE_TOO_HIGH); // Slippage too high
         
         // Update the outstanding shares for the selected spread
         let spread = vector::borrow_mut(&mut market.spreads, spread_index);
-        assert!(spread.outstanding_shares >= shares_in, 1006); // Cannot sell more than available
+        assert!(spread.outstanding_shares >= shares_in, ERROR_INVALID_SHARE_AMOUNT_TO_SELL); // Cannot sell more than available
         spread.outstanding_shares = spread.outstanding_shares - shares_in;
         
         // Update cumulative shares sold (decrease when selling back)
@@ -339,7 +358,7 @@ module skepsis_market::distribution_market {
         spread_index: u64,
         shares_amount: u64
     ): u64 {
-        assert!(spread_index < vector::length(&market.spreads), 1004);
+        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
         
         // Get current quantities for all spreads
         let mut quantities = vector::empty<u64>();
@@ -374,7 +393,7 @@ module skepsis_market::distribution_market {
         spread_index: u64,
         shares_amount: u64
     ): u64 {
-        assert!(spread_index < vector::length(&market.spreads), 1004);
+        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
         // Remove the redundant assertion that's causing test failures
         
         // Get current quantities for all spreads
@@ -413,7 +432,7 @@ module skepsis_market::distribution_market {
         market: &Market<CoinType>,
         spread_index: u64
     ): u64 {
-        assert!(spread_index < vector::length(&market.spreads), 1004);
+        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
         
         // Get current quantities for all spreads
         let mut quantities = vector::empty<u64>();
@@ -444,18 +463,19 @@ module skepsis_market::distribution_market {
     }
 
     /// Multi-spread buy to get exact shares in multiple spreads (with slippage protection)
+    #[allow(lint(self_transfer))]
     public fun buy_exact_multi_spread_shares<CoinType>(
         market: &mut Market<CoinType>,
         spread_indices: vector<u64>,
         shares_out: vector<u64>,     // Exact amounts of outcome shares to buy for each spread
-        mut max_input_amount: Coin<CoinType>,  // Fix: Use mut for mutable parameter
+        mut max_input_amount: Coin<CoinType>,  
         clock: &Clock,
         ctx: &mut TxContext
-    ): Coin<CoinType> {
+    ) {
         // Validate inputs
         assert!(vector::length(&spread_indices) == vector::length(&shares_out), 1012);
         assert!(vector::length(&spread_indices) > 0, 1013);
-        assert!(market.market_state == 0, 1007); // Market must be open
+        assert!(market.market_state == 0, ERROR_MARKET_IS_NOT_OPEN); // Market must be open
         // Check current time against bidding deadline
         let current_time = timestamp_ms(clock);
         assert!(current_time < market.bidding_deadline, ERROR_INVALID_BIDDING_DEADLINE);
@@ -470,8 +490,8 @@ module skepsis_market::distribution_market {
             let share_amount = *vector::borrow(&shares_out, i);
             
             // Validate each spread index
-            assert!(spread_index < vector::length(&market.spreads), 1004);
-            assert!(share_amount > 0, 1008); // Must buy at least 1 share of each
+            assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
+            assert!(share_amount > 0, ERROR_INVALID_SHARE_AMOUNT_TO_BUY); // Must buy at least 1 share of each
             
             // Add cost for this spread
             total_cost = total_cost + get_buy_quote<CoinType>(market, spread_index, share_amount);
@@ -481,7 +501,7 @@ module skepsis_market::distribution_market {
         
         // Check if provided amount is sufficient
         let input_value = coin::value(&max_input_amount);
-        assert!(input_value >= total_cost, 1009); // Insufficient funds
+        assert!(input_value >= total_cost, ERROR_INSUFFICIENT_FUNDS); // Insufficient funds
         
         // Split the exact amount needed for the purchase
         let payment = coin::split(&mut max_input_amount, total_cost, ctx);
@@ -503,11 +523,15 @@ module skepsis_market::distribution_market {
         };
         
         // Return any excess funds
-        max_input_amount
+        // @audit Transfer of an object to transaction sender address 
+        // distribution_market.move(447, 16): Returning an object from a function, allows a caller to use the object and enables composability via programmable transactions.
+        // distribution_market.move(506, 53): Transaction sender address coming from here
+        // distribution_market.move(506, 9): Note: This warning can be suppressed with '#[allow(lint(self_transfer))]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+        transfer::public_transfer(max_input_amount, tx_context::sender(ctx));
     }
 
     /// Add liquidity to the market with slippage protection
-    public fun add_liquidity<CoinType>(
+    public entry fun add_liquidity<CoinType>(
         market: &mut Market<CoinType>,
         liquidity_amount: Coin<CoinType>,     // Amount to add as liquidity
         min_lp_tokens: u64,                   // Minimum LP tokens to receive (slippage protection)
@@ -515,8 +539,8 @@ module skepsis_market::distribution_market {
         ctx: &mut TxContext
     ): u64 {
         // Validate inputs
-        assert!(market.market_state == 0, 1007); // Market must be open
-        assert!(coin::value(&liquidity_amount) > 0, 1008); // Must add positive liquidity
+        assert!(market.market_state == 0, ERROR_MARKET_IS_NOT_OPEN); // Market must be open
+        assert!(coin::value(&liquidity_amount) > 0, ERROR_POSITIVE_LIQUIDITY); // Must add positive liquidity
         let current_time = timestamp_ms(clock);
         assert!(current_time < market.bidding_deadline, ERROR_MARKET_BIDDING_IS_OVER);
     
@@ -529,7 +553,7 @@ module skepsis_market::distribution_market {
         let lp_tokens_to_mint = (new_amount * market.total_shares) / existing_liquidity;
         
         // Check minimum LP tokens constraint
-        assert!(lp_tokens_to_mint >= min_lp_tokens, 1014); // Slippage too high
+        assert!(lp_tokens_to_mint >= min_lp_tokens, ERROR_SLIPPAGE_TOO_HIGH); // Slippage too high
         
         // Add the liquidity to the market
         let liquidity_balance = coin::into_balance(liquidity_amount);
@@ -959,7 +983,7 @@ module skepsis_market::distribution_market {
     
     /// Get spread information by index, @comment: not required can read the Market object directly
     public fun get_spread_info<CoinType>(market: &Market<CoinType>, spread_index: u64): (u64, u64, u64, u64) {
-        assert!(spread_index < vector::length(&market.spreads), 1004);
+        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
         let spread = vector::borrow(&market.spreads, spread_index);
         (spread.precision, spread.lower_bound, spread.upper_bound, spread.outstanding_shares)
     }
@@ -969,5 +993,49 @@ module skepsis_market::distribution_market {
     /// Get the market's total liquidity, @comment: not required can read the Market object directly
     public fun get_total_liquidity<CoinType>(market: &Market<CoinType>): u64 {
         balance::value(&market.total_liquidity)
+    }
+
+    /// Get prices for all spreads in the market in a single call
+    /// @param market The market object
+    /// @return A tuple containing vectors of spread indices and their corresponding prices
+    public fun get_all_spread_prices<CoinType>(
+        market: &Market<CoinType>
+    ): (vector<u64>, vector<u64>) {
+        let spreads_count = vector::length(&market.spreads);
+        
+        // Initialize vectors to hold spread indices and prices
+        let mut spread_indices = vector::empty<u64>();
+        let mut spread_prices = vector::empty<u64>();
+        
+        // Get current quantities once for all spreads (more efficient)
+        let mut quantities = vector::empty<u64>();
+        let mut i = 0;
+        
+        // Collect all outstanding shares quantities
+        while (i < spreads_count) {
+            let spread = vector::borrow(&market.spreads, i);
+            let quantity = spread.outstanding_shares;
+            vector::push_back(&mut quantities, quantity);
+            i = i + 1;
+        };
+        
+        // Calculate liquidity parameter b once
+        // let b = market.total_shares / spreads_count;
+        
+        // Calculate price for each spread
+        i = 0;
+        while (i < spreads_count) {
+            
+            // Cap at 1.0 if needed
+            let normalized_price = get_buy_quote<CoinType>(market, i, 1_000_000);
+            
+            // Add index and price to the result vectors
+            vector::push_back(&mut spread_indices, i);
+            vector::push_back(&mut spread_prices, normalized_price);
+            
+            i = i + 1;
+        };
+        
+        (spread_indices, spread_prices)
     }
 }

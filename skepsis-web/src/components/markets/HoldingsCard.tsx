@@ -1,12 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useMarketService, MarketPosition } from '@/hooks/useMarketService';
 import { useCurrentAccount } from '@mysten/dapp-kit';
+
+interface Position {
+  id: string;
+  spreadIndex: number;
+  sharesAmount: number;
+  value: number;
+}
 
 interface HoldingsCardProps {
   marketId: string;
   spreadRanges?: string[]; // Array of spread ranges to display (e.g. "95,000-100,000")
-  onSelectPosition?: (position: MarketPosition) => void;
+  onSelectPosition?: (position: Position) => void;
   selectedPositionId?: string;
 }
 
@@ -17,12 +23,31 @@ export const HoldingsCard: React.FC<HoldingsCardProps> = ({
   selectedPositionId,
 }) => {
   const account = useCurrentAccount();
-  const { fetchUserPositions, positions, isLoading } = useMarketService();
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch positions when component mounts or marketId changes
   useEffect(() => {
+    const fetchUserPositions = async () => {
+      if (!account) return;
+      
+      setIsLoading(true);
+      try {
+        // In a real implementation, you would fetch positions from the blockchain
+        // For now, we'll use an empty array to simulate no positions
+        setPositions([]);
+        
+        // Simulate fetching delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error("Error fetching positions:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (account && marketId) {
-      fetchUserPositions(marketId);
+      fetchUserPositions();
     }
   }, [account, marketId]);
 
@@ -30,7 +55,7 @@ export const HoldingsCard: React.FC<HoldingsCardProps> = ({
   const totalValue = positions.reduce((sum, position) => sum + position.value, 0);
 
   // Handle position selection
-  const handleSelectPosition = (position: MarketPosition) => {
+  const handleSelectPosition = (position: Position) => {
     if (onSelectPosition) {
       onSelectPosition(position);
     }

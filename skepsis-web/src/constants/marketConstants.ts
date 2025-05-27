@@ -28,14 +28,14 @@ export const MARKET_CONSTANTS = {
   // Function Names
   FUNCTIONS: {
     // Market factory functions
-    CREATE_MARKET: 'create_market',
-    GET_MARKET_LIST: 'get_market_list',
+    // CREATE_MARKET: 'create_market',
+    // GET_MARKET_LIST: 'get_market_list',
 
-    // Market query functions
-    GET_MARKET_INFO: 'get_market_info',
-    GET_MARKET_TIMINGS: 'get_market_timings',
-    GET_SPREAD_CONFIG: 'get_spread_config',
-    GET_LIQUIDITY_PARAMETERS: 'get_liquidity_parameters',
+    // // Market query functions
+    // GET_MARKET_INFO: 'get_market_info',
+    // GET_MARKET_TIMINGS: 'get_market_timings',
+    // GET_SPREAD_CONFIG: 'get_spread_config',
+    // GET_LIQUIDITY_PARAMETERS: 'get_liquidity_parameters',
 
     // Trading functions
     BUY_EXACT_SHARES_WITH_MAX_INPUT: 'buy_exact_shares_with_max_input',
@@ -44,30 +44,25 @@ export const MARKET_CONSTANTS = {
     // Position functions
     GET_USER_POSITIONS: 'get_user_positions',
     GET_POSITION_INFO: 'get_position_info',
+    WITHDRAW_LIQUIDITY: 'withdraw_liquidity',
+
   },
 };
 
-// Sample market for Bitcoin price prediction (updated to use real market ID from testnet)
+// Basic market info - most data will be loaded dynamically via useLiveMarketInfo hook
 export const BITCOIN_MARKET = {
   marketId: '0x10904622d7c95899091e6b19787e7a256dd7719298889d3cdf85f36bd589f498',
-  name: 'Bitcoin Price on May 30th, 2025',
-  description: 'What will be the price of Bitcoin (BTC) on May 30th, 2025?',
-  resolutionCriteria: 'The price will be determined by taking the average closing price from CoinMarketCap, Binance, and Coinbase.',
-  resolver: 'Skepsis Oracle',
-  spreads: [
-    { range: '95,000-100,000', percentage: 11 },
-    { range: '100,000-105,000', percentage: 28 },
-    { range: '105,000-110,000', percentage: 26 },
-    { range: '110,000-115,000', percentage: 21 },
-    { range: '115,000-120,000', percentage: 8 },
-    { range: '120,000-125,000', percentage: 4 },
-    { range: '125,000-130,000', percentage: 2 },
-  ],
-  currentPrice: 102350,
+  name: 'Bitcoin Price on May 30th, 2025', // Fallback name if dynamic data isn't loaded yet
 };
 
-// Array of all available markets
-export const MARKETS = [BITCOIN_MARKET];
+// Additional market IDs can be added here - full data will be loaded dynamically
+export const ETHEREUM_MARKET = {
+  marketId: '0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9',
+  name: 'Ethereum Price Prediction', // Fallback name
+};
+
+// Array of all available market IDs - full data will be loaded dynamically
+export const MARKETS = [BITCOIN_MARKET, ETHEREUM_MARKET];
 
 // Default market ID to use in prediction page
 export const DEFAULT_MARKET_ID = BITCOIN_MARKET.marketId;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
 import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import MarketService from '@/services/marketService';
+import { MarketService } from '@/services/marketService';
 import { toast } from 'react-toastify';
 import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 
