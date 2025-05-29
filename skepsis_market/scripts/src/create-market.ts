@@ -36,15 +36,15 @@ async function main() {
 
   // Market parameters - you can customize these
   const marketParams = {
-    question: "Will Bitcoin price exceed $100,000 by end of 2025?",
-    resolutionCriteria: "Based on the closing price on December 31st, 2025 as reported by CoinGecko",
-    steps: 10, // Number of buckets/spreads
+    question: "Who will win the champions leauge in 2025, Between Inter and PSG?",
+    resolutionCriteria: "Skepsis Keeper will check the winner on 2025-06-01",
+    steps: 2, // Number of buckets/spreads
     lowerBound: 0, // Minimum value (e.g., 0%)
-    upperBound: 100, // Maximum value (e.g., 100%)
+    upperBound: 2, // Maximum value (e.g., 100%)
     initialLiquidity: 1000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)
     // Calculate timestamps (in milliseconds) for deadlines
-    resolutionTimeMs: Date.now() +  30 * 60 * 1000, // 30 minutes from now
-    biddingDeadlineMs: Date.now() +  25 * 60 * 1000, // 25 minutes from now
+    resolutionTimeMs: Date.now() +  65 * 60 * 1000, // 120 minutes from now
+    biddingDeadlineMs: Date.now() +  59 * 60 * 1000, // 115 minutes from now
   };
   
   console.log('\n📊 Market Parameters:');

@@ -82,7 +82,7 @@ const BasicInputField = ({
     return () => {
       clearTimeout(handler);
     };
-  }, [debouncedInputValue]);
+  }, [debouncedInputValue, inputValue, setInputValue]);
 
   return (
     <div className="w-full p-4 flex flex-col gap-2 rounded-2xl bg-white/10 bg-token-input-field-radial">

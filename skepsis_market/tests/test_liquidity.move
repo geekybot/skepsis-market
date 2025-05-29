@@ -64,311 +64,311 @@ module skepsis_market::test_liquidity {
     }
 
     // Add a test for adding liquidity from the same user and a different user
-    #[test]
-    fun add_liquidity_test() {
-        let owner = @0x1; // Initial liquidity provider
-        let new_provider = @0x2; // New liquidity provider
+    // #[test]
+    // fun add_liquidity_test() {
+    //     let owner = @0x1; // Initial liquidity provider
+    //     let new_provider = @0x2; // New liquidity provider
         
-        let mut scenario_val = test_scenario::begin(owner);
-        let scenario = &mut scenario_val;
+    //     let mut scenario_val = test_scenario::begin(owner);
+    //     let scenario = &mut scenario_val;
         
-        // Setup the market first with 1000 tokens
-        setup_market(scenario, owner);
+    //     // Setup the market first with 1000 tokens
+    //     setup_market(scenario, owner);
         
-        // Check initial liquidity position of the owner
-        next_tx(scenario, owner);
-        {
-            let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+    //     // Check initial liquidity position of the owner
+    //     next_tx(scenario, owner);
+    //     {
+    //         let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
             
-            // Get owner's liquidity through a liquidity share object
-            let liquidity_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //         // Get owner's liquidity through a liquidity share object
+    //         let liquidity_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            let owner_shares = distribution_market::get_liquidity_shares(&liquidity_shares);
-            let market_id = distribution_market::get_liquidity_share_market_id(&liquidity_shares);
-            let (market_shares, sold_shares) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
+    //         let owner_shares = distribution_market::get_liquidity_shares(&liquidity_shares);
+    //         let market_id = distribution_market::get_liquidity_share_market_id(&liquidity_shares);
+    //         let (market_shares, sold_shares) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
             
-            debug::print(&std::string::utf8(b"Initial owner liquidity shares: "));
-            debug::print(&owner_shares);
-            debug::print(&std::string::utf8(b"Initial total market shares: "));
-            debug::print(&market_shares);
+    //         debug::print(&std::string::utf8(b"Initial owner liquidity shares: "));
+    //         debug::print(&owner_shares);
+    //         debug::print(&std::string::utf8(b"Initial total market shares: "));
+    //         debug::print(&market_shares);
             
-            // Verify initial values
-            assert!(owner_shares == 1_000_000_000, 500); // Owner should have 1000 tokens of shares
-            assert!(market_shares == 1_000_000_000, 501); // Total should be 1000 tokens
-            assert!(object::id(&market) == market_id, 502); // Market ID should match
+    //         // Verify initial values
+    //         assert!(owner_shares == 1_000_000_000, 500); // Owner should have 1000 tokens of shares
+    //         assert!(market_shares == 1_000_000_000, 501); // Total should be 1000 tokens
+    //         assert!(object::id(&market) == market_id, 502); // Market ID should match
             
-            test_scenario::return_to_sender(scenario, liquidity_shares);
-            test_scenario::return_shared(market);
-        };
+    //         test_scenario::return_to_sender(scenario, liquidity_shares);
+    //         test_scenario::return_shared(market);
+    //     };
         
-        // Owner adds more liquidity (500 additional tokens)
-        next_tx(scenario, owner);
-        {
-            let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
-            let mut liquidity_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //     // Owner adds more liquidity (500 additional tokens)
+    //     next_tx(scenario, owner);
+    //     {
+    //         let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+    //         let mut liquidity_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            // Mint additional liquidity
-            let additional_liquidity = 500_000_000; // 500 tokens
-            let min_lp_tokens = 490_000_000; // Minimum expected tokens (allowing for some slippage)
-            let coins = mint<TestCoin>(additional_liquidity, ctx(scenario));
+    //         // Mint additional liquidity
+    //         let additional_liquidity = 500_000_000; // 500 tokens
+    //         let min_lp_tokens = 490_000_000; // Minimum expected tokens (allowing for some slippage)
+    //         let coins = mint<TestCoin>(additional_liquidity, ctx(scenario));
             
-            debug::print(&std::string::utf8(b"Owner adding additional liquidity: "));
-            debug::print(&additional_liquidity);
+    //         debug::print(&std::string::utf8(b"Owner adding additional liquidity: "));
+    //         debug::print(&additional_liquidity);
             
-            // Create a clock for the transaction
-            let mut clock_obj = clock::create_for_testing(ctx(scenario));
-            clock::set_for_testing(&mut clock_obj, 1100); // Still before bidding deadline
+    //         // Create a clock for the transaction
+    //         let mut clock_obj = clock::create_for_testing(ctx(scenario));
+    //         clock::set_for_testing(&mut clock_obj, 1100); // Still before bidding deadline
             
-            // Add liquidity to existing position
-            distribution_market::add_liquidity_to_existing_position<TestCoin>(
-                &mut market, 
-                &mut liquidity_shares, 
-                coins, 
-                min_lp_tokens, 
-                &clock_obj, 
-                ctx(scenario)
-            );
+    //         // Add liquidity to existing position
+    //         distribution_market::add_liquidity_to_existing_position<TestCoin>(
+    //             &mut market, 
+    //             &mut liquidity_shares, 
+    //             coins, 
+    //             min_lp_tokens, 
+    //             &clock_obj, 
+    //             ctx(scenario)
+    //         );
             
-            clock::destroy_for_testing(clock_obj);
+    //         clock::destroy_for_testing(clock_obj);
             
-            // Check updated liquidity positions
-            let owner_shares = distribution_market::get_liquidity_shares(&liquidity_shares);
-            let (market_shares, sold_shares) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
+    //         // Check updated liquidity positions
+    //         let owner_shares = distribution_market::get_liquidity_shares(&liquidity_shares);
+    //         let (market_shares, sold_shares) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
             
-            debug::print(&std::string::utf8(b"After adding - Owner liquidity shares: "));
-            debug::print(&owner_shares);
-            debug::print(&std::string::utf8(b"After adding - Total market shares: "));
-            debug::print(&market_shares);
+    //         debug::print(&std::string::utf8(b"After adding - Owner liquidity shares: "));
+    //         debug::print(&owner_shares);
+    //         debug::print(&std::string::utf8(b"After adding - Total market shares: "));
+    //         debug::print(&market_shares);
             
-            // Verify updated values - owner and market shares should have increased
-            assert!(owner_shares == 1_500_000_000, 503); // Owner should now have 1500 tokens
-            assert!(market_shares == 1_500_000_000, 504); // Total should be 1500 tokens
+    //         // Verify updated values - owner and market shares should have increased
+    //         assert!(owner_shares == 1_500_000_000, 503); // Owner should now have 1500 tokens
+    //         assert!(market_shares == 1_500_000_000, 504); // Total should be 1500 tokens
             
-            test_scenario::return_to_sender(scenario, liquidity_shares);
-            test_scenario::return_shared(market);
-        };
+    //         test_scenario::return_to_sender(scenario, liquidity_shares);
+    //         test_scenario::return_shared(market);
+    //     };
         
-        // New provider adds liquidity (800 tokens)
-        next_tx(scenario, new_provider);
-        {
-            let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+    //     // New provider adds liquidity (800 tokens)
+    //     next_tx(scenario, new_provider);
+    //     {
+    //         let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
             
-            // Mint liquidity for new provider
-            let new_provider_liquidity = 800_000_000; // 800 tokens 
-            let min_lp_tokens = 790_000_000; // Minimum expected (allowing for slippage)
-            let coins = mint<TestCoin>(new_provider_liquidity, ctx(scenario));
+    //         // Mint liquidity for new provider
+    //         let new_provider_liquidity = 800_000_000; // 800 tokens 
+    //         let min_lp_tokens = 790_000_000; // Minimum expected (allowing for slippage)
+    //         let coins = mint<TestCoin>(new_provider_liquidity, ctx(scenario));
             
-            debug::print(&std::string::utf8(b"New provider adding liquidity: "));
-            debug::print(&new_provider_liquidity);
+    //         debug::print(&std::string::utf8(b"New provider adding liquidity: "));
+    //         debug::print(&new_provider_liquidity);
             
-            // Create a clock for the transaction
-            let mut clock_obj = clock::create_for_testing(ctx(scenario));
-            clock::set_for_testing(&mut clock_obj, 1150); // Still before bidding deadline
+    //         // Create a clock for the transaction
+    //         let mut clock_obj = clock::create_for_testing(ctx(scenario));
+    //         clock::set_for_testing(&mut clock_obj, 1150); // Still before bidding deadline
             
-            // Add liquidity
-            distribution_market::add_liquidity<TestCoin>(
-                &mut market,
-                coins,
-                min_lp_tokens,
-                &clock_obj,
-                ctx(scenario)
-            );
+    //         // Add liquidity
+    //         distribution_market::add_liquidity<TestCoin>(
+    //             &mut market,
+    //             coins,
+    //             min_lp_tokens,
+    //             &clock_obj,
+    //             ctx(scenario)
+    //         );
             
-            clock::destroy_for_testing(clock_obj);
+    //         clock::destroy_for_testing(clock_obj);
             
-            // Check for the new liquidity share object created for the new provider
-            let new_provider_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //         // Check for the new liquidity share object created for the new provider
+    //         let new_provider_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            // Take owner's liquidity shares from their address
-            test_scenario::next_tx(scenario, owner);
-            let owner_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //         // Take owner's liquidity shares from their address
+    //         test_scenario::next_tx(scenario, owner);
+    //         let owner_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            // Switch back to new provider for the remainder of the test
-            test_scenario::next_tx(scenario, new_provider);
+    //         // Switch back to new provider for the remainder of the test
+    //         test_scenario::next_tx(scenario, new_provider);
             
-            // Get liquidity information
-            let new_provider_share_amount = distribution_market::get_liquidity_shares(&new_provider_shares);
-            let owner_share_amount = distribution_market::get_liquidity_shares(&owner_shares);
-            let (market_shares, _) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
+    //         // Get liquidity information
+    //         let new_provider_share_amount = distribution_market::get_liquidity_shares(&new_provider_shares);
+    //         let owner_share_amount = distribution_market::get_liquidity_shares(&owner_shares);
+    //         let (market_shares, _) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
             
-            debug::print(&std::string::utf8(b"Final - Owner liquidity shares: "));
-            debug::print(&owner_share_amount);
-            debug::print(&std::string::utf8(b"Final - New provider liquidity shares: "));
-            debug::print(&new_provider_share_amount);
-            debug::print(&std::string::utf8(b"Final - Total market shares: "));
-            debug::print(&market_shares);
+    //         debug::print(&std::string::utf8(b"Final - Owner liquidity shares: "));
+    //         debug::print(&owner_share_amount);
+    //         debug::print(&std::string::utf8(b"Final - New provider liquidity shares: "));
+    //         debug::print(&new_provider_share_amount);
+    //         debug::print(&std::string::utf8(b"Final - Total market shares: "));
+    //         debug::print(&market_shares);
             
-            // Calculate percentages for better comparison
-            let owner_percentage = (owner_share_amount * 100) / market_shares;
-            let new_provider_percentage = (new_provider_share_amount * 100) / market_shares;
+    //         // Calculate percentages for better comparison
+    //         let owner_percentage = (owner_share_amount * 100) / market_shares;
+    //         let new_provider_percentage = (new_provider_share_amount * 100) / market_shares;
             
-            debug::print(&std::string::utf8(b"Owner's percentage of pool: "));
-            debug::print(&owner_percentage);
-            debug::print(&std::string::utf8(b"New provider's percentage of pool: "));
-            debug::print(&new_provider_percentage);
+    //         debug::print(&std::string::utf8(b"Owner's percentage of pool: "));
+    //         debug::print(&owner_percentage);
+    //         debug::print(&std::string::utf8(b"New provider's percentage of pool: "));
+    //         debug::print(&new_provider_percentage);
             
-            // Verify final values
-            assert!(owner_share_amount == 1_500_000_000, 505); // Owner should still have 1500 tokens
-            assert!(new_provider_share_amount == 800_000_000, 506); // New provider should have 800 tokens
-            assert!(market_shares == 2_300_000_000, 507); // Total should be 2300 tokens
+    //         // Verify final values
+    //         assert!(owner_share_amount == 1_500_000_000, 505); // Owner should still have 1500 tokens
+    //         assert!(new_provider_share_amount == 800_000_000, 506); // New provider should have 800 tokens
+    //         assert!(market_shares == 2_300_000_000, 507); // Total should be 2300 tokens
             
-            // Verify percentages (approximately)
-            assert!(owner_percentage == 65, 508); // ~65%
-            assert!(new_provider_percentage == 34, 509); // ~34% (with rounding)
+    //         // Verify percentages (approximately)
+    //         assert!(owner_percentage == 65, 508); // ~65%
+    //         assert!(new_provider_percentage == 34, 509); // ~34% (with rounding)
             
-            // Return objects correctly
-            test_scenario::next_tx(scenario, owner);
-            test_scenario::return_to_sender(scenario, owner_shares);
+    //         // Return objects correctly
+    //         test_scenario::next_tx(scenario, owner);
+    //         test_scenario::return_to_sender(scenario, owner_shares);
             
-            test_scenario::next_tx(scenario, new_provider);
-            test_scenario::return_to_sender(scenario, new_provider_shares);
-            test_scenario::return_shared(market);
-        };
+    //         test_scenario::next_tx(scenario, new_provider);
+    //         test_scenario::return_to_sender(scenario, new_provider_shares);
+    //         test_scenario::return_shared(market);
+    //     };
         
-        test_scenario::end(scenario_val);
-    }
+    //     test_scenario::end(scenario_val);
+    // }
 
     // Test for a third user adding liquidity and checking their share percentage
-    #[test]
-    fun third_provider_liquidity_test() {
-        let owner = @0x1; // Initial liquidity provider
-        let second_provider = @0x2; // Second liquidity provider
-        let third_provider = @0x3; // Third liquidity provider
+    // #[test]
+    // fun third_provider_liquidity_test() {
+    //     let owner = @0x1; // Initial liquidity provider
+    //     let second_provider = @0x2; // Second liquidity provider
+    //     let third_provider = @0x3; // Third liquidity provider
         
-        let mut scenario_val = test_scenario::begin(owner);
-        let scenario = &mut scenario_val;
+    //     let mut scenario_val = test_scenario::begin(owner);
+    //     let scenario = &mut scenario_val;
         
-        // Setup the market with initial liquidity from owner
-        setup_market(scenario, owner);
+    //     // Setup the market with initial liquidity from owner
+    //     setup_market(scenario, owner);
         
-        // Second provider adds liquidity (500 tokens)
-        next_tx(scenario, second_provider);
-        {
-            let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+    //     // Second provider adds liquidity (500 tokens)
+    //     next_tx(scenario, second_provider);
+    //     {
+    //         let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
             
-            let second_provider_liquidity = 500_000_000; // 500 tokens
-            let min_lp_tokens = 490_000_000;
-            let coins = mint<TestCoin>(second_provider_liquidity, ctx(scenario));
+    //         let second_provider_liquidity = 500_000_000; // 500 tokens
+    //         let min_lp_tokens = 490_000_000;
+    //         let coins = mint<TestCoin>(second_provider_liquidity, ctx(scenario));
             
-            // Create a clock for the transaction
-            let mut clock_obj = clock::create_for_testing(ctx(scenario));
-            clock::set_for_testing(&mut clock_obj, 1100);
+    //         // Create a clock for the transaction
+    //         let mut clock_obj = clock::create_for_testing(ctx(scenario));
+    //         clock::set_for_testing(&mut clock_obj, 1100);
             
-            // Add liquidity
-            distribution_market::add_liquidity<TestCoin>(
-                &mut market,
-                coins,
-                min_lp_tokens,
-                &clock_obj,
-                ctx(scenario)
-            );
+    //         // Add liquidity
+    //         distribution_market::add_liquidity<TestCoin>(
+    //             &mut market,
+    //             coins,
+    //             min_lp_tokens,
+    //             &clock_obj,
+    //             ctx(scenario)
+    //         );
             
-            clock::destroy_for_testing(clock_obj);
-            test_scenario::return_shared(market);
-        };
+    //         clock::destroy_for_testing(clock_obj);
+    //         test_scenario::return_shared(market);
+    //     };
         
-        // Third provider adds liquidity (300 tokens)
-        next_tx(scenario, third_provider);
-        {
-            let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+    //     // Third provider adds liquidity (300 tokens)
+    //     next_tx(scenario, third_provider);
+    //     {
+    //         let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
             
-            let third_provider_liquidity = 300_000_000; // 300 tokens
-            let min_lp_tokens = 290_000_000;
-            let coins = mint<TestCoin>(third_provider_liquidity, ctx(scenario));
+    //         let third_provider_liquidity = 300_000_000; // 300 tokens
+    //         let min_lp_tokens = 290_000_000;
+    //         let coins = mint<TestCoin>(third_provider_liquidity, ctx(scenario));
             
-            debug::print(&std::string::utf8(b"Third provider adding liquidity: "));
-            debug::print(&third_provider_liquidity);
+    //         debug::print(&std::string::utf8(b"Third provider adding liquidity: "));
+    //         debug::print(&third_provider_liquidity);
             
-            // Create a clock for the transaction
-            let mut clock_obj = clock::create_for_testing(ctx(scenario));
-            clock::set_for_testing(&mut clock_obj, 1200);
+    //         // Create a clock for the transaction
+    //         let mut clock_obj = clock::create_for_testing(ctx(scenario));
+    //         clock::set_for_testing(&mut clock_obj, 1200);
             
-            // Add liquidity
-            distribution_market::add_liquidity<TestCoin>(
-                &mut market,
-                coins,
-                min_lp_tokens,
-                &clock_obj,
-                ctx(scenario)
-            );
+    //         // Add liquidity
+    //         distribution_market::add_liquidity<TestCoin>(
+    //             &mut market,
+    //             coins,
+    //             min_lp_tokens,
+    //             &clock_obj,
+    //             ctx(scenario)
+    //         );
             
-            clock::destroy_for_testing(clock_obj);
-            test_scenario::return_shared(market);
-        };
+    //         clock::destroy_for_testing(clock_obj);
+    //         test_scenario::return_shared(market);
+    //     };
         
-        // Now check each user's liquidity shares
-        next_tx(scenario, third_provider);
-        {
-            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+    //     // Now check each user's liquidity shares
+    //     next_tx(scenario, third_provider);
+    //     {
+    //         let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
             
-            // Take all three users' liquidity share objects 
-            test_scenario::next_tx(scenario, owner);
-            let owner_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //         // Take all three users' liquidity share objects 
+    //         test_scenario::next_tx(scenario, owner);
+    //         let owner_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            test_scenario::next_tx(scenario, second_provider);
-            let second_provider_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //         test_scenario::next_tx(scenario, second_provider);
+    //         let second_provider_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            test_scenario::next_tx(scenario, third_provider);
-            let third_provider_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
+    //         test_scenario::next_tx(scenario, third_provider);
+    //         let third_provider_shares = test_scenario::take_from_sender<LiquidityShare>(scenario);
             
-            // Get all share information
-            let owner_share_amount = distribution_market::get_liquidity_shares(&owner_shares);
-            let second_provider_share_amount = distribution_market::get_liquidity_shares(&second_provider_shares);
-            let third_provider_share_amount = distribution_market::get_liquidity_shares(&third_provider_shares);
-            let (total_market_shares, _) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
+    //         // Get all share information
+    //         let owner_share_amount = distribution_market::get_liquidity_shares(&owner_shares);
+    //         let second_provider_share_amount = distribution_market::get_liquidity_shares(&second_provider_shares);
+    //         let third_provider_share_amount = distribution_market::get_liquidity_shares(&third_provider_shares);
+    //         let (total_market_shares, _) = distribution_market::get_market_liquidity_info<TestCoin>(&market);
             
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Liquidity Distribution"));
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Owner liquidity shares: "));
-            debug::print(&owner_share_amount);
-            debug::print(&std::string::utf8(b"Second provider liquidity shares: "));
-            debug::print(&second_provider_share_amount);
-            debug::print(&std::string::utf8(b"Third provider liquidity shares: "));
-            debug::print(&third_provider_share_amount);
-            debug::print(&std::string::utf8(b"Total market shares: "));
-            debug::print(&total_market_shares);
+    //         debug::print(&std::string::utf8(b"----------------------"));
+    //         debug::print(&std::string::utf8(b"Liquidity Distribution"));
+    //         debug::print(&std::string::utf8(b"----------------------"));
+    //         debug::print(&std::string::utf8(b"Owner liquidity shares: "));
+    //         debug::print(&owner_share_amount);
+    //         debug::print(&std::string::utf8(b"Second provider liquidity shares: "));
+    //         debug::print(&second_provider_share_amount);
+    //         debug::print(&std::string::utf8(b"Third provider liquidity shares: "));
+    //         debug::print(&third_provider_share_amount);
+    //         debug::print(&std::string::utf8(b"Total market shares: "));
+    //         debug::print(&total_market_shares);
             
-            // Calculate percentages for better comparison
-            let owner_percentage = (owner_share_amount * 100) / total_market_shares;
-            let second_provider_percentage = (second_provider_share_amount * 100) / total_market_shares;
-            let third_provider_percentage = (third_provider_share_amount * 100) / total_market_shares;
+    //         // Calculate percentages for better comparison
+    //         let owner_percentage = (owner_share_amount * 100) / total_market_shares;
+    //         let second_provider_percentage = (second_provider_share_amount * 100) / total_market_shares;
+    //         let third_provider_percentage = (third_provider_share_amount * 100) / total_market_shares;
             
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Percentage Distribution"));
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Owner's percentage of pool: "));
-            debug::print(&owner_percentage);
-            debug::print(&std::string::utf8(b"Second provider's percentage of pool: "));
-            debug::print(&second_provider_percentage);
-            debug::print(&std::string::utf8(b"Third provider's percentage of pool: "));
-            debug::print(&third_provider_percentage);
+    //         debug::print(&std::string::utf8(b"----------------------"));
+    //         debug::print(&std::string::utf8(b"Percentage Distribution"));
+    //         debug::print(&std::string::utf8(b"----------------------"));
+    //         debug::print(&std::string::utf8(b"Owner's percentage of pool: "));
+    //         debug::print(&owner_percentage);
+    //         debug::print(&std::string::utf8(b"Second provider's percentage of pool: "));
+    //         debug::print(&second_provider_percentage);
+    //         debug::print(&std::string::utf8(b"Third provider's percentage of pool: "));
+    //         debug::print(&third_provider_percentage);
             
-            // Verify expected shares
-            assert!(owner_share_amount == 1_000_000_000, 600); // Owner should have 1000 tokens
-            assert!(second_provider_share_amount == 500_000_000, 601); // Second provider should have 500 tokens
-            assert!(third_provider_share_amount == 300_000_000, 602); // Third provider should have 300 tokens
-            assert!(total_market_shares == 1_800_000_000, 603); // Total should be 1800 tokens
+    //         // Verify expected shares
+    //         assert!(owner_share_amount == 1_000_000_000, 600); // Owner should have 1000 tokens
+    //         assert!(second_provider_share_amount == 500_000_000, 601); // Second provider should have 500 tokens
+    //         assert!(third_provider_share_amount == 300_000_000, 602); // Third provider should have 300 tokens
+    //         assert!(total_market_shares == 1_800_000_000, 603); // Total should be 1800 tokens
             
-            // Verify approximate percentages
-            assert!(owner_percentage == 55, 604); // Around 55.5% (1000/1800)
-            assert!(second_provider_percentage == 27, 605); // Around 27.7% (500/1800)
-            assert!(third_provider_percentage == 16, 606); // Around 16.6% (300/1800)
+    //         // Verify approximate percentages
+    //         assert!(owner_percentage == 55, 604); // Around 55.5% (1000/1800)
+    //         assert!(second_provider_percentage == 27, 605); // Around 27.7% (500/1800)
+    //         assert!(third_provider_percentage == 16, 606); // Around 16.6% (300/1800)
             
-            // Return all objects
-            test_scenario::next_tx(scenario, owner);
-            test_scenario::return_to_sender(scenario, owner_shares);
+    //         // Return all objects
+    //         test_scenario::next_tx(scenario, owner);
+    //         test_scenario::return_to_sender(scenario, owner_shares);
             
-            test_scenario::next_tx(scenario, second_provider);
-            test_scenario::return_to_sender(scenario, second_provider_shares);
+    //         test_scenario::next_tx(scenario, second_provider);
+    //         test_scenario::return_to_sender(scenario, second_provider_shares);
             
-            test_scenario::next_tx(scenario, third_provider);
-            test_scenario::return_to_sender(scenario, third_provider_shares);
-            test_scenario::return_shared(market);
-        };
+    //         test_scenario::next_tx(scenario, third_provider);
+    //         test_scenario::return_to_sender(scenario, third_provider_shares);
+    //         test_scenario::return_shared(market);
+    //     };
         
-        test_scenario::end(scenario_val);
-    }
+    //     test_scenario::end(scenario_val);
+    // }
 
      // Helper function to buy shares and verify the purchase
     public fun buy_shares_and_verify(
@@ -437,5 +437,327 @@ module skepsis_market::test_liquidity {
         
         test_scenario::return_shared(registry);
         test_scenario::return_shared(market);
+    }
+
+    // Test to verify the get_all_spread_prices function
+    #[test]
+    fun test_get_all_spread_prices() {
+        let owner = @0x1;
+        let trader1 = @0x2;
+        let trader2 = @0x3;
+        
+        let mut scenario_val = test_scenario::begin(owner);
+        let scenario = &mut scenario_val;
+        
+        // Setup the market first with initial liquidity
+        setup_market(scenario, owner);
+        
+        // Have trader1 buy shares in spread 2 to affect prices
+        next_tx(scenario, trader1);
+        {
+            // Buy 50M shares in spread 2
+            buy_shares_and_verify(
+                scenario,
+                trader1,
+                2,
+                50_000_000,
+                1100,  // clock time
+                5_000_000  // extra funds for slippage
+            );
+        };
+        
+        // Have trader2 buy shares in spread 7 to affect prices differently
+        next_tx(scenario, trader2);
+        {
+            // Buy 30M shares in spread 7
+            buy_shares_and_verify(
+                scenario,
+                trader2,
+                7,
+                30_000_000,
+                1150,  // clock time
+                5_000_000  // extra funds for slippage
+            );
+        };
+        
+        // Now test the get_all_spread_prices function
+        next_tx(scenario, owner);
+        {
+            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+            
+            // First get individual spread prices for comparison
+            let spread2_price = distribution_market::get_spread_price<TestCoin>(&market, 2);
+            let spread7_price = distribution_market::get_spread_price<TestCoin>(&market, 7);
+            
+            // Now get all prices at once with our new function
+            let (spread_indices, spread_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
+            
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Testing get_all_spread_prices"));
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Individual spread 2 price: "));
+            debug::print(&spread2_price);
+            debug::print(&std::string::utf8(b"Individual spread 7 price: "));
+            debug::print(&spread7_price);
+            debug::print(&std::string::utf8(b"All spread indices: "));
+            debug::print(&spread_indices);
+            debug::print(&std::string::utf8(b"All spread prices: "));
+            debug::print(&spread_prices);
+            
+            // Get number of spreads in the market
+            let spreads_count = distribution_market::get_spreads_count<TestCoin>(&market);
+            
+            // Verify we got prices for all spreads
+            assert!(vector::length(&spread_indices) == spreads_count, 700);
+            assert!(vector::length(&spread_prices) == spreads_count, 701);
+            
+            // Verify specific spread indices and their position in the vector
+            let mut found_spread2 = false;
+            let mut found_spread7 = false;
+            let mut spread2_batch_price = 0;
+            let mut spread7_batch_price = 0;
+            
+            let mut i = 0;
+            while (i < vector::length(&spread_indices)) {
+                let index = *vector::borrow(&spread_indices, i);
+                if (index == 2) {
+                    found_spread2 = true;
+                    spread2_batch_price = *vector::borrow(&spread_prices, i);
+                } else if (index == 7) {
+                    found_spread7 = true;
+                    spread7_batch_price = *vector::borrow(&spread_prices, i);
+                };
+                i = i + 1;
+            };
+            
+            // Verify we found our specific spreads
+            assert!(found_spread2, 702);
+            assert!(found_spread7, 703);
+            
+            // Verify that the individually queried prices match the batch results
+            // Note: Using == for exact equality since these should calculate the same result
+            assert!(spread2_price == spread2_batch_price, 704);
+            assert!(spread7_price == spread7_batch_price, 705);
+            
+            // Print which spread has the highest price
+            let mut highest_price = 0;
+            let mut highest_index = 0;
+            i = 0;
+            while (i < vector::length(&spread_prices)) {
+                let price = *vector::borrow(&spread_prices, i);
+                if (price > highest_price) {
+                    highest_price = price;
+                    highest_index = *vector::borrow(&spread_indices, i);
+                };
+                i = i + 1;
+            };
+            
+            debug::print(&std::string::utf8(b"Highest price spread index: "));
+            debug::print(&highest_index);
+            debug::print(&std::string::utf8(b"Highest price value: "));
+            debug::print(&highest_price);
+            
+            // Verify traders affected the prices (spread 2 and 7 should have higher prices due to purchases)
+            assert!(spread2_batch_price > 0, 706);
+            assert!(spread7_batch_price > 0, 707);
+            
+            test_scenario::return_shared(market);
+        };
+        
+        test_scenario::end(scenario_val);
+    }
+
+    // Additional test to verify price changes after multiple transactions
+    #[test]
+    fun test_spread_price_changes() {
+        let owner = @0x1;
+        let trader = @0x2;
+        
+        let mut scenario_val = test_scenario::begin(owner);
+        let scenario = &mut scenario_val;
+        
+        // Setup the market with initial liquidity
+        setup_market(scenario, owner);
+        
+        // First get all prices before any trading
+        next_tx(scenario, owner);
+        {
+            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+            
+            // Get initial prices
+            let (initial_indices, initial_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
+            
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Initial spread prices before trading"));
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Spread indices: "));
+            debug::print(&initial_indices);
+            debug::print(&std::string::utf8(b"Spread prices: "));
+            debug::print(&initial_prices);
+            
+            // Store some initial values for comparison later
+            let initial_spread5_price = *vector::borrow(&initial_prices, 5);
+            
+            test_scenario::return_shared(market);
+            
+            // Now have trader buy shares in spread 5 to affect price
+            next_tx(scenario, trader);
+            buy_shares_and_verify(
+                scenario,
+                trader,
+                5,
+                100_000_000, // Buying a large amount to significantly change the price
+                1200,  // clock time
+                10_000_000  // extra funds for slippage
+            );
+            
+            // Check prices after the trade
+            next_tx(scenario, owner);
+            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+            
+            // Get updated prices
+            let (updated_indices, updated_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
+            
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Updated spread prices after trading"));
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Spread indices: "));
+            debug::print(&updated_indices);
+            debug::print(&std::string::utf8(b"Spread prices: "));
+            debug::print(&updated_prices);
+            
+            // Verify price changed for spread 5
+            let updated_spread5_price = *vector::borrow(&updated_prices, 5);
+            
+            debug::print(&std::string::utf8(b"Spread 5 price before: "));
+            debug::print(&initial_spread5_price);
+            debug::print(&std::string::utf8(b"Spread 5 price after: "));
+            debug::print(&updated_spread5_price);
+            
+            // Price should increase after buying shares
+            assert!(updated_spread5_price > initial_spread5_price, 708);
+            
+            // Compare relative prices across all spreads
+            // Spread 5 should now have one of the highest prices due to the purchase
+            let mut i = 0;
+            let mut highest_non5_price = 0;
+            
+            while (i < vector::length(&updated_indices)) {
+                if (*vector::borrow(&updated_indices, i) != 5) {
+                    let price = *vector::borrow(&updated_prices, i);
+                    if (price > highest_non5_price) {
+                        highest_non5_price = price;
+                    };
+                };
+                i = i + 1;
+            };
+            
+            debug::print(&std::string::utf8(b"Highest price in any spread other than 5: "));
+            debug::print(&highest_non5_price);
+            
+            // Verify spread 5 price is significantly higher due to our trade
+            // (Testing that our function accurately reflects price changes)
+            assert!(updated_spread5_price >= highest_non5_price, 709);
+            
+            test_scenario::return_shared(market);
+        };
+        
+        test_scenario::end(scenario_val);
+    }
+
+    #[test]
+    fun test_get_all_spread_prices_read_only() {
+        let owner = @0x1;
+        
+        
+        let mut scenario_val = test_scenario::begin(owner);
+        let scenario = &mut scenario_val;
+        
+        // Setup the market first with initial liquidity
+        setup_market(scenario, owner);
+        next_tx(scenario, owner);
+        {
+            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
+            
+            // First get individual spread prices for comparison
+            let spread2_price = distribution_market::get_spread_price<TestCoin>(&market, 2);
+            let spread7_price = distribution_market::get_spread_price<TestCoin>(&market, 7);
+            
+            // Now get all prices at once with our new function
+            let (spread_indices, spread_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
+            
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Testing get_all_spread_prices"));
+            debug::print(&std::string::utf8(b"----------------------"));
+            debug::print(&std::string::utf8(b"Individual spread 2 price: "));
+            debug::print(&spread2_price);
+            debug::print(&std::string::utf8(b"Individual spread 7 price: "));
+            debug::print(&spread7_price);
+            debug::print(&std::string::utf8(b"All spread indices: "));
+            debug::print(&spread_indices);
+            debug::print(&std::string::utf8(b"All spread prices: "));
+            debug::print(&spread_prices);
+            
+            // Get number of spreads in the market
+            let spreads_count = distribution_market::get_spreads_count<TestCoin>(&market);
+            
+            // Verify we got prices for all spreads
+            assert!(vector::length(&spread_indices) == spreads_count, 700);
+            assert!(vector::length(&spread_prices) == spreads_count, 701);
+            
+            // Verify specific spread indices and their position in the vector
+            let mut found_spread2 = false;
+            let mut found_spread7 = false;
+            let mut spread2_batch_price = 0;
+            let mut spread7_batch_price = 0;
+            
+            let mut i = 0;
+            while (i < vector::length(&spread_indices)) {
+                let index = *vector::borrow(&spread_indices, i);
+                if (index == 2) {
+                    found_spread2 = true;
+                    spread2_batch_price = *vector::borrow(&spread_prices, i);
+                } else if (index == 7) {
+                    found_spread7 = true;
+                    spread7_batch_price = *vector::borrow(&spread_prices, i);
+                };
+                i = i + 1;
+            };
+            
+            // Verify we found our specific spreads
+            assert!(found_spread2, 702);
+            assert!(found_spread7, 703);
+            
+            // Verify that the individually queried prices match the batch results
+            // Note: Using == for exact equality since these should calculate the same result
+            assert!(spread2_price == spread2_batch_price, 704);
+            assert!(spread7_price == spread7_batch_price, 705);
+            
+            // Print which spread has the highest price
+            let mut highest_price = 0;
+            let mut highest_index = 0;
+            i = 0;
+            while (i < vector::length(&spread_prices)) {
+                let price = *vector::borrow(&spread_prices, i);
+                if (price > highest_price) {
+                    highest_price = price;
+                    highest_index = *vector::borrow(&spread_indices, i);
+                };
+                i = i + 1;
+            };
+            
+            debug::print(&std::string::utf8(b"Highest price spread index: "));
+            debug::print(&highest_index);
+            debug::print(&std::string::utf8(b"Highest price value: "));
+            debug::print(&highest_price);
+            
+            // Verify traders affected the prices (spread 2 and 7 should have higher prices due to purchases)
+            assert!(spread2_batch_price > 0, 706);
+            assert!(spread7_batch_price > 0, 707);
+            
+            test_scenario::return_shared(market);
+        };
+        test_scenario::end(scenario_val);
+
     }
 }

@@ -2,3 +2,4 @@ generated
 */build
 */*.lock
 */ignored
+ping_log.txt

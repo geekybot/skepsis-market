@@ -1,0 +1,28 @@
+{
+  "deployment_date": "2025-05-25T20:12:57.537Z",
+  "network": "devnet",
+  "packages": {
+    "distribution_market_factory": "0xf8cac7e2af3e186a9821a6df801c2fadbf964403b1ba26757f2571a006d39284",
+    "usdc": "0x7c2e2815e1b4d345775fa1494b50625aeabde0a3c49225fa63092367ddb341de"
+  },
+  "objects": {
+    "factory": "0x6b8013e635b26842109a35ff573230bbe539c720478d1187336f4291a14358b1",
+    "market": "0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9",
+    "admin_cap": "0xacf7625aeea4083dad749cf76a81316869ca53165449b0d868f578da62898021",
+    "liquidity_share": "0xa769385a52146ab77a79a9af118a070476ec393c7e7201ceba840ddb49ffced5",
+    "position_registry": "0x607bb436a792e6302b413b5e9a6edcc4e5f664d576aa4071b6415f1c06d7b971"
+  },
+  "market_params": {
+    "question": "Will Bitcoin price exceed $100,000 by end of 2025?",
+    "resolutionCriteria": "Based on the closing price on December 31st, 2025 as reported by CoinGecko",
+    "steps": 10,
+    "lowerBound": 0,
+    "upperBound": 100,
+    "initialLiquidity": 1000000000,
+    "resolutionTimeMs": 1748205774907,
+    "biddingDeadlineMs": 1748205474908,
+    "resolution_time": "2025-05-25T20:42:54.907Z",
+    "bidding_deadline": "2025-05-25T20:37:54.908Z",
+    "initial_liquidity_usdc": 1000
+  }
+}
