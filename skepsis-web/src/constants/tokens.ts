@@ -34,14 +34,22 @@ export const SKEPSIS_CONFIG = {
   dist_admin_cap: '0x4739a65fbd4b174cef360a5c7a7cbdfd28015b86d540de93c80f1c5574d5425f',
   
   // Core contracts
-  distribution_market_factory: '0xabc23de3ea61d9d436cd663bdd3169a809c1382a0ac5065f4791ec9f051cdb52',
-  user_position_registry: '0x937b969d8b16844f4917def2b6ce96be18f6f13c301c6a5873449431404ca3d7',
+  distribution_market_factory: '0xf8cac7e2af3e186a9821a6df801c2fadbf964403b1ba26757f2571a006d39284',
+  user_position_registry: '0x607bb436a792e6302b413b5e9a6edcc4e5f664d576aa4071b6415f1c06d7b971',
   factory: '0xdbe4a824d0f5192874deeb63faa43e6e99cff7fcda7f8187535cc688509b5798',
-  liquidity_share: '0x03331428ec395b21a19d03370863a9f57fbebe71943b2383e6620e5fe8d0d921',
+  liquidity_share: '0xa769385a52146ab77a79a9af118a070476ec393c7e7201ceba840ddb49ffced5',
   
   // Default market ID
-  default_market_id: '0x10904622d7c95899091e6b19787e7a256dd7719298889d3cdf85f36bd589f498',
+  default_market_id: '0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9',
 };
+
+export const MODULES = {
+    DISTRIBUTION_MARKET_FACTORY: 'distribution_market_factory',
+    DISTRIBUTION_MARKET: 'distribution_market',
+    DISTRIBUTION_AMM: 'distribution_amm',
+    FAUCET: 'faucet',
+    USDC: 'usdc',
+}
 
 // Network configuration
 export const NETWORK_CONFIG = {

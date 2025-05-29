@@ -936,6 +936,246 @@ async function getSellQuoteWithPremium(client: SuiClient, marketId: string, spre
 }
 
 /**
+ * 12. Get all spread prices and return JSON data for frontend integration
+ * This function returns an object with all spread details including bounds and prices
+ */
+async function getAllSpreadPrices(client: SuiClient, marketId: string): Promise<any> {
+  try {
+    console.log(`\n📊 Querying all spread prices for market ${marketId}`);
+    
+    // First get the total number of spreads
+    const tx = new Transaction();
+    
+    tx.moveCall({
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_spreads_count`,
+      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+      arguments: [
+        tx.object(marketId)
+      ],
+    });
+    
+    const response = await client.devInspectTransactionBlock({
+      transactionBlock: tx,
+      sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
+    });
+    
+    // Prepare response object
+    const result: {
+      success: boolean;
+      data: {
+        marketId: string;
+        totalSpreads: number;
+        spreads: Array<{
+          spreadIndex: number;
+          lowerBound: number;
+          upperBound: number;
+          precision: number;
+          outstandingShares: number;
+          outstandingSharesDisplay: string;
+          buyPrice: number | null;
+          buyPriceDisplay: string;
+          sellPrice: number | null;
+          sellPriceDisplay: string;
+          displayRange: string;
+        }>;
+      };
+      error: string | null;
+      rawData: any;
+    } = {
+      success: false,
+      data: {
+        marketId: marketId,
+        totalSpreads: 0,
+        spreads: []
+      },
+      error: null,
+      rawData: null
+    };
+    
+    // Parse count of spreads
+    if (!response.results || response.results.length === 0 || !response.results[0]) {
+      result.error = 'No results returned when getting spreads count';
+      return result;
+    }
+    
+    const countValues = response.results[0].returnValues;
+    if (!countValues || !countValues[0] || !countValues[0][0]) {
+      result.error = 'Could not parse spreads count';
+      return result;
+    }
+    
+    // Convert count bytes to number
+    const countBytes = countValues[0][0];
+    let totalSpreads = 0;
+    for (let i = 0; i < Math.min(countBytes.length, 8); i++) {
+      totalSpreads += countBytes[i] * Math.pow(256, i);
+    }
+    
+    result.data.totalSpreads = totalSpreads;
+    console.log(`Found ${totalSpreads} spreads in the market`);
+    
+    // For each spread, get the spread info and quotes
+    const sampleShareAmount = 1; // 1 token with 6 decimals
+    
+    for (let i = 0; i < totalSpreads; i++) {
+      // Get spread info
+      const spreadTx = new Transaction();
+      spreadTx.moveCall({
+        target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_spread_info`,
+        typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+        arguments: [
+          spreadTx.object(marketId),
+          spreadTx.pure.u64(i)
+        ],
+      });
+      
+      const spreadResponse = await client.devInspectTransactionBlock({
+        transactionBlock: spreadTx,
+        sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
+      });
+      
+      // Parse spread info
+      if (!spreadResponse.results || !spreadResponse.results[0]) {
+        console.error(`Failed to get info for spread ${i}`);
+        continue;
+      }
+      
+      const spreadValues = spreadResponse.results[0].returnValues;
+      
+      const spreadInfo = {
+        spreadIndex: i,
+        precision: 0,
+        lowerBound: 0,
+        upperBound: 0,
+        outstandingShares: 0,
+        outstandingSharesDisplay: "0",
+        buyPrice: null as number | null,
+        buyPriceDisplay: "N/A",
+        sellPrice: null as number | null,
+        sellPriceDisplay: "N/A",
+        displayRange: ""
+      };
+      
+      // Parse precision (u64)
+      if (spreadValues && spreadValues[0] && spreadValues[0][0]) {
+        const precisionBytes = spreadValues[0][0];
+        for (let j = 0; j < Math.min(precisionBytes.length, 8); j++) {
+          spreadInfo.precision += precisionBytes[j] * Math.pow(256, j);
+        }
+      }
+      
+      // Parse lower bound (u64)
+      if (spreadValues && spreadValues[1] && spreadValues[1][0]) {
+        const lowerBytes = spreadValues[1][0];
+        for (let j = 0; j < Math.min(lowerBytes.length, 8); j++) {
+          spreadInfo.lowerBound += lowerBytes[j] * Math.pow(256, j);
+        }
+      }
+      
+      // Parse upper bound (u64)
+      if (spreadValues && spreadValues[2] && spreadValues[2][0]) {
+        const upperBytes = spreadValues[2][0];
+        for (let j = 0; j < Math.min(upperBytes.length, 8); j++) {
+          spreadInfo.upperBound += upperBytes[j] * Math.pow(256, j);
+        }
+      }
+      
+      // Parse outstanding shares (u64)
+      if (spreadValues && spreadValues[3] && spreadValues[3][0]) {
+        const sharesBytes = spreadValues[3][0];
+        for (let j = 0; j < Math.min(sharesBytes.length, 8); j++) {
+          spreadInfo.outstandingShares += sharesBytes[j] * Math.pow(256, j);
+        }
+        spreadInfo.outstandingSharesDisplay = (spreadInfo.outstandingShares / 1_000_000).toFixed(6);
+      }
+      
+      // Create display range string for frontend
+      spreadInfo.displayRange = `${spreadInfo.lowerBound} - ${spreadInfo.upperBound}`;
+      
+      // Get buy price quote if possible
+      try {
+        const buyTx = new Transaction();
+        buyTx.moveCall({
+          target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
+          typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+          arguments: [
+            buyTx.object(marketId),
+            buyTx.pure.u64(i),
+            buyTx.pure.u64(sampleShareAmount * 1_000_000) // 1 token
+          ],
+        });
+        
+        const buyResponse = await client.devInspectTransactionBlock({
+          transactionBlock: buyTx,
+          sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
+        });
+        
+        if (buyResponse.results && buyResponse.results[0] && buyResponse.results[0].returnValues) {
+          const quoteBytes = buyResponse.results[0].returnValues[0][0];
+          let buyPrice = 0;
+          for (let j = 0; j < Math.min(quoteBytes.length, 8); j++) {
+            buyPrice += quoteBytes[j] * Math.pow(256, j);
+          }
+          spreadInfo.buyPrice = buyPrice;
+          spreadInfo.buyPriceDisplay = (buyPrice / 1_000_000).toFixed(6);
+        }
+      } catch (e) {
+        console.warn(`Could not get buy quote for spread ${i}: ${e}`);
+      }
+      
+      // Get sell price quote if possible
+      try {
+        const sellTx = new Transaction();
+        sellTx.moveCall({
+          target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_sell_quote`,
+          typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+          arguments: [
+            sellTx.object(marketId),
+            sellTx.pure.u64(i),
+            sellTx.pure.u64(sampleShareAmount * 1_000_000) // 1 token
+          ],
+        });
+        
+        const sellResponse = await client.devInspectTransactionBlock({
+          transactionBlock: sellTx,
+          sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
+        });
+        
+        if (sellResponse.results && sellResponse.results[0] && sellResponse.results[0].returnValues) {
+          const quoteBytes = sellResponse.results[0].returnValues[0][0];
+          let sellPrice = 0;
+          for (let j = 0; j < Math.min(quoteBytes.length, 8); j++) {
+            sellPrice += quoteBytes[j] * Math.pow(256, j);
+          }
+          spreadInfo.sellPrice = sellPrice;
+          spreadInfo.sellPriceDisplay = (sellPrice / 1_000_000).toFixed(6);
+        }
+      } catch (e) {
+        console.warn(`Could not get sell quote for spread ${i}: ${e}`);
+      }
+      
+      // Add spread to results
+      result.data.spreads.push(spreadInfo);
+    }
+    
+    result.success = true;
+    return result;
+    
+  } catch (error) {
+    return {
+      success: false,
+      data: {
+        marketId: marketId,
+        totalSpreads: 0,
+        spreads: []
+      },
+      error: `Error in getAllSpreadPrices: ${error}`,
+      rawData: null
+    };
+  }
+}
+
+/**
  * Converts a market state number to a descriptive string
  */
 function getMarketStateString(state: number): string {
@@ -1041,8 +1281,14 @@ async function main(): Promise<void> {
         const sellShareAmount = parseFloat(process.argv[5] || '1');
         await getSellQuoteWithPremium(client, marketId, sellSpreadIndex, sellShareAmount);
         break;
+      case 12:
+        const spreadPricesResult = await getAllSpreadPrices(client, marketId);
+        console.log('\nAll Spread Prices:');
+        console.log('------------------');
+        console.log(JSON.stringify(spreadPricesResult, null, 2));
+        break;
       default:
-        console.log('Invalid function number. Please choose a number between 1 and 11.');
+        console.log('Invalid function number. Please choose a number between 1 and 12.');
         console.log(`
 Usage: npm run read-all-states -- <function_number> <market_id> [additional_args]
 
@@ -1058,6 +1304,7 @@ Function numbers:
 9. get_buy_quote_with_premium - Calculates cost to buy shares (requires spread_index and share_amount parameters)
 10. get_user_position - Returns data about a user's position (requires user_address parameter)
 11. get_sell_quote_with_premium - Calculates proceeds from selling shares (requires spread_index and share_amount parameters)
+12. get_all_spread_prices - Returns all spread prices and details for frontend integration
         `);
     }
     
@@ -1083,5 +1330,6 @@ export {
   getLiquidityShareUser,
   getBuyQuoteWithPremium,
   getUserPosition,
-  getSellQuoteWithPremium
+  getSellQuoteWithPremium,
+  getAllSpreadPrices
 };

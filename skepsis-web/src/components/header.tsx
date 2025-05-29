@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { useContext, useState, useEffect } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import { COIN } from "bucket-protocol-sdk";
-import { ConnectModal } from "@mysten/dapp-kit";
+import { ConnectModal, useCurrentWallet } from "@mysten/dapp-kit";
 import ConnectMenu from "./ui/connectMenu";
 import "@mysten/dapp-kit/dist/index.css";
 import { AppContext } from "@/context/AppContext";
@@ -13,7 +13,25 @@ import { Link as LinkIcon } from "lucide-react";
 // import RpcSetting from "./rpcSetting";
 
 const Header = () => {
-  const { walletAddress, suiName } = useContext(AppContext);
+  const { walletAddress, suiName, refreshWalletState } = useContext(AppContext);
+  const { currentWallet } = useCurrentWallet();
+  const [previousWalletId, setPreviousWalletId] = useState<string | undefined>(undefined);
+
+  // Listen for wallet changes
+  useEffect(() => {
+    if (!currentWallet) return;
+    
+    // If the wallet changed
+    if (previousWalletId !== currentWallet.id) {
+      console.log("Wallet changed from", previousWalletId, "to", currentWallet.id);
+      setPreviousWalletId(currentWallet.id);
+      refreshWalletState();
+      
+      // Dispatch a custom event for other components
+      const event = new Event("walletChanged");
+      window.dispatchEvent(event);
+    }
+  }, [currentWallet, previousWalletId, refreshWalletState]);
 
   return (
     <div
@@ -37,6 +55,11 @@ const Header = () => {
             <Link href="/prediction">
               <span className="text-sm text-white/70 hover:text-white transition-colors">
                 Prediction Markets
+              </span>
+            </Link>
+            <Link href="/liquidity">
+              <span className="text-sm text-white/70 hover:text-white transition-colors">
+                Liquidity
               </span>
             </Link>
             <Link href="/faucet">

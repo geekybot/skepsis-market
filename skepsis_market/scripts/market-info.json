@@ -1,0 +1,197 @@
+{
+  "success": true,
+  "marketId": "0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9",
+  "basic": {
+    "question": "Will Bitcoin price exceed $100,000 by end of 2025?",
+    "resolutionCriteria": "Based on the closing price on December 31st, 2025 as reported by CoinGecko",
+    "steps": 10,
+    "creationTime": 1748203976767,
+    "creationTimeDisplay": "2025-05-25T20:12:56.767Z",
+    "state": 0,
+    "stateDisplay": "Open"
+  },
+  "timing": {
+    "biddingDeadline": 1748205474908,
+    "biddingDeadlineDisplay": "2025-05-25T20:37:54.908Z",
+    "biddingOpen": false,
+    "resolutionTime": 1748205774907,
+    "resolutionTimeDisplay": "2025-05-25T20:42:54.907Z",
+    "resolvedValue": 0,
+    "isResolved": false
+  },
+  "liquidity": {
+    "totalShares": 1000000000,
+    "totalSharesDisplay": "1000.000000",
+    "cumulativeSharesSold": 0,
+    "cumulativeSharesSoldDisplay": "0.000000",
+    "totalLiquidity": 1000000000,
+    "totalLiquidityDisplay": "1000.000000"
+  },
+  "spreads": {
+    "count": 10,
+    "details": [
+      {
+        "spreadIndex": 0,
+        "id": "0x8bd4c2a8535554b82d75ef8c82b458b7b9689c613bd44f0e32d2b51c1466b853",
+        "precision": 1000000,
+        "lowerBound": 0,
+        "upperBound": 10,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "0 - 10",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 1,
+        "id": "0x924a06af01ed3e393f6e84c8d1e5c261bfd69ca0d83d131f2f6b36639b49deba",
+        "precision": 1000000,
+        "lowerBound": 10,
+        "upperBound": 20,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "10 - 20",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 2,
+        "id": "0xdbc13d54345e38e9ec24172278ce48fbd874107a5887710d45f78c7eafe56e25",
+        "precision": 1000000,
+        "lowerBound": 20,
+        "upperBound": 30,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "20 - 30",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 3,
+        "id": "0x619f122959296c6621c1a7376e4d479f505b1f7105c5cc224601222edf9e65e8",
+        "precision": 1000000,
+        "lowerBound": 30,
+        "upperBound": 40,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "30 - 40",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 4,
+        "id": "0xc9bb07afa0d689eca3fdfaf59767c262a8ae72c210dd561ba67cf6f2fb11ed1a",
+        "precision": 1000000,
+        "lowerBound": 40,
+        "upperBound": 50,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "40 - 50",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 5,
+        "id": "0x1d5d427feb438947ef2f620b08752e552840abf5489979e79d5335f208a1a42f",
+        "precision": 1000000,
+        "lowerBound": 50,
+        "upperBound": 60,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "50 - 60",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 6,
+        "id": "0x289e24752a49f51f2997b191d5ba14dde5b76b8d4526f2e0e7bf23aa55b06ca7",
+        "precision": 1000000,
+        "lowerBound": 60,
+        "upperBound": 70,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "60 - 70",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 7,
+        "id": "0x2fab703b395a3099591a49b3683ab7575ab46784fff5d6a9ca675f6ce03448b3",
+        "precision": 1000000,
+        "lowerBound": 70,
+        "upperBound": 80,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "70 - 80",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 8,
+        "id": "0x0c9b4b871b7d70ed648f0f9c1823e39174e29958526589dad86c1e8092010b94",
+        "precision": 1000000,
+        "lowerBound": 80,
+        "upperBound": 90,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "80 - 90",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      },
+      {
+        "spreadIndex": 9,
+        "id": "0xfd9cc440afb47f5afed9c30e75343f0842eeb4fbe6642be09358e9d1fb2d0ae7",
+        "precision": 1000000,
+        "lowerBound": 90,
+        "upperBound": 100,
+        "outstandingShares": 0,
+        "outstandingSharesDisplay": "0.000000",
+        "displayRange": "90 - 100",
+        "buyPrice": 90000,
+        "buyPriceDisplay": "0.090000",
+        "sellPrice": null,
+        "sellPriceDisplay": "N/A"
+      }
+    ]
+  },
+  "error": null,
+  "metadata": {
+    "deployment_date": "2025-05-25T20:12:57.537Z",
+    "network": "devnet",
+    "packages": {
+      "distribution_market_factory": "0xf8cac7e2af3e186a9821a6df801c2fadbf964403b1ba26757f2571a006d39284",
+      "usdc": "0x7c2e2815e1b4d345775fa1494b50625aeabde0a3c49225fa63092367ddb341de"
+    },
+    "market_params": {
+      "question": "Will Bitcoin price exceed $100,000 by end of 2025?",
+      "resolutionCriteria": "Based on the closing price on December 31st, 2025 as reported by CoinGecko",
+      "steps": 10,
+      "lowerBound": 0,
+      "upperBound": 100,
+      "initialLiquidity": 1000000000,
+      "resolutionTimeMs": 1748205774907,
+      "biddingDeadlineMs": 1748205474908,
+      "resolution_time": "2025-05-25T20:42:54.907Z",
+      "bidding_deadline": "2025-05-25T20:37:54.908Z",
+      "initial_liquidity_usdc": 1000
+    }
+  }
+}

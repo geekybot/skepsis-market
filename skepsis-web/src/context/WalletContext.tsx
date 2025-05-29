@@ -26,11 +26,7 @@ const SuiWalletProvider = ({ children }: Props) => {
           theme={lightTheme}
           autoConnect={true}
           storage={localStorage as StateStorage}
-          storageKey="sui-wallet"
-          preferredWallets={["Sui Wallet"]}
-          stashedWallet={{
-            name: 'Bucket Protocol',
-          }}
+          storageKey="skepsis-wallet" // Updated storage key to be more specific
         >
           {children}
         </WalletProvider>
