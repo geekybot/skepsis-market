@@ -4,6 +4,7 @@ import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { MarketService } from '@/services/marketService';
 import { toast } from 'react-toastify';
 import { MARKET_CONSTANTS } from '@/constants/marketConstants';
+import { Transaction } from '@mysten/sui/transactions';
 
 export interface MarketPosition {
   id: string;
@@ -231,12 +232,145 @@ export const useMarketService = () => {
     }
   };
   
+  /**
+   * Add liquidity to a market using the intelligent method that chooses the right contract function
+   * 
+   * @param marketId - ID of the market
+   * @param usdcAmount - Amount of USDC to add as liquidity
+   * @param minLpTokens - Minimum LP tokens expected (slippage protection)
+   */
+  const addLiquidityIntelligent = async (
+    marketId: string,
+    usdcAmount: number,
+    minLpTokens: number
+  ): Promise<Transaction> => {
+    if (!account) {
+      throw new Error('Wallet not connected');
+    }
+    
+    // Call the marketService implementation with all required parameters
+    return await marketService.addLiquidityIntelligent(
+      marketId,
+      usdcAmount,
+      minLpTokens,
+      account.address
+    );
+  };
+  
+  /**
+   * Remove liquidity from a market
+   * 
+   * @param marketId - ID of the market
+   * @param liquidityShareId - ID of the liquidity share object
+   */
+  const removeLiquidity = async (
+    marketId: string,
+    liquidityShareId: string
+  ): Promise<Transaction> => {
+    if (!account) {
+      throw new Error('Wallet not connected');
+    }
+    
+    // Call the marketService implementation with all required parameters
+    return await marketService.removeLiquidity(
+      marketId,
+      liquidityShareId,
+      account.address
+    );
+  };
+  
+  /**
+   * Fetch information for multiple markets at once
+   * 
+   * @param marketIds - Array of market IDs to fetch information for
+   * @returns Array of market information objects
+   */
+  // Cache to store market info and reduce API calls
+  const marketInfoCache: Record<string, {data: any, timestamp: number}> = {};
+  
+  // Function to delay execution - prevents API rate limiting
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  
+  const getAllMarketsInfo = async (marketIds: string[]) => {
+    try {
+      const results: any[] = [];
+      
+      // First, check for cached data that is still valid (less than 30 seconds old)
+      const currentTime = Date.now();
+      const freshMarketIds: string[] = [];
+      const cachedResults: Record<string, any> = {};
+      
+      // Separate markets that need fresh data from those we can use cached data for
+      marketIds.forEach(marketId => {
+        const cachedInfo = marketInfoCache[marketId];
+        if (cachedInfo && (currentTime - cachedInfo.timestamp) < 30000) { // 30 seconds cache
+          cachedResults[marketId] = cachedInfo.data;
+        } else {
+          freshMarketIds.push(marketId);
+        }
+      });
+      
+      // Process market IDs that need fresh data with delays between requests
+      for (let i = 0; i < freshMarketIds.length; i++) {
+        const marketId = freshMarketIds[i];
+        
+        try {
+          // Add a delay between requests to avoid hitting rate limits
+          if (i > 0) await delay(500); // 500ms delay between API calls
+          
+          const info = await marketService.getMarketInfo(marketId);
+          
+          // Cache the result
+          marketInfoCache[marketId] = {
+            data: info,
+            timestamp: Date.now()
+          };
+          
+          cachedResults[marketId] = info;
+        } catch (error) {
+          console.error(`Error fetching info for market ${marketId}:`, error);
+          cachedResults[marketId] = { success: false, marketId, error: String(error) };
+          
+          // Cache error results too but with a shorter expiry (5 seconds)
+          marketInfoCache[marketId] = {
+            data: { success: false, marketId, error: String(error) },
+            timestamp: Date.now() - 25000 // Will expire in 5 seconds
+          };
+        }
+      }
+      
+      // Build the final results array in the same order as the input marketIds
+      marketIds.forEach(marketId => {
+        results.push(cachedResults[marketId]);
+      });
+      
+      return {
+        success: true,
+        markets: results,
+        count: marketIds.length,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      console.error('Error getting all markets info:', error);
+      return {
+        success: false,
+        markets: [],
+        count: 0,
+        error: `Error getting market information: ${error}`,
+        timestamp: Date.now()
+      };
+    }
+  };
+  
   return {
     buyShares,
     sellShares,
     fetchMarketInfo,
     fetchUserPositions,
     getQuote,
+    addLiquidityIntelligent,
+    removeLiquidity,
+    getAllMarketsInfo,
     isLoading,
     positions,
     marketInfo,

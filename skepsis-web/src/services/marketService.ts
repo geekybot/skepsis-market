@@ -180,80 +180,16 @@ export class MarketService {
   }
 
   /**
- * Get all spread prices in a single call using the get_all_spread_prices function
- */
-  async getAllSpreadPrices(client: SuiClient, marketId: string): Promise<any> {
-    try {
-      const tx = new Transaction();
-
-      tx.moveCall({
-        target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`,
-        typeArguments: [`${USDC_CONFIG.tokenType}`],
-        arguments: [
-          tx.object(marketId)
-        ],
-      });
-
-      const response = await client.devInspectTransactionBlock({
-        transactionBlock: tx,
-        sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
-      });
-
-      if (!response.results || !response.results[0]) {
-        throw new Error('No results returned for spread prices');
-      }
-
-      const returnValues = response.results[0].returnValues;
-      if (!returnValues || returnValues.length < 2) {
-        throw new Error('Incomplete return values for spread prices');
-      }
-
-      // Parse indices (vector<u64>)
-      const indicesBytes = returnValues[0][0];
-      let indices: number[] = [];
-
-      // Vector bytes are formatted as [length, elem1, elem2, ...]
-      // Each u64 takes up 8 bytes
-      const numIndices = indicesBytes[0]; // First byte is length
-      for (let i = 0; i < numIndices; i++) {
-        let index = 0;
-        for (let j = 0; j < 8; j++) {
-          if (1 + i * 8 + j < indicesBytes.length) {
-            index += indicesBytes[1 + i * 8 + j] * Math.pow(256, j);
-          }
-        }
-        indices.push(index);
-      }
-
-      // Parse prices (vector<u64>)
-      const pricesBytes = returnValues[1][0];
-      let prices: number[] = [];
-
-      // Vector bytes are formatted as [length, elem1, elem2, ...]
-      // Each u64 takes up 8 bytes
-      const numPrices = pricesBytes[0]; // First byte is length
-      for (let i = 0; i < numPrices; i++) {
-        let price = 0;
-        for (let j = 0; j < 8; j++) {
-          if (1 + i * 8 + j < pricesBytes.length) {
-            price += pricesBytes[1 + i * 8 + j] * Math.pow(256, j);
-          }
-        }
-        prices.push(price);
-      }
-
-      return {
-        success: true,
-        indices,
-        prices
-      };
-    } catch (error) {
-      console.error(`Error getting spread prices: ${error}`);
-      return {
-        success: false,
-        error: `Error getting spread prices: ${error}`
-      };
-    }
+   * Helper function to generate mock spread price data
+   * @private
+   */
+  private generateMockSpreadPrices(marketId: string, spreadCount: number = 10): any {
+    console.log(`ℹ️ Using default price values for market ${marketId}`);
+    return {
+      success: true,
+      indices: Array.from({ length: spreadCount }, (_, i) => i),
+      prices: Array(spreadCount).fill(90000) // Default price of 0.09 USDC (with 6 decimal places)
+    };
   }
   /**
    * Get market information
@@ -408,9 +344,10 @@ export class MarketService {
       }
 
 
-      // CALL 2: Get all spread prices in a single call
-      console.log(`🔢 Fetching all spread prices in a single call`);
-      const spreadPrices = await this.getAllSpreadPrices(this.client, marketId);
+      // Generate mock spread prices based on the number of spreads in the market
+      console.log(`🔢 Setting default price values for spreads`);
+      const spreadCount = marketResult.spreads.count || 10;
+      const spreadPrices = this.generateMockSpreadPrices(marketId, spreadCount);
 
       // Add pricing info to the spreads
       if (spreadPrices.success && spreadPrices.indices && spreadPrices.prices) {
@@ -724,7 +661,8 @@ export class MarketService {
         showType: true,
       },
     });
-
+    
+    
     // Filter for LiquidityShare objects related to this market
     const liquidityShareType = `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::LiquidityShare`;
     
@@ -745,7 +683,7 @@ export class MarketService {
         }
       }
     }
-    console.log("", `Existing LiquidityShare ID for market ${marketId}:`, existingLiquidityShareId);
+    console.log("============>>>>>>>", `Existing LiquidityShare ID for market ${marketId}:`, existingLiquidityShareId);
     
     // Create transaction
     const tx = new Transaction();
@@ -838,6 +776,51 @@ export class MarketService {
 
     return tx;
   }
+
+  /**
+   * Get information for multiple markets in parallel
+   * 
+   * @param marketIds - Array of market IDs to retrieve information for
+   * @returns Array of market information objects
+   */
+  async getAllMarketsInfo(marketIds: string[]) {
+    try {
+      // Process all market info requests in parallel for efficiency
+      const marketInfoPromises = marketIds.map(marketId => 
+        this.getMarketInfo(marketId)
+          .catch(error => {
+            console.error(`Error fetching market ${marketId}:`, error);
+            return {
+              success: false,
+              marketId: marketId,
+              error: `Failed to load market data: ${error.message || error}`
+            };
+          })
+      );
+      
+      const marketsInfo = await Promise.all(marketInfoPromises);
+      
+      return {
+        success: true,
+        markets: marketsInfo,
+        count: marketIds.length,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      console.error('Error getting all markets info:', error);
+      return {
+        success: false,
+        markets: [],
+        count: 0,
+        error: `Error getting market information: ${error}`,
+        timestamp: Date.now()
+      };
+    }
+  }
+
+  
+
+
 }
 
 // default MarketService;

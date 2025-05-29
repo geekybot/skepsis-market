@@ -93,3 +93,13 @@ export const formatBigInt = (mist: bigint, decimal: number): string => {
 export const shortenAddress = (address: string) => {
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
 };
+
+/**
+ * Format a number with commas as thousands separators
+ * @param value Number to format
+ * @returns Formatted number string with commas
+ */
+export function formatNumberWithCommas(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '0';
+  return new Intl.NumberFormat('en-US').format(value);
+}

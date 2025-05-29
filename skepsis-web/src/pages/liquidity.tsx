@@ -11,10 +11,10 @@ import RemoveLiquidityModal from '@/components/markets/RemoveLiquidityModal';
 import { toast } from 'react-toastify';
 import { useLiquidityShares } from '@/hooks/useLiquidityShares';
 import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
-import { useLiveMarketsInfo } from '@/hooks/useLiveMarketsInfo';
 import { MarketService } from '@/services/marketService';
 import Link from 'next/link';
 import { MARKETS } from '@/constants/appConstants';
+import { useMarketService } from '@/hooks/useMarketService';
 
 interface MarketWithPosition {
   id: number;
@@ -25,6 +25,7 @@ interface MarketWithPosition {
   maxPayout: number;
   resolutionTime: string;
   userPosition: number;
+  userPositionPercentage?: number;  // Added field to store percentage of total liquidity
   userPositionObjectId?: string;
   state: number;
   stateDisplay: string;
@@ -34,13 +35,88 @@ interface MarketWithPosition {
   biddingDeadline?: string; // Add biddingDeadline field
 }
 
+// Helper function to get consistent market state display
+const getMarketStateFromRawState = (state?: number, biddingDeadline?: string, resolutionTime?: string): { status: string; state: number } => {
+  const now = new Date();
+  let resolutionDate = null;
+  let biddingEndDate = null;
+  
+  // 1. First check if the market has been explicitly resolved (state = 1)
+  if (state === 1) {
+    return { status: 'Resolved', state: 1 };
+  }
+
+  // 2. Check for special states like Canceled
+  if (state === 2) {
+    return { status: 'Canceled', state: 2 };
+  }
+  
+  // Parse bidding deadline and resolution dates for state calculation
+  try {
+    if (biddingDeadline) {
+      biddingEndDate = new Date(biddingDeadline);
+      if (isNaN(biddingEndDate.getTime())) biddingEndDate = null;
+    }
+    
+    if (resolutionTime) {
+      resolutionDate = new Date(resolutionTime);
+      if (isNaN(resolutionDate.getTime())) resolutionDate = null;
+    }
+  } catch (e) {
+    console.error('Error parsing market timing dates:', e);
+  }
+  
+  // 3. Check if resolution time has passed
+  if (resolutionDate && now >= resolutionDate) {
+    return { status: 'Waiting for Resolution', state: 0 };
+  } 
+  // 4. Check if bidding deadline has passed but resolution time hasn't
+  else if (biddingEndDate && now >= biddingEndDate) {
+    return { status: 'Waiting for Resolution', state: 0 };
+  } 
+  // 5. Default case: Market is still active (bidding period)
+  else {
+    return { status: 'Active', state: 0 };
+  }
+};
+
+// Helper function to format ISO date strings to a more readable format
+const formatDateForDisplay = (dateString: string): string => {
+  if (!dateString) return 'Not set';
+  
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    // Format date: Month Day, Year at Hour:Minute AM/PM
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return dateString; // Return original string if parsing fails
+  }
+};
+
 const LiquidityPage: NextPage = () => {
   const { walletAddress } = useContext(AppContext);
   const client = useSuiClient();
   const account = useCurrentAccount();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-  const [marketService, setMarketService] = useState<MarketService | null>(null);
+  
+  
+  // Use the marketService hook instead of initializing it manually
+  const usemarketService = useMarketService();
   
   // Add modal state variables
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -68,18 +144,10 @@ const LiquidityPage: NextPage = () => {
     refresh: refreshMarkets
   } = useMarketLiquidityInfo(client, refreshTrigger);
   
-  // Get market IDs to fetch with useLiveMarketsInfo
-  const marketIds = useMemo(() => {
-    return marketData.map(market => market.marketId);
-  }, [marketData]);
-  
-  // Use our new useLiveMarketsInfo hook to fetch all markets data in parallel
-  const {
-    marketsMap: liveMarketsInfo,
-    loading: liveMarketsLoading,
-    error: liveMarketsError,
-    refresh: refreshLiveMarkets
-  } = useLiveMarketsInfo(marketIds);
+  // State for storing live markets data
+  const [liveMarketsInfo, setLiveMarketsInfo] = useState<any>({});
+  const [liveMarketsLoading, setLiveMarketsLoading] = useState<boolean>(true);
+  const [liveMarketsError, setLiveMarketsError] = useState<string | null>(null);
   
   // Update the selected market ID when a market row is expanded
   useEffect(() => {
@@ -87,40 +155,85 @@ const LiquidityPage: NextPage = () => {
       // Find the market object for the first expanded market ID
       const expandedMarket = marketsWithPositions.find(m => m.marketId === expandedMarketIds[0]);
       if (expandedMarket) {
-        setSelectedMarket(expandedMarket);
+        // Use a functional update to avoid triggering refreshes if the market ID is the same
+        setSelectedMarket((prevSelected: MarketWithPosition | null) => {
+          if (prevSelected && prevSelected.marketId === expandedMarket.marketId) {
+            return prevSelected; // No change if the market ID is the same
+          }
+          return expandedMarket;
+        });
       }
     }
   }, [expandedMarketIds]);
   
   // Create a combined view of markets with user positions
   const marketsWithPositions = useMemo(() => {
-    console.log("Building marketsWithPositions with current data:", { 
-      markets: marketData.length, 
-      today: new Date().toISOString(),
-      userLiquidityShare: Object.keys(userLiquidityByMarket).length,
-      liveMarkets: liveMarketsInfo ? Object.keys(liveMarketsInfo).length : 0
-    });
-    console.log(marketData);
+    // Reduce logging frequency to improve performance
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Building marketsWithPositions with current data:", { 
+        markets: marketData.length, 
+        today: new Date().toISOString(),
+        userLiquidityShare: Object.keys(userLiquidityByMarket).length,
+        liveMarkets: liveMarketsInfo ? Object.keys(liveMarketsInfo).length : 0
+      });
+    }
     
     return marketData.map(market => {
       // Find the user's liquidity position for this market
-      const userPosition = userLiquidityByMarket[market.marketId] || 0;
+      const userPosition = userLiquidityByMarket[market.marketId] ?? 0;
       
-      // Find the liquidity share object ID if user has a position
+      // Find the user's liquidity share object for this market
       const liquidityShare = userLiquidityShares.find(share => share.marketId === market.marketId);
       
-      // Find market details from appConstants
-      const marketDetails = MARKETS.find(m => m.marketId === market.marketId);
-      
       // Get live market data from our parallel fetched markets
-      const liveData = liveMarketsInfo && liveMarketsInfo[market.marketId] ? liveMarketsInfo[market.marketId] : null;
+      const liveMarketData = liveMarketsInfo && liveMarketsInfo[market.marketId] ? liveMarketsInfo[market.marketId] : null;
+      
+      // Calculate percentage of total liquidity
+      let positionPercentage = 0;
+      if (userPosition > 0 && liveMarketData?.liquidity?.totalLiquidity) {
+        const totalLiquidity = Number(liveMarketData.liquidity.totalLiquidity) / 1_000_000;
+        console.log(`DETAILED CALCULATION for market ${market.marketId}:`, {
+          userPosition: userPosition,
+          rawTotalLiquidity: liveMarketData.liquidity.totalLiquidity,
+          convertedTotalLiquidity: totalLiquidity,
+          divisionFactor: "1_000_000 (converting from microUSDC)",
+          shareObject: liquidityShare
+        });
+        
+        if (totalLiquidity > 0) {
+          positionPercentage = (userPosition / totalLiquidity) * 100;
+          console.log(`Percentage calculation: (${userPosition} / ${totalLiquidity}) * 100 = ${positionPercentage}%`);
+        } else {
+          console.warn(`Total liquidity is zero or invalid for market ${market.marketId}`);
+        }
+      } else {
+        console.log(`No calculation for market ${market.marketId}: userPosition=${userPosition}, hasLiquidityData=${!!liveMarketData?.liquidity?.totalLiquidity}`);
+      }
+      
+      // Debug user positions for this market
+      console.log(`User position summary for market ${market.marketId}:`, {
+        position: userPosition,
+        percentageOfTotal: positionPercentage > 0 ? `${positionPercentage.toFixed(1)}%` : 'N/A',
+        hasPosition: userPosition > 0,
+        liquidityShareId: liquidityShare?.id,
+        marketTotalLiquidity: liveMarketData?.liquidity?.totalLiquidityDisplay,
+        liquidityShareRawValue: liquidityShare?.shares,
+        allShares: userLiquidityShares.length
+      });
+      
+      // Find market details from appConstants - ensure type safety
+      const marketDetails = MARKETS.find(m => 
+        typeof m === 'object' && 'marketId' in m && m.marketId === market.marketId
+      ) as { marketId: string; name: string; description: string } | undefined;
       
       // Get bidding deadline from live data if available, otherwise calculate it
       let biddingDeadline = '';
-      console.log(`Processing market ${market.marketId} with live data:`, liveData);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Processing market ${market.marketId} with live data:`, liveMarketData);
+      }
       
-      if (liveData && liveData.timing && liveData.timing.biddingDeadlineDisplay) {
-        biddingDeadline = liveData.timing.biddingDeadlineDisplay;
+      if (liveMarketData?.timing?.biddingDeadlineDisplay) {
+        biddingDeadline = liveMarketData.timing.biddingDeadlineDisplay;
       } else {
         // Fallback to calculated bidding deadline (24 hours after creation)
         const biddingDeadlineDate = new Date(market.creationTime + (24 * 60 * 60 * 1000));
@@ -128,28 +241,43 @@ const LiquidityPage: NextPage = () => {
       }
       
       // Get question and criteria from live data if available
-      const question = liveData?.basic?.question || marketDetails?.description || market.name;
-      const resolutionCriteria = liveData?.basic?.resolutionCriteria ||
+      const question = liveMarketData?.basic?.question || marketDetails?.description || market.name;
+      const resolutionCriteria = liveMarketData?.basic?.resolutionCriteria ||
         marketDetails?.description || 
         (market.name.includes("Bitcoin") ? "Based on Coinbase BTC/USD closing price" : 
         market.name.includes("temperature") ? "Based on official weather data" :
         "Based on official results");
       
-      // Get state from live data if available
-      const state = liveData?.basic?.state !== undefined ? liveData.basic.state : market.state;
-      const stateDisplay = liveData?.basic?.stateDisplay || market.stateDisplay;
-      
       // Get resolution time from live data if available
-      const resolutionTime = liveData?.timing?.resolutionTimeDisplay || market.resolutionTime;
+      const resolutionTime = liveMarketData?.timing?.resolutionTimeDisplay || market.resolutionTime;
+      
+      // Get consistent market state using the same logic as PredictionMarket component
+      const rawState = liveMarketData?.basic?.state !== undefined ? liveMarketData.basic.state : market.state;
+      const { status: stateDisplay, state } = getMarketStateFromRawState(
+        rawState, 
+        biddingDeadline, 
+        resolutionTime
+      );
+      
+      console.log(`MARKET STATE for market ${market.marketId}:`, {
+        rawState,
+        newStateDisplay: stateDisplay,
+        newState: state,
+        oldStateDisplay: liveMarketData?.basic?.stateDisplay || market.stateDisplay,
+        biddingDeadline,
+        resolutionTime,
+        now: new Date().toISOString()
+      });
       
       // Calculate current liquidity from live data if available
-      const currentLiquidity = liveData?.liquidity?.totalLiquidity !== undefined
-        ? Number(liveData.liquidity.totalLiquidity) / 1_000_000
+      const currentLiquidity = liveMarketData?.liquidity?.totalLiquidity !== undefined
+        ? Number(liveMarketData.liquidity.totalLiquidity) / 1_000_000
         : market.currentLiquidity;
-      
+
       return {
         ...market,
         userPosition,
+        userPositionPercentage: positionPercentage,
         userPositionObjectId: liquidityShare?.id,
         biddingDeadline,
         question,
@@ -160,7 +288,18 @@ const LiquidityPage: NextPage = () => {
         currentLiquidity
       };
     });
-  }, [marketData, userLiquidityByMarket, userLiquidityShares, liveMarketsInfo]);
+    // Using a more efficient dependency array that only triggers re-calculation when
+    // important data changes, not on every render cycle
+  }, [
+    // Only re-run when the list of market IDs changes, not the entire market objects
+    marketData.map(m => m.marketId).join(','),
+    // Only care about which markets have liquidity and how much
+    Object.entries(userLiquidityByMarket).map(([id, val]) => `${id}:${val}`).join(','),
+    // Only care about the share IDs, not the full objects
+    (userLiquidityShares || []).map(s => s?.id || '').join(','),
+    // For liveMarketsInfo, we only care if the collection of market IDs changed
+    liveMarketsInfo ? Object.keys(liveMarketsInfo).sort().join(',') : ''
+  ]);
 
   // Function to check if bidding is still open (bidding deadline > current time)
   const isBiddingOpen = (market: MarketWithPosition): boolean => {
@@ -174,34 +313,107 @@ const LiquidityPage: NextPage = () => {
     const deadline = new Date(market.biddingDeadline);
     const isOpen = now < deadline;
     
-    console.log(`Market ${market.id}: Bidding status check - Current date: ${now.toISOString()}, Deadline: ${deadline.toISOString()}, Is Open: ${isOpen}`);
     return isOpen;
   };
 
   // Check if market is eligible for adding liquidity
   const canAddLiquidity = (market: MarketWithPosition): boolean => {
-    const isStateValid = market.state === 0;
-    const isBiddingStillOpen = isBiddingOpen(market);
-    const isEligible = isStateValid && isBiddingStillOpen;
+    // Use stateDisplay instead of raw state number for more accurate state determination
+    const isStateValid = market.stateDisplay === 'Active';
+    const isEligible = isStateValid;
     
-    console.log(`Market ${market.id}: Eligibility for adding liquidity - State: ${market.state} (Valid: ${isStateValid}), Bidding Open: ${isBiddingStillOpen}, Final Result: ${isEligible}`);
+    // Limit logging to development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Market ${market.id}: Eligibility for adding liquidity - State: ${market.state}, StateDisplay: ${market.stateDisplay} (Valid: ${isStateValid}), Final Result: ${isEligible}`);
+    }
     
     return isEligible;
   };
   
-  // Initialize market service when client is available
+  // Maintain a ref to track if a fetch is in progress
+  const isFetchingRef = React.useRef(false);
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  // Store a reference to the previous trigger value to avoid unnecessary fetches
+  const prevTriggerRef = React.useRef<number>(refreshTrigger);
+  
+  // Initialize market service when client is available or when refresh is explicitly triggered
   useEffect(() => {
-    if (client) {
-      setMarketService(new MarketService(client));
+    // Only proceed if:
+    // 1. We have market service and some market data
+    // 2. This is the initial load OR an explicit refresh was triggered
+    if (!usemarketService || marketData.length === 0) return;
+    
+    // Skip if this is just a re-render with the same data
+    const isFirstLoad = prevTriggerRef.current === 0;
+    const isExplicitRefresh = prevTriggerRef.current !== refreshTrigger;
+    
+    if (!isFirstLoad && !isExplicitRefresh) {
+      return;
     }
-  }, [client]);
-
-  // Function to refresh all data
+    
+    // Update our reference for next time
+    prevTriggerRef.current = refreshTrigger;
+    
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Debounce the fetch operation to prevent rapid consecutive calls
+    debounceTimerRef.current = setTimeout(() => {
+      // Only fetch if a fetch is not already in progress
+      if (!isFetchingRef.current) {
+        isFetchingRef.current = true;
+        fetchLiveMarketsData()
+          .finally(() => {
+            isFetchingRef.current = false;
+          });
+      }
+    }, 1000); // 1 second debounce
+    
+    // Cleanup function to clear timer on unmount or dependency change
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+    
+    // Only include refreshTrigger in dependencies, not marketData.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usemarketService, refreshTrigger]);
+  
+  // Function to refresh all data with safeguards against rapid clicks
+  const lastRefreshTimeRef = React.useRef<number>(0);
+  
   const refreshData = () => {
-    setRefreshTrigger(prev => prev + 1);
-    refreshLiveMarkets(); // Also refresh live markets data
+    const now = Date.now();
+    // Don't allow refreshes more frequently than every 10 seconds
+    if (now - lastRefreshTimeRef.current < 10000) {
+      console.log('Refresh throttled - please wait before refreshing again');
+      return;
+    }
+    
+    lastRefreshTimeRef.current = now;
+    console.log("Refreshing all data...");
+    
+    // Force a complete refresh by using the current timestamp
+    setRefreshTrigger(now);
+    
+    // This will trigger the useEffect hook to fetch live markets data
+    // and explicitly call refresh methods if available
+    if (refreshShares) {
+      refreshShares();
+    }
+    
+    if (refreshMarkets) {
+      refreshMarkets();
+    }
   };
 
+  // Ref to track last toggle time to prevent double-clicks
+  const lastToggleTimeRef = React.useRef<number>(0);
+  
   // Toggle expanded/collapsed state of a market row
   const toggleMarketExpanded = (marketId: string, event: React.MouseEvent) => {
     // Prevent expanding when clicking on buttons
@@ -210,11 +422,26 @@ const LiquidityPage: NextPage = () => {
       return;
     }
     
+    // Prevent default behavior to avoid any form submission
+    event.preventDefault();
+    
+    const now = Date.now();
+    
+    // Debounce toggle operations to 500ms to prevent multiple rapid toggles
+    if (now - lastToggleTimeRef.current < 500) {
+      return;
+    }
+    
+    lastToggleTimeRef.current = now;
+    
+    // Update expanded IDs to only allow one expanded row at a time
     setExpandedMarketIds(prevIds => {
       if (prevIds.includes(marketId)) {
+        // If this row is already expanded, collapse it
         return prevIds.filter(id => id !== marketId);
       } else {
-        return [...prevIds, marketId];
+        // Otherwise, expand only this row and collapse any others
+        return [marketId];
       }
     });
   };
@@ -233,13 +460,8 @@ const LiquidityPage: NextPage = () => {
       return;
     }
     
-    if (market.state !== 0) {
-      toast.warning("Cannot add liquidity to a market that is not open");
-      return;
-    }
-
-    if (!isBiddingOpen(market)) {
-      toast.warning("Bidding period has ended for this market");
+    if (market.stateDisplay !== 'Active') {
+      toast.warning(`Cannot add liquidity to a market in '${market.stateDisplay}' state`);
       return;
     }
     
@@ -273,7 +495,7 @@ const LiquidityPage: NextPage = () => {
 
   // Handle add liquidity submission
   const handleAddLiquidity = async (amount: number) => {
-    if (!selectedMarket || !marketService || !account) return;
+    if (!selectedMarket || !usemarketService || !account) return;
     
     try {
       // Convert amount to number for clarity and add a reasonable slippage protection
@@ -283,11 +505,10 @@ const LiquidityPage: NextPage = () => {
       console.log(`Adding ${usdcAmount} USDC to market ${selectedMarket.marketId} with min LP tokens ${minLpTokens}`);
       
       // Use the intelligent handler that decides which contract function to call
-      const tx = await marketService.addLiquidityIntelligent(
+      const tx = await usemarketService.addLiquidityIntelligent(
         selectedMarket.marketId,
         usdcAmount,
-        minLpTokens,
-        account.address
+        minLpTokens
       );
       
       // Sign and execute transaction
@@ -300,8 +521,8 @@ const LiquidityPage: NextPage = () => {
             toast.success(`Successfully added ${amount} USDC liquidity to "${selectedMarket.name}" market`);
             
             // Immediately update UI to reflect changes
-            refreshShares();
-            refreshMarkets();
+            console.log("Refreshing user liquidity positions after adding liquidity");
+            refreshData(); // Use the comprehensive refresh function
             
             // Close the modal
             setAddModalOpen(false);
@@ -321,14 +542,13 @@ const LiquidityPage: NextPage = () => {
 
   // Handle remove liquidity submission
   const handleRemoveLiquidity = async (amount: number) => {
-    if (!selectedMarket || !marketService || !account || !selectedMarket.userPositionObjectId) return;
+    if (!selectedMarket || !usemarketService || !account || !selectedMarket.userPositionObjectId) return;
     
     try {
       // Create transaction for removing liquidity
-      const tx = await marketService.removeLiquidity(
+      const tx = await usemarketService.removeLiquidity(
         selectedMarket.marketId,
-        selectedMarket.userPositionObjectId,
-        account.address
+        selectedMarket.userPositionObjectId
       );
       
       // Sign and execute transaction
@@ -341,8 +561,8 @@ const LiquidityPage: NextPage = () => {
             toast.success(`Successfully removed ${amount} USDC liquidity from "${selectedMarket.name}" market`);
             
             // Immediately update UI to reflect changes
-            refreshShares();
-            refreshMarkets();
+            console.log("Refreshing user liquidity positions after removing liquidity");
+            refreshData(); // Use the comprehensive refresh function
             
             // Close the modal
             setRemoveModalOpen(false);
@@ -366,6 +586,137 @@ const LiquidityPage: NextPage = () => {
     if (text.length <= maxLength) return text;
     
     return `${text.substring(0, maxLength)}...`;
+  };
+
+  // Keep track of the last fetch time to implement throttling
+  const lastFetchTimeRef = React.useRef<number>(0);
+  const fetchErrorCountRef = React.useRef<number>(0);
+  
+  // Function to fetch live markets data with throttling and error handling
+  const fetchLiveMarketsData = async () => {
+    if (!usemarketService) {
+      console.error('Market service not available');
+      return;
+    }
+    
+    // Implement throttling - don't fetch more than once every 10 seconds normally
+    // If errors are occurring, increase the delay exponentially
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTimeRef.current;
+    const errorBackoffTime = Math.min(30000, Math.pow(2, fetchErrorCountRef.current) * 1000);
+    const waitTime = fetchErrorCountRef.current > 0 ? errorBackoffTime : 10000;
+    
+    if (timeSinceLastFetch < waitTime && lastFetchTimeRef.current !== 0) {
+      // console.log(`Throttling API requests. Last fetch was ${timeSinceLastFetch}ms ago. Next allowed in ${waitTime - timeSinceLastFetch}ms.`);
+      return; // Skip this fetch
+    }
+    
+    lastFetchTimeRef.current = now;
+    
+    try {
+      setLiveMarketsLoading(true);
+      setLiveMarketsError(null);
+      
+      // Extract all market IDs from the marketData
+      const marketIds = marketData.map(market => market.marketId);
+      
+      if (marketIds.length === 0) {
+        console.log('No markets to fetch live data for');
+        setLiveMarketsLoading(false);
+        return;
+      }
+      
+      console.log(`Fetching live data for ${marketIds.length} markets`);
+      
+      // Call the getAllMarketsInfo method from MarketService
+      const marketsInfoResponse = await usemarketService.getAllMarketsInfo(marketIds);
+      
+      // Check if we got a proper response with markets array
+      const marketsInfo = marketsInfoResponse.success && marketsInfoResponse.markets ? 
+        marketsInfoResponse.markets : [];
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Markets info response:', { 
+          success: marketsInfoResponse.success,
+          count: marketsInfoResponse.count,
+          marketsCount: marketsInfo.length
+        });
+      }
+      
+      // Convert the array of market info objects to a map for easier lookups
+      const marketsInfoMap: Record<string, any> = {};
+      marketsInfo.forEach(marketInfo => {
+        if (marketInfo && marketInfo.marketId) {
+          marketsInfoMap[marketInfo.marketId] = marketInfo;
+        }
+      });
+      
+      // Minimize logging in production - only log when needed
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Fetched live markets data');
+      }
+      
+      // Deep compare the actual market data that matters, not just keys
+      const hasChanged = !liveMarketsInfo || 
+        marketsInfo.some((info, index) => {
+          if (!info || !info.success) return false;
+          const marketId = info.marketId;
+          const oldInfo = liveMarketsInfo[marketId];
+          if (!oldInfo || !oldInfo.success) return true;
+          
+          try {
+            // Compare the important fields that would affect rendering
+            return JSON.stringify(info.liquidity) !== JSON.stringify(oldInfo.liquidity) ||
+                   JSON.stringify(info.basic) !== JSON.stringify(oldInfo.basic) ||
+                   JSON.stringify(info.timing) !== JSON.stringify(oldInfo.timing);
+          } catch (e) {
+            console.error("Error comparing market info:", e);
+            return true; // If there's an error, consider it changed
+          }
+        });
+        
+      if (hasChanged) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Live markets data has changed, updating state');
+        }
+        setLiveMarketsInfo(marketsInfoMap);
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Live markets data has not changed, skipping state update');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error fetching live markets data:', error);
+      
+      // Increment the error counter to trigger exponential backoff
+      fetchErrorCountRef.current = Math.min(8, fetchErrorCountRef.current + 1); // Cap at 256 seconds (2^8 * 1000ms)
+      
+      // Create a user-friendly error message, but don't update state for spread price errors
+      // which would cause unnecessary re-renders
+      const errorMessage = error.message || 'Failed to fetch live market data';
+      
+      // Only update error state if it's not a spread price error
+      // This prevents unnecessary re-renders and refresh cycles
+      if (errorMessage.includes('spread prices') || errorMessage.includes('No results returned')) {
+        console.log('Ignoring non-critical spread price error to prevent refresh cycles');
+      } else {
+        setLiveMarketsError(errorMessage);
+        
+        // If we got a rate limit error, wait longer before next attempt
+        if (errorMessage.includes('429')) {
+          lastFetchTimeRef.current = now + 60000; // Wait at least 60 more seconds
+        }
+      }
+    } finally {
+      setLiveMarketsLoading(false);
+      
+      // If successful (no error caught), reset error counter
+      if (fetchErrorCountRef.current > 0) {
+        setTimeout(() => {
+          fetchErrorCountRef.current = Math.max(0, fetchErrorCountRef.current - 1);
+        }, 30000); // Gradually reduce the error counter after 30 seconds
+      }
+    }
   };
 
   const isLoading = sharesLoading || marketsLoading || liveMarketsLoading;
@@ -494,7 +845,17 @@ const LiquidityPage: NextPage = () => {
                         </td>
                         <td className="py-3 text-right pr-4">
                           {market.userPosition > 0 ? (
-                            <span className="text-green-400">${market.userPosition.toLocaleString()}</span>
+                            <span 
+                              className="text-green-400" 
+                              title={`${market.userPosition} USDC (${market.userPositionPercentage?.toFixed(1) || 0}% of total market liquidity)`}
+                            >
+                              ${parseFloat(market.userPosition.toFixed(2)).toLocaleString()}
+                              {market.userPositionPercentage > 0 && (
+                                <span className="ml-1 text-xs text-green-300">
+                                  ({market.userPositionPercentage.toFixed(1)}%)
+                                </span>
+                              )}
+                            </span>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}
@@ -502,8 +863,9 @@ const LiquidityPage: NextPage = () => {
                         <td className="py-3 text-center">
                           <span className={cn(
                             "px-2 py-1 text-xs rounded-full",
-                            market.state === 0 ? "bg-green-900/30 text-green-400" : 
-                            market.state === 1 ? "bg-amber-900/30 text-amber-400" : 
+                            market.stateDisplay === 'Active' ? "bg-green-900/30 text-green-400" : 
+                            market.stateDisplay === 'Resolved' ? "bg-amber-900/30 text-amber-400" : 
+                            market.stateDisplay === 'Waiting for Resolution' ? "bg-blue-900/30 text-blue-400" :
                             "bg-red-900/30 text-red-400"
                           )}>
                             {market.stateDisplay}
@@ -589,7 +951,7 @@ const LiquidityPage: NextPage = () => {
                                 </div>
                                 <div className="bg-gray-800/50 p-3 rounded-md">
                                   <h4 className="text-gray-400 text-xs mb-1">Resolution Time</h4>
-                                  <p className="text-white text-lg font-medium">{market.resolutionTime}</p>
+                                  <p className="text-white text-lg font-medium">{formatDateForDisplay(market.resolutionTime)}</p>
                                 </div>
                               </div>
                               

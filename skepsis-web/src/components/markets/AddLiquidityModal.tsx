@@ -100,7 +100,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            This amount will be added to the market's liquidity pool
+            This amount will be added to the market&apos;s liquidity pool
           </p>
         </div>
         

@@ -36,9 +36,9 @@ async function main() {
 
   // Market parameters - you can customize these
   const marketParams = {
-    question: "Who will win the champions leauge in 2025?",
+    question: "Who will win the champions leauge in 2025, Between Inter and PSG?",
     resolutionCriteria: "Skepsis Keeper will check the winner on 2025-06-01",
-    steps: 1, // Number of buckets/spreads
+    steps: 2, // Number of buckets/spreads
     lowerBound: 0, // Minimum value (e.g., 0%)
     upperBound: 2, // Maximum value (e.g., 100%)
     initialLiquidity: 1000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)

@@ -69,6 +69,11 @@ export const MARKETS = [
     name: 'Who will win the champions leauge in 2025?',
     description: 'Who will win the champions leauge in 2025?'
   },
+  {
+    marketId: '0x8dc3f6b648e749022b84b9533cda9898884c175534e3eac34dba762c9dec09a3',
+    name: 'Who will win the champions leauge in 2025, Between Inter and PSG?',
+    description: 'Who will win the champions leauge in 2025?'
+  },
   
   // If you add more markets, add them here
   // {

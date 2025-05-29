@@ -87,25 +87,36 @@ export const useLiquidityShares = (
           const fields = shareObj.data.content.fields as Record<string, any>;
           const marketId = fields.market || '';
 
+          // Get the raw shares amount and convert properly
+          const sharesRaw = Number(fields.shares || 0);
+          const shareAmount = sharesRaw / 1_000_000; // Convert from 6 decimals (LP tokens use 6 decimal places like USDC)
           
+          // Only log in development environment to avoid cluttering the console
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`Found liquidity share for market ${marketId}:`, {
+              shareId: shareObj.data.objectId,
+              sharesRaw,
+              shareAmount,
+              fields
+            });
+          }
+          
+          // Create the liquidity share object with all necessary info
           const share: LiquidityShare = {
             id: shareObj.data.objectId,
-            shares: Number(fields.shares || 0),
+            shares: sharesRaw,
             marketId: marketId,
             userAddress: account.address,
-            shareAmount: Number(fields.shares || 0) / 1_000_000, // Assuming 6 decimals
+            shareAmount: shareAmount, // This is the user's LP tokens amount in USDC equivalent
             marketState: marketStates ? marketStates[marketId] : undefined
           };
           
-          
           // Add to our list of shares
           shares.push(share);
-          console.log(shares);
           
-          
-          // Update shares by market
+          // Update shares by market with the proper amount
           if (marketId) {
-            sharesByMarket[marketId] = share.shareAmount;
+            sharesByMarket[marketId] = shareAmount;
           }
 
           totalLiquidity += share.shareAmount;

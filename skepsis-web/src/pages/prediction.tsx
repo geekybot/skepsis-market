@@ -15,12 +15,32 @@ const PredictionPage: NextPage = () => {
   const router = useRouter();
   const [selectedMarketId, setSelectedMarketId] = useState(DEFAULT_MARKET_ID);
   
+  // Local loading state to ensure immediate UI feedback on market change
+  const [isChangingMarket, setIsChangingMarket] = useState(false);
+  
+  // Add debug logging for better troubleshooting and handle market changes
+  useEffect(() => {
+    console.log("🔍 Current selectedMarketId:", selectedMarketId);
+    
+    // Set temporary loading state to provide immediate feedback
+    setIsChangingMarket(true);
+    
+    // Clear the temporary loading state once market data is loaded or after timeout
+    const timeout = setTimeout(() => {
+      setIsChangingMarket(false);
+    }, 2000); // 2 second safety timeout
+    
+    return () => clearTimeout(timeout);
+  }, [selectedMarketId]);
+  
   // Check for market ID in URL query parameters
   useEffect(() => {
     const { market } = router.query;
+    console.log("🔍 Market from URL query:", market);
     if (market && typeof market === 'string') {
       // Verify that the market ID is valid
       const isValidMarket = MARKETS.some(m => m.marketId === market);
+      console.log("🔍 Is valid market:", isValidMarket, "marketId:", market);
       if (isValidMarket) {
         setSelectedMarketId(market);
       }
@@ -40,9 +60,15 @@ const PredictionPage: NextPage = () => {
 
   // Handle market change from dropdown
   const handleMarketChange = (marketId: string) => {
-    setSelectedMarketId(marketId);
-    // Update the URL without refreshing the page
-    router.push(`/prediction?market=${marketId}`, undefined, { shallow: true });
+    console.log("🔄 Market selection changed to:", marketId);
+    // Reset data to avoid showing stale data during transition
+    if (selectedMarketId !== marketId) {
+      console.log("🔄 Updating selectedMarketId state");
+      setSelectedMarketId(marketId);
+      // Update the URL without refreshing the page
+      console.log("🔄 Updating URL to:", `/prediction?market=${marketId}`);
+      router.push(`/prediction?market=${marketId}`, undefined, { shallow: true });
+    }
   };
 
   return (
@@ -106,6 +132,7 @@ const PredictionPage: NextPage = () => {
             {/* Market Trading Interface */}
             <div className="w-full">
               <PredictionMarket 
+                key={selectedMarketId} // Force component remount when marketId changes
                 marketId={selectedMarketId}
                 question={marketData.basic.question || selectedMarketBasicInfo.name}
                 options={marketData.spreads.details.map((spread, index) => ({

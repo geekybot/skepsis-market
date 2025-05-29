@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { SuiClient } from '@mysten/sui/client';
 import { MARKETS } from '@/constants/appConstants';
 import { MarketService } from '@/services/marketService';
-import { Transaction } from '@mysten/sui/transactions';
-import { SKEPSIS_CONFIG } from '@/constants/tokens';
-import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 
 export interface MarketLiquidityData {
   id: number;
@@ -88,9 +85,9 @@ export const useMarketLiquidityInfo = (
           const fields = marketObject.data.content.dataType === 'moveObject' 
             ? marketObject.data.content.fields as Record<string, any>
             : {};
-            
-          // Get global market statistics
-          const marketStats = await getMarketStatistics(client, marketId);
+          
+          // Get more details using the full market info service
+          const marketInfo = await marketService.getMarketInfo(marketId);
             
           // Get resolution time and bidding deadline as formatted strings
           const resolutionTime = fields.resolution_time 
@@ -107,14 +104,36 @@ export const useMarketLiquidityInfo = (
               new Date(Number(fields.resolution_time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             : 'Unknown';
             
+          // Find the spread with the highest outstanding shares for max payout
+          let maxOutstandingShares = 0;
+          let maxOutstandingSharesSpread = null;
+          
+          if (marketInfo && marketInfo.spreads && marketInfo.spreads.details) {
+            for (const spread of marketInfo.spreads.details) {
+              if (spread.outstandingShares > maxOutstandingShares) {
+                maxOutstandingShares = spread.outstandingShares;
+                maxOutstandingSharesSpread = spread;
+              }
+            }
+          }
+          
           // Create market data object
           const market: MarketLiquidityData = {
             id: i + 1,
             marketId: marketId,
             name: basicInfo?.name || 'Unknown Market',
-            currentLiquidity: Number(fields.total_liquidity || 0) / 1_000_000, // Convert to USDC (6 decimals)
-            openInterest: marketStats.openInterest / 1_000_000, // Convert to USDC (6 decimals)
-            maxPayout: calculateMaxPayout(fields) / 1_000_000, // Convert to USDC (6 decimals)
+            // Use data from marketInfo when available
+            currentLiquidity: marketInfo && marketInfo.liquidity && marketInfo.liquidity.totalLiquidityDisplay 
+              ? parseFloat(marketInfo.liquidity.totalLiquidityDisplay) 
+              : Number(fields.total_liquidity || 0) / 1_000_000,
+            // Use cumulative shares sold as open interest
+            openInterest: marketInfo && marketInfo.liquidity && marketInfo.liquidity.cumulativeSharesSoldDisplay 
+              ? parseFloat(marketInfo.liquidity.cumulativeSharesSoldDisplay)
+              : 0,
+            // Use the shares of the spread with highest outstanding value as max payout
+            maxPayout: maxOutstandingSharesSpread 
+              ? parseFloat(maxOutstandingSharesSpread.outstandingSharesDisplay || "0") 
+              : 0,
             resolutionTime: resolutionTimeDisplay,
             creationTime: Number(fields.creation_time || 0),
             state: Number(fields.market_state || 0),
@@ -198,52 +217,39 @@ export const useMarketLiquidityInfo = (
   };
   
   // Helper function to calculate max payout based on market data
-  const calculateMaxPayout = (fields: Record<string, any>): number => {
-    // This is a simplified calculation - actual implementation would depend on market contract details
-    const totalLiquidity = Number(fields.total_liquidity || 0);
-    
-    // Typically max payout is related to total liquidity and available capital
-    // We're using a simple multiplier for demonstration
-    return totalLiquidity * 0.8; // 80% of total liquidity as max payout
-  };
-  
-  // Helper function to get market statistics (open interest, etc.)
-  const getMarketStatistics = async (client: SuiClient, marketId: string) => {
-    try {
-      const tx = new Transaction();
+  const calculateMaxPayout = (marketInfo: any): number => {
+    // If we have market info with spread details, find the spread with highest outstanding shares
+    if (marketInfo && marketInfo.spreads && marketInfo.spreads.details && marketInfo.spreads.details.length > 0) {
+      let maxOutstandingShares = 0;
       
-      tx.moveCall({
-        target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_market_statistics`,
-        arguments: [
-          tx.object(marketId)
-        ],
-      });
-      
-      const response = await client.devInspectTransactionBlock({
-        transactionBlock: tx,
-        sender: '0x7d30376fa94aadc2886fb5c7faf217f172e04bee91361b833b4feaab3ca34724'
-      });
-      
-      // Process the response to get open interest
-      // This is a simplified example - actual implementation depends on the contract
-      let openInterest = 0;
-      
-      if (response.results && response.results[0] && response.results[0].returnValues) {
-        const returnValues = response.results[0].returnValues;
-        // Assuming the first return value contains open interest
-        if (returnValues[0]) {
-          const bytes = returnValues[0][0];
-          for (let i = 0; i < Math.min(bytes.length, 8); i++) {
-            openInterest += bytes[i] * Math.pow(256, i);
-          }
+      for (const spread of marketInfo.spreads.details) {
+        if (spread.outstandingShares > maxOutstandingShares) {
+          maxOutstandingShares = spread.outstandingShares;
         }
       }
       
-      return { openInterest };
-    } catch (error) {
-      console.error(`Error getting market statistics for ${marketId}:`, error);
-      return { openInterest: 0 };
+      return maxOutstandingShares;
     }
+    
+    // Fallback to old calculation if market info is not available
+    if (marketInfo && marketInfo.liquidity && marketInfo.liquidity.totalLiquidity) {
+      return Number(marketInfo.liquidity.totalLiquidity) * 0.8;
+    }
+    
+    return 0; // Default value if no data is available
+  };
+  
+  // Helper function to extract market statistics from the market info
+  const extractMarketStatistics = (marketInfo: any) => {
+    // Default values
+    let openInterest = 0;
+    
+    // Extract from market info if available
+    if (marketInfo && marketInfo.liquidity && marketInfo.liquidity.cumulativeSharesSoldDisplay) {
+      openInterest = parseFloat(marketInfo.liquidity.cumulativeSharesSoldDisplay);
+    }
+    
+    return { openInterest };
   };
   
   // Helper function to calculate summary statistics

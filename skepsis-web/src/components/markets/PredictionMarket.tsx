@@ -211,6 +211,14 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   // State to track the current market
   const [currentMarketId, setCurrentMarketId] = useState<string>(marketId);
   
+  // Effect to detect and handle marketId changes
+  useEffect(() => {
+    console.log("🔄 [PredictionMarket] MarketId changed from", currentMarketId, "to", marketId);
+    if (currentMarketId !== marketId) {
+      setCurrentMarketId(marketId);
+    }
+  }, [marketId, currentMarketId]);
+  
   // State to track market timing information
   const [marketTimingInfo, setMarketTimingInfo] = useState<{
     createdAt: string | null;

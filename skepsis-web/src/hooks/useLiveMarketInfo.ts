@@ -82,6 +82,15 @@ export function useLiveMarketInfo(marketId: string) {
   const [data, setData] = useState<MarketInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Add debug log for marketId changes and reset data
+  useEffect(() => {
+    console.log("🔍 useLiveMarketInfo - marketId changed:", marketId);
+    // Reset data when marketId changes to prevent showing stale data
+    setData(null);
+    setLoading(true);
+    setError(null);
+  }, [marketId]);
 
   /**
    * Fetches all spread prices in a single call using the get_all_spread_prices function
@@ -363,14 +372,27 @@ export function useLiveMarketInfo(marketId: string) {
   }, [marketId, suiClient, getAllSpreadPrices]);
 
   useEffect(() => {
-    fetchMarketInfo();
+    console.log("🔍 Fetching market data for marketId:", marketId);
+    
+    // First set loading state to true
+    setLoading(true);
+    
+    // Add a small delay to ensure UI state is updated before the potentially heavy fetch
+    const fetchTimeout = setTimeout(() => {
+      fetchMarketInfo().then(() => {
+        console.log("✅ Finished fetching data for marketId:", marketId);
+      }).catch(err => {
+        console.error("❌ Error fetching data for marketId:", marketId, err);
+      });
+    }, 50);
     
     // React 18 StrictMode might be causing the hook to be called twice during development
     // Adding a cleanup function to the effect to ensure we don't have multiple fetches running
     return () => {
-      // This is an empty cleanup function to handle any potential unmounting
+      clearTimeout(fetchTimeout);
+      console.log("🧹 Cleaning up fetch for marketId:", marketId);
     };
-  }, [fetchMarketInfo]);
+  }, [marketId]);
 
   return { 
     data, 

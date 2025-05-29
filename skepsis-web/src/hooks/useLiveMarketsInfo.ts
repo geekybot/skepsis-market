@@ -7,6 +7,37 @@ import { CONSTANTS } from "@/constants/appConstants";
 import { MarketInfo, Spread } from "./useLiveMarketInfo";
 import { formatNumberWithCommas } from "@/lib/format";
 
+// Define types for the Move object fields we expect
+interface MarketFields {
+  question?: { fields?: { bytes?: number[] } };
+  resolution_criteria?: { fields?: { bytes?: number[] } };
+  creation_time?: string | number;
+  bidding_end_time?: string | number;
+  resolution_time?: string | number;
+  resolved_value?: string | number;
+  state?: string | number;
+  funding_amount?: string | number;
+  market_spreads?: { 
+    fields?: { 
+      spreads?: { 
+        fields?: { 
+          contents?: Array<{
+            fields?: {
+              id?: { id?: string };
+              precision?: string | number;
+              lower_bound?: string | number;
+              upper_bound?: string | number;
+              outstanding_shares?: string | number;
+            }
+          }>
+        } 
+      } 
+    }
+  };
+  steps?: string | number;
+  cumulative_shares_sold?: string | number;
+}
+
 /**
  * Hook to fetch multiple markets' live data in parallel
  * @param marketIds Array of market IDs to fetch
@@ -118,36 +149,35 @@ export function useLiveMarketsInfo(marketIds: string[]) {
       setLoading(false);
       return;
     }
-    
     setLoading(true);
-    const newMarketsData: Record<string, MarketInfo | null> = { ...marketsData };
     const errorMessages: string[] = [];
-    
     try {
       // Process each market ID in parallel
-      const marketPromises = marketIds.filter(Boolean).map(async (marketId) => {
-        try {
-          // Re-implement the core functionality from useLiveMarketInfo directly here
-          // Instead of calling it as a hook
-          const marketData = await fetchMarketInfo(marketId);
+      const marketResults = await Promise.all(
+        marketIds.filter(Boolean).map(async (marketId) => {
+          try {
+            const marketData = await fetchMarketInfo(marketId);
+            return { marketId, marketData };
+          } catch (err) {
+            errorMessages.push(`Market ${marketId}: ${err instanceof Error ? err.message : String(err)}`);
+            return { marketId, marketData: null };
+          }
+        })
+      );
+      setMarketsData(prev => {
+        const newMarketsData = { ...prev };
+        for (const { marketId, marketData } of marketResults) {
           newMarketsData[marketId] = marketData;
-          return { marketId, success: true };
-        } catch (err) {
-          errorMessages.push(`Market ${marketId}: ${err instanceof Error ? err.message : String(err)}`);
-          return { marketId, success: false };
         }
+        return newMarketsData;
       });
-      
-      await Promise.all(marketPromises);
-      
     } catch (err) {
       errorMessages.push(`General error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setMarketsData(newMarketsData);
       setLoading(false);
-      setError(errorMessages.length ? errorMessages.join("; ") : null);
+      setError(errorMessages.length ? errorMessages.join('; ') : null);
     }
-  }, [marketIds, suiClient, marketsData]);
+  }, [marketIds, suiClient]);
   
   // Helper function to fetch a single market's data
   async function fetchMarketInfo(marketId: string): Promise<MarketInfo> {
@@ -169,7 +199,8 @@ export function useLiveMarketsInfo(marketIds: string[]) {
         throw new Error('Invalid market object format');
       }
       
-      const marketFields = marketObj.fields;
+      // Cast the fields to our expected type
+      const marketFields = marketObj.fields as unknown as MarketFields;
       
       // Extract basic information
       const question = marketFields.question?.fields?.bytes ? 
