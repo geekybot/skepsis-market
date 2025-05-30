@@ -1,4 +1,3 @@
-import { SKEPSIS_CONFIG } from './tokens';
 
 /**
  * Testnet contract addresses for Skepsis Protocol

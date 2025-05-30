@@ -48,14 +48,14 @@ const ConnectMenu = ({
   return (
     <DropdownMenu>
       {/* Trigger */}
-      <DropdownMenuTrigger className="h-full px-5 py-4 rounded-xl flex items-center gap-2 bg-white/20 outline-none ring-0 xl:button-animate-105">
-        <div className={cn("w-3 aspect-square rounded-[50%] bg-blue-300")} />
-        <span className="text-sm">{displayName ? displayName : "Connect"}</span>
+      <DropdownMenuTrigger className="px-5 py-3 rounded-lg flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 outline-none ring-0 xl:button-animate-105 shadow-md shadow-indigo-900/20 transition-colors">
+        <div className={cn("w-3 aspect-square rounded-[50%] bg-emerald-400")} />
+        <span className="text-sm font-medium text-white">{displayName ? displayName : "Connect"}</span>
       </DropdownMenuTrigger>
       {/* Content */}
       <DropdownMenuContent
         align={"end"}
-        className="relative flex w-40 flex-col items-center bg-white/20 border-none overflow-hidden"
+        className="relative flex w-44 flex-col items-center bg-gradient-to-br from-indigo-950/90 to-violet-950/90 border border-indigo-800/30 overflow-hidden shadow-lg"
       >
         <div
           className="absolute top-0 left-0 w-full h-full -z-[1] backdrop-blur-md"
@@ -67,7 +67,7 @@ const ConnectMenu = ({
           {/* Copy Address */}
           <DropdownMenuItem className="DropdownMenuItem w-full">
             <button
-              className="w-full flex items-center justify-start gap-2 rounded-lg px-2 py-2 text-black hover:bg-main-700 hover:text-white"
+              className="w-full flex items-center justify-start gap-2 rounded-lg px-3 py-2.5 hover:bg-indigo-800/30 transition-colors"
               onClick={() => {
                 window.navigator.clipboard.writeText(walletAddress);
                 toast.info("Your address copied to clipboard");
@@ -75,7 +75,7 @@ const ConnectMenu = ({
             >
               <ClipboardCopyIcon
                 strokeWidth={2}
-                className="h-4 w-4 text-white"
+                className="h-4 w-4 text-indigo-200"
               />
               <span className="text-sm text-white">Copy Address</span>
             </button>
@@ -87,8 +87,8 @@ const ConnectMenu = ({
               target="_blank"
               className="w-full"
             >
-              <button className="w-full flex items-center justify-start gap-2 rounded-lg px-2 py-2 text-black hover:bg-main-700 hover:text-white">
-                <SlMagnifier strokeWidth={2} className="h-4 w-4 text-white" />
+              <button className="w-full flex items-center justify-start gap-2 rounded-lg px-3 py-2.5 hover:bg-indigo-800/30 transition-colors">
+                <SlMagnifier strokeWidth={2} className="h-4 w-4 text-indigo-200" />
                 <span className="text-sm text-white">Explorer</span>
               </button>
             </Link>
@@ -101,11 +101,11 @@ const ConnectMenu = ({
           {/* Disconnect */}
           <DropdownMenuItem className="DropdownMenuItem w-full">
             <button
-              className="w-full flex items-center justify-start gap-2 rounded-lg px-2 py-2 text-black hover:bg-main-700 hover:text-white"
+              className="w-full flex items-center justify-start gap-2 rounded-lg px-3 py-2.5 hover:bg-red-800/30 transition-colors"
               onClick={() => disconnectWallet()}
             >
-              <BiExit strokeWidth={1} className="h-4 w-4 text-white" />
-              <span className="text-sm text-white">Disconnect</span>
+              <BiExit strokeWidth={1} className="h-4 w-4 text-red-300" />
+              <span className="text-sm text-red-200">Disconnect</span>
             </button>
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -1,9 +1,8 @@
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { SKEPSIS_CONFIG, USDC_CONFIG } from '@/constants/tokens';
+import { SKEPSIS_CONFIG, USDC_CONFIG, MODULES } from '@/constants/appConstants';
 import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 import { bcs } from '@mysten/sui/bcs';
-import * as TOKEN from '../constants/tokens';
 
 /**
  * Service for interacting with Skepsis prediction markets
@@ -294,28 +293,37 @@ export class MarketService {
           marketResult.liquidity.cumulativeSharesSoldDisplay = (cumulativeSharesSold / 1_000_000).toFixed(6);
         }
 
-        // Process total liquidity if available - handle different data structures
-        if ('total_liquidity' in fields) {
-          // The value could be stored directly as a number or in a nested structure
-          let totalLiquidity: number;
-
-          if (typeof fields.total_liquidity === 'object' && fields.total_liquidity !== null) {
-            // It might be stored in a nested structure like { value: "1000000000" }
-            if ('value' in fields.total_liquidity) {
-              totalLiquidity = Number(fields.total_liquidity.value);
-            } else {
-              // Try to find a property that might contain the value
-              const possibleValueProps = Object.values(fields.total_liquidity);
-              totalLiquidity = possibleValueProps.length > 0 ? Number(possibleValueProps[0]) : 0;
-            }
-          } else {
-            // It's directly stored as a primitive value
-            totalLiquidity = Number(fields.total_liquidity);
-          }
-
-          marketResult.liquidity.totalLiquidity = totalLiquidity;
-          marketResult.liquidity.totalLiquidityDisplay = (totalLiquidity / 1_000_000).toFixed(6);
+        // Process total liquidity if available
+        // First check if there's a liquidity_share field (new approach)
+        if ('liquidity_share' in fields) {
+          // Use liquidity_share field directly - it's in 6 decimal format
+          const liquidityShare = Number(fields.liquidity_share);
+          marketResult.liquidity.liquidityShare = liquidityShare;
+          marketResult.liquidity.totalLiquidity = liquidityShare;
+          marketResult.liquidity.totalLiquidityDisplay = (liquidityShare / 1_000_000).toFixed(2); // Display with 2 decimals
         }
+        // Fall back to total_liquidity if liquidity_share is not available
+        // else if ('total_liquidity' in fields) {
+        //   // The value could be stored directly as a number or in a nested structure
+        //   let totalLiquidity: number;
+
+        //   if (typeof fields.total_liquidity === 'object' && fields.total_liquidity !== null) {
+        //     // It might be stored in a nested structure like { value: "1000000000" }
+        //     if ('value' in fields.total_liquidity) {
+        //       totalLiquidity = Number(fields.total_liquidity.value);
+        //     } else {
+        //       // Try to find a property that might contain the value
+        //       const possibleValueProps = Object.values(fields.total_liquidity);
+        //       totalLiquidity = possibleValueProps.length > 0 ? Number(possibleValueProps[0]) : 0;
+        //     }
+        //   } else {
+        //     // It's directly stored as a primitive value
+        //     totalLiquidity = Number(fields.total_liquidity);
+        //   }
+
+        //   marketResult.liquidity.totalLiquidity = totalLiquidity;
+        //   marketResult.liquidity.totalLiquidityDisplay = (totalLiquidity / 1_000_000).toFixed(2); // Display with 2 decimals
+        // }
 
         // Process spreads info
         if ('spreads' in fields && Array.isArray(fields.spreads)) {
@@ -605,7 +613,7 @@ export class MarketService {
 
       tx.moveCall({
         target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::withdraw_liquidity`,
-        typeArguments: [`${TOKEN.USDC_CONFIG.packageId}::${TOKEN.MODULES.USDC}::USDC`],
+        typeArguments: [`${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`],
         arguments: [
           tx.object(marketId),
           tx.object(liquidityShareId),   
@@ -715,7 +723,7 @@ export class MarketService {
       // Call add_liquidity_to_existing_position
       tx.moveCall({
         target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::add_liquidity_to_existing_position`,
-        typeArguments: [`${TOKEN.USDC_CONFIG.packageId}::${TOKEN.MODULES.USDC}::USDC`],
+        typeArguments: [`${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`],
         arguments: [
           tx.object(marketId),                        // Market ID
           tx.object(existingLiquidityShareId),        // Existing LiquidityShare ID
@@ -730,7 +738,7 @@ export class MarketService {
       // Call add_liquidity for new position
       tx.moveCall({
         target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::add_liquidity`,
-        typeArguments: [`${TOKEN.USDC_CONFIG.packageId}::${TOKEN.MODULES.USDC}::USDC`],
+        typeArguments: [`${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`],
         arguments: [
           tx.object(marketId),                        // Market ID
           splitCoin,                                  // USDC payment

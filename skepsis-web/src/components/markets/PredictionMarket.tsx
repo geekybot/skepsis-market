@@ -112,15 +112,21 @@ const Countdown = ({ targetDate, label, onComplete }: {
   );
 };
 
-// Updated interface to include color for spread visualization
+// Updated interface to include color for spread visualization and metadata
 interface SpreadOption {
   id: string;
   value: string; // spreadIndex as string
-  label: string; // display range
+  label: string; // display name or range
+  originalRange?: string; // original display range
   buyPrice: string;
   sellPrice: string | null;
   percentage: number; // Dynamically calculated percentage
   color?: string; // Optional color for visualization
+  metadata?: { 
+    name: string; 
+    description: string; 
+    rangeDescription: string;
+  }; // Optional metadata for enhanced display
 }
 
 interface PredictionMarketProps {
@@ -773,8 +779,28 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     const lowerBound = parseFloat(range[0]);
     const upperBound = parseFloat(range[1]);
     
-    // Return true if the resolved value is within the position's spread range
-    return resolvedValue >= lowerBound && resolvedValue <= upperBound;
+    // Special handling for 0-1 spread when resolvedValue is exactly 1
+    if (position.spreadIndex === 0 && resolvedValue === 1) {
+      // For 0-1 spread, include exactly 1 in the range
+      return true;
+    }
+    
+    // For other spreads, use half-open interval [lowerBound, upperBound)
+    // This ensures that the upper bound is exclusive except for the highest spread
+    if (resolvedValue === upperBound) {
+      // For boundary values, only consider it part of the current spread if there's no next spread
+      // Check if this is the last/highest spread
+      const isHighestSpread = !options.some(opt => {
+        const otherRange = opt.label.split(" - ");
+        if (otherRange.length !== 2) return false;
+        return parseFloat(otherRange[0]) > upperBound;
+      });
+      
+      return isHighestSpread && resolvedValue >= lowerBound;
+    }
+    
+    // Normal case - value is within bounds but not exactly at upper boundary
+    return resolvedValue >= lowerBound && resolvedValue < upperBound;
   };
   
   // Function to calculate position value based on whether it's winning or not
@@ -927,7 +953,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   onClick={() => handleOptionSelect(option)}
                   disabled={isBiddingClosed}
                   className={cn(
-                    "absolute inset-0 flex flex-col justify-between px-3 py-2 rounded-lg transition-all",
+                    "absolute inset-0 flex flex-col justify-between px-3 py-2 rounded-lg transition-all group",
                     selectedOption === option.label
                       ? "bg-blue-700/40 text-white ring-2 ring-blue-500"
                       : "bg-transparent text-white hover:bg-gray-600/20",
@@ -938,26 +964,49 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     <span className="text-xs font-medium">{option.label}</span>
                     <span className="text-xs">{option.percentage.toFixed(1)}%</span>
                   </div>
-                  <div className="flex justify-end items-center w-full z-10">
+                  <div className="flex justify-between items-center w-full z-10">
+                    <span className="text-xs text-white/70">{option.originalRange || option.metadata?.rangeDescription || ''}</span>
                     <span className="text-xs text-white/70">Buy: {option.buyPrice}</span>
                   </div>
+                  
+                  {/* Description tooltip on hover */}
+                  {option.metadata?.description && (
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center bg-gray-900/90 rounded-lg transition-opacity">
+                      <div className="text-xs text-white/90 p-2 text-center">
+                        {option.metadata.description}
+                      </div>
+                    </div>
+                  )}
                 </button>
               </div>
             ))}
           </div>
 
-          {/* Color legends */}
-          <div className="flex flex-wrap gap-2 mt-2 mb-4">
+          {/* Color legends with enhanced metadata */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 mb-4">
             {SPREAD_COLORS.slice(0, Math.min(options.length, SPREAD_COLORS.length)).map((color, idx) => {
               const option = options[idx];
               if (!option) return null;
               return (
-                <div key={idx} className="flex items-center">
+                <div 
+                  key={idx} 
+                  className="flex items-center bg-gray-800/70 p-2.5 rounded-md border border-gray-700/30 hover:border-gray-600/50 transition-colors"
+                  onClick={() => handleOptionSelect(option)}
+                >
                   <div 
-                    className="w-4 h-4 rounded-sm mr-1"
+                    className="w-5 h-5 rounded-md mr-3 flex-shrink-0 shadow-sm"
                     style={{ backgroundColor: color }}
                   ></div>
-                  <span className="text-xs text-white/70">{option.label} °C</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-white font-medium leading-tight">{option.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-white/60">{option.originalRange || option.metadata?.rangeDescription || ''}</span>
+                      <span className="text-xs bg-gray-700/70 text-white/80 px-1.5 rounded-sm">{option.percentage.toFixed(1)}%</span>
+                    </div>
+                    {option.metadata?.description && (
+                      <span className="text-xs text-white/60 mt-1 italic">{option.metadata.description}</span>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1003,17 +1052,42 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         <span className="text-sm font-medium text-amber-300">{resolvedValue}</span>
                         {(() => {
                           // Find which spread contains the resolved value
-                          const containingSpread = options.find(
-                            opt => {
+                          // Use the same logic as isWinningPosition to ensure consistency
+                          const findContainingSpread = () => {
+                            for (const opt of options) {
                               const range = opt.label.split(" - ");
-                              if (range.length === 2) {
-                                const lowerBound = parseFloat(range[0]);
-                                const upperBound = parseFloat(range[1]);
-                                return resolvedValue >= lowerBound && resolvedValue <= upperBound;
+                              if (range.length !== 2) continue;
+                              
+                              const lowerBound = parseFloat(range[0]);
+                              const upperBound = parseFloat(range[1]);
+                              
+                              // Special handling for 0-1 spread when resolvedValue is exactly 1
+                              if (parseInt(opt.value) === 0 && resolvedValue === 1) {
+                                return opt;
                               }
-                              return false;
+                              
+                              // For boundary values, check if it's the highest spread
+                              if (resolvedValue === upperBound) {
+                                const isHighestSpread = !options.some(otherOpt => {
+                                  const otherRange = otherOpt.label.split(" - ");
+                                  if (otherRange.length !== 2) return false;
+                                  return parseFloat(otherRange[0]) > upperBound;
+                                });
+                                
+                                if (isHighestSpread && resolvedValue >= lowerBound) {
+                                  return opt;
+                                }
+                              }
+                              
+                              // Normal case - value is within bounds but not exactly at upper boundary
+                              if (resolvedValue >= lowerBound && resolvedValue < upperBound) {
+                                return opt;
+                              }
                             }
-                          );
+                            return null;
+                          };
+                          
+                          const containingSpread = findContainingSpread();
                           
                           if (containingSpread) {
                             return (
@@ -1069,25 +1143,36 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           )}
           
           {/* Show claim component ONLY when resolution time is passed AND user has NOT claimed rewards yet */}
-          {isResolutionPassed && account && !hasUserClaimedWinnings() && (
-            <div className="p-6 rounded-xl bg-gray-800/70 backdrop-blur-md">
-              <div className="text-center p-3 rounded-xl bg-amber-700/30 text-white font-medium mb-4">
-                Resolution time has passed
+          {(() => {
+            // Add debug logging for claim button conditions
+            console.log('Claim Button Debug:', {
+              marketId,
+              isResolutionPassed,
+              hasAccount: !!account,
+              hasClaimedWinnings: hasUserClaimedWinnings(),
+              positionsCount: positions.length
+            });
+            
+            return isResolutionPassed && account && !hasUserClaimedWinnings() && positions.length > 0 && (
+              <div className="p-6 rounded-xl bg-gray-800/70 backdrop-blur-md">
+                <div className="text-center p-3 rounded-xl bg-amber-700/30 text-white font-medium mb-4">
+                  Resolution time has passed
+                </div>
+                <button
+                  onClick={handleClaimReward}
+                  disabled={isLoading || txLoading}
+                  className={cn(
+                    "w-full py-3 rounded-xl font-medium text-white transition-all",
+                    isLoading || txLoading
+                      ? "bg-gray-500 cursor-not-allowed" 
+                      : "bg-amber-600 hover:bg-amber-500"
+                  )}
+                >
+                  {isLoading || txLoading ? "Processing..." : "Claim Rewards"}
+                </button>
               </div>
-              <button
-                onClick={handleClaimReward}
-                disabled={isLoading || txLoading}
-                className={cn(
-                  "w-full py-3 rounded-xl font-medium text-white transition-all",
-                  isLoading || txLoading
-                    ? "bg-gray-500 cursor-not-allowed" 
-                    : "bg-amber-600 hover:bg-amber-500"
-                )}
-              >
-                {isLoading || txLoading ? "Processing..." : "Claim Rewards"}
-              </button>
-            </div>
-          )}
+            );
+          })()}
           
           {/* Trading Interface - Only shown when resolution time hasn't passed AND market is active AND bidding is open */}
           {!isResolutionPassed && realTimeMarketStatus.status === 'Active' && !isBiddingClosed && (
@@ -1231,7 +1316,12 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                                 </span>
                               )}
                             </div>
-                            <div className="text-white/70 text-xs">Position ID: {position.id.substring(0, 8)}...</div>
+                            <div className="flex items-center gap-1">
+                              <div className="text-white/70 text-xs">Position ID: {position.id.substring(0, 8)}...</div>
+                              {option?.metadata?.rangeDescription && (
+                                <div className="text-white/60 text-xs">({option.metadata.rangeDescription})</div>
+                              )}
+                            </div>
                           </div>
                           <div className="flex-col items-end text-right">
                             <div className="text-white">{position.sharesAmount.toFixed(2)} shares</div>
@@ -1292,7 +1382,12 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         <div className="flex justify-between items-center mb-1">
                           <div className="flex-col">
                             <div className="text-white">{option?.label || `Spread #${position.spreadIndex}`}</div>
-                            <div className="text-white/70 text-xs">Position ID: {position.id.substring(0, 8)}...</div>
+                            <div className="flex items-center gap-1">
+                              <div className="text-white/70 text-xs">Position ID: {position.id.substring(0, 8)}...</div>
+                              {option?.metadata?.rangeDescription && (
+                                <div className="text-white/60 text-xs">({option.metadata.rangeDescription})</div>
+                              )}
+                            </div>
                           </div>
                           <div className="flex justify-end items-center gap-2">
                             <div className="text-white text-center">{position.sharesAmount.toFixed(2)}</div>

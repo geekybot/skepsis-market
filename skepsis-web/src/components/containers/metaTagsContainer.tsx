@@ -5,9 +5,9 @@ import MetaThumbnail from "/public/images/app-og-image.png";
 const MetaTagsContainer = () => {
   const router = useRouter();
   //Set your product name, description, twitter account, and metadata image path
-  const name = "Sui Dapp Scaffold";
-  const description = "Product description";
-  const twitterAccount = "@yourTwitterAccount";
+  const name = "Skepsis";
+  const description = "Decentralized continuous outcome prediction markets on the Sui blockchain";
+  const twitterAccount = "@SkepsisMarkets";
   const metadataImagePath = `http://localhost:3000${MetaThumbnail.src}`;
   const pathname = router.pathname;
   const page = pathname.split("/")[1] ?? "";

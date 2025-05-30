@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { SKEPSIS_CONFIG } from '@/constants/tokens';
+import { SKEPSIS_CONFIG } from '@/constants/appConstants';
 import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 import { formatCurrency } from '@/lib/format';
 

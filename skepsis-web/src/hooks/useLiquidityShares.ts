@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SuiClient } from '@mysten/sui/client';
 import { useCurrentAccount } from '@mysten/dapp-kit';
-import { SKEPSIS_CONFIG } from '@/constants/tokens';
+import { SKEPSIS_CONFIG } from '@/constants/appConstants';
 import { MARKET_CONSTANTS, MARKETS } from '@/constants/marketConstants';
 
 export interface LiquidityShare {
