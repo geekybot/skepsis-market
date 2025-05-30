@@ -12,7 +12,7 @@ import {
 import { Transaction } from '@mysten/sui/transactions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { USDC_CONFIG, NETWORK_CONFIG, getExplorerUrl } from '@/constants/tokens';
+import { USDC_CONFIG, NETWORK_CONFIG, getExplorerUrl } from '@/constants/appConstants';
 
 const FaucetPage: NextPage = () => {
   const { walletAddress } = useContext(AppContext);

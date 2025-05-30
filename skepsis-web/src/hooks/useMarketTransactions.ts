@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { CONSTANTS } from '@/constants/appConstants';
+import { CONSTANTS, MODULES } from '@/constants/appConstants';
 import { Position } from './useMarketPositions';
 
 export interface TransactionResult {
@@ -42,7 +42,7 @@ export function useMarketTransactions() {
             // Find user's USDC coin to use for purchase
             const { data: coins } = await client.getCoins({
                 owner: walletAddress,
-                coinType: `${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`,
+                coinType: `${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`,
             });
 
             if (coins.length === 0) {
@@ -69,8 +69,8 @@ export function useMarketTransactions() {
 
             // Call the buy_exact_shares_with_max_input function
             tx.moveCall({
-                target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::buy_exact_shares_with_max_input`,
-                typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+                target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::buy_exact_shares_with_max_input`,
+                typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
                 arguments: [
                     tx.object(positionRegistry),
                     tx.object(marketId),
@@ -110,8 +110,8 @@ export function useMarketTransactions() {
             // Call the sell_exact_shares_with_min_output function
             const positionRegistry = CONSTANTS.OBJECTS.POSITION_REGISTRY || '0x6';
             tx.moveCall({
-                target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::sell_exact_shares_for_min_output`,
-                typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+                target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::sell_exact_shares_for_min_output`,
+                typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
                 arguments: [
                     tx.object(positionRegistry),
                     tx.object(marketId),
@@ -147,8 +147,8 @@ export function useMarketTransactions() {
 
             // Call the claim_winnings function as specified
             tx.moveCall({
-                target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::claim_winnings`,
-                typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+                target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::claim_winnings`,
+                typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
                 arguments: [
                     tx.object(CONSTANTS.OBJECTS.POSITION_REGISTRY),
                     tx.object(marketId),

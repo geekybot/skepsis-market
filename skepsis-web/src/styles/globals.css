@@ -19,7 +19,7 @@
   }
 
   body {
-    @apply bg-black text-foreground;
+    @apply bg-gradient-to-br from-indigo-950 via-violet-950 to-purple-950 text-foreground min-h-screen;
   }
 }
 
@@ -31,6 +31,23 @@
 
   .button-animate-105 {
     @apply duration-300 ease-in-out hover:scale-105 active:scale-95;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+  }
+  
+  @keyframes pulse-slow {
+    0%, 100% {
+      box-shadow: 0 0 15px 0 rgba(99, 102, 241, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 25px 5px rgba(139, 92, 246, 0.5);
+    }
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   .Toastify__toast {

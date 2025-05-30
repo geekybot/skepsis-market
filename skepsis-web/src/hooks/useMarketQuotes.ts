@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { CONSTANTS } from '@/constants/appConstants';
+import { CONSTANTS, MODULES } from '@/constants/appConstants';
 
 /**
  * Hook for getting buy and sell quotes from the prediction market
@@ -34,8 +34,8 @@ export function useMarketQuotes(
   ): Promise<number> => {
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
-      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::get_buy_quote`,
+      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId),
         tx.pure.u64(spreadIndex),
@@ -76,8 +76,8 @@ export function useMarketQuotes(
   ): Promise<number> => {
     const tx = new Transaction();
     tx.moveCall({
-      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_sell_quote`,
-      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::get_sell_quote`,
+      typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
       arguments: [
         tx.object(marketId),
         tx.pure.u64(spreadIndex),

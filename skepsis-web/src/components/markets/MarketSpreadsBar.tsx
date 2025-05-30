@@ -1,7 +1,7 @@
 import React from "react";
 import { useLiveMarketInfo } from "@/hooks/useLiveMarketInfo";
 import { cn } from "@/lib/utils";
-import { SPREAD_COLORS } from "@/constants/appConstants";
+import { SPREAD_COLORS, MARKET_SPREADS_METADATA } from "@/constants/appConstants";
 
 interface MarketSpreadsBarProps {
   marketId: string;
@@ -42,54 +42,68 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
       <div className="flex justify-between gap-2">
         {/* Left side bar (original) */}
         <div className="w-full flex overflow-hidden rounded-md bg-white/10 h-6">
-          {data.spreads.details.map((spread, idx) => (
-            <div
-              key={`left-${spread.id}`}
-              className={cn(
-                "h-full transition-all duration-300 flex items-center justify-center",
-              )}
-              style={{
-                width: `${spread.percentage}%`,
-                minWidth: spread.percentage > 2 ? "auto" : "0",
-                backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length],
-              }}
-            >
-              {spread.percentage > 5 && (
-                <span className="text-white text-xs px-1 truncate">
-                  {spread.displayRange}
-                  {spread.percentage > 10 && (
-                    <span className="ml-1 opacity-80">{spread.percentage.toFixed(1)}%</span>
-                  )}
-                </span>
-              )}
-            </div>
-          ))}
+          {data.spreads.details.map((spread, idx) => {
+            // Get metadata for this market and spread if available
+            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA];
+            const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            const displayName = spreadMetadata?.name || spread.displayRange;
+            
+            return (
+              <div
+                key={`left-${spread.id}`}
+                className={cn(
+                  "h-full transition-all duration-300 flex items-center justify-center",
+                )}
+                style={{
+                  width: `${spread.percentage}%`,
+                  minWidth: spread.percentage > 2 ? "auto" : "0",
+                  backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length],
+                }}
+              >
+                {spread.percentage > 5 && (
+                  <span className="text-white text-xs px-1 truncate">
+                    {displayName}
+                    {spread.percentage > 10 && (
+                      <span className="ml-1 opacity-80">{spread.percentage.toFixed(1)}%</span>
+                    )}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
         
         {/* Right side bar (mirrored) */}
         <div className="w-full flex flex-row-reverse overflow-hidden rounded-md bg-white/10 h-6">
-          {data.spreads.details.map((spread, idx) => (
-            <div
-              key={`right-${spread.id}`}
-              className={cn(
-                "h-full transition-all duration-300 flex items-center justify-center",
-              )}
-              style={{
-                width: `${spread.percentage}%`,
-                minWidth: spread.percentage > 2 ? "auto" : "0",
-                backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length],
-              }}
-            >
-              {spread.percentage > 5 && (
-                <span className="text-white text-xs px-1 truncate text-right">
-                  {spread.percentage > 10 && (
-                    <span className="mr-1 opacity-80">{spread.percentage.toFixed(1)}%</span>
-                  )}
-                  {spread.displayRange}
-                </span>
-              )}
-            </div>
-          ))}
+          {data.spreads.details.map((spread, idx) => {
+            // Get metadata for this market and spread if available
+            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA];
+            const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            const displayName = spreadMetadata?.name || spread.displayRange;
+            
+            return (
+              <div
+                key={`right-${spread.id}`}
+                className={cn(
+                  "h-full transition-all duration-300 flex items-center justify-center",
+                )}
+                style={{
+                  width: `${spread.percentage}%`,
+                  minWidth: spread.percentage > 2 ? "auto" : "0",
+                  backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length],
+                }}
+              >
+                {spread.percentage > 5 && (
+                  <span className="text-white text-xs px-1 truncate text-right">
+                    {spread.percentage > 10 && (
+                      <span className="mr-1 opacity-80">{spread.percentage.toFixed(1)}%</span>
+                    )}
+                    {displayName}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 mt-3">
@@ -100,6 +114,37 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
         <div className="text-right">
           <div className="text-xs text-white/60">Status</div>
           <div className="text-sm text-white">{data.basic.stateDisplay}</div>
+        </div>
+      </div>
+      
+      {/* Spread Legend */}
+      <div className="mt-4">
+        <div className="text-xs text-white/60 mb-2">Spread Ranges</div>
+        <div className="flex flex-wrap gap-2">
+          {data.spreads.details.map((spread, idx) => {
+            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA];
+            const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            
+            return (
+              <div 
+                key={`legend-${spread.id}`}
+                className="flex items-center bg-gray-800/50 px-2 py-1 rounded-md border border-gray-700/50"
+              >
+                <div 
+                  className="w-3 h-3 rounded-sm mr-2"
+                  style={{ backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length] }}
+                ></div>
+                <div>
+                  <span className="text-xs text-white">
+                    {spreadMetadata?.name || spread.displayRange}
+                    {spreadMetadata?.rangeDescription && (
+                      <span className="text-xs text-white/60 ml-1">({spreadMetadata.rangeDescription})</span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import { CONSTANTS } from "@/constants/appConstants";
+import { CONSTANTS, MODULES } from "@/constants/appConstants";
 // Import MarketInfo type directly, not the hook
 import { MarketInfo, Spread } from "./useLiveMarketInfo";
 import { formatNumberWithCommas } from "@/lib/format";
@@ -77,8 +77,8 @@ export function useLiveMarketsInfo(marketIds: string[]) {
       const tx = new Transaction();
       
       tx.moveCall({
-        target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`,
-        typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
+        target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`,
+        typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
         arguments: [
           tx.object(marketId)
         ],

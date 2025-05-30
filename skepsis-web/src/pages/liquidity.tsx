@@ -178,36 +178,56 @@ const LiquidityPage: NextPage = () => {
       });
     }
     
+    // Debug the user's liquidity positions
+    console.log("DEBUG - User Liquidity by Market:", userLiquidityByMarket);
+    console.log("DEBUG - All User Liquidity Shares:", userLiquidityShares);
+    
+    // Debug the correlation between marketData and userLiquidityShares
+    console.log("DEBUG - Market IDs correlation:", {
+      marketDataIds: marketData.map(m => m.marketId),
+      userSharesIds: userLiquidityShares.map(s => s.marketId),
+      matchingIds: marketData.filter(m => userLiquidityShares.some(s => s.marketId === m.marketId)).map(m => m.marketId)
+    });
+    
     return marketData.map(market => {
       // Find the user's liquidity position for this market
+      // userLiquidityByMarket already contains the shareAmount (already divided by 1_000_000)
       const userPosition = userLiquidityByMarket[market.marketId] ?? 0;
-      
       // Find the user's liquidity share object for this market
       const liquidityShare = userLiquidityShares.find(share => share.marketId === market.marketId);
-      
       // Get live market data from our parallel fetched markets
       const liveMarketData = liveMarketsInfo && liveMarketsInfo[market.marketId] ? liveMarketsInfo[market.marketId] : null;
-      
-      // Calculate percentage of total liquidity
+      // Calculate percentage of total shares
       let positionPercentage = 0;
-      if (userPosition > 0 && liveMarketData?.liquidity?.totalLiquidity) {
-        const totalLiquidity = Number(liveMarketData.liquidity.totalLiquidity) / 1_000_000;
-        console.log(`DETAILED CALCULATION for market ${market.marketId}:`, {
-          userPosition: userPosition,
-          rawTotalLiquidity: liveMarketData.liquidity.totalLiquidity,
-          convertedTotalLiquidity: totalLiquidity,
-          divisionFactor: "1_000_000 (converting from microUSDC)",
-          shareObject: liquidityShare
-        });
+      let userPositionDisplay = undefined;
+      
+      console.log(`DEBUG - Processing market ${market.marketId}:`, {
+        marketName: market.name,
+        userPosition,
+        hasLiquidityShare: !!liquidityShare,
+        liquidityShareData: liquidityShare,
+        hasLiveMarketData: !!liveMarketData,
+        totalShares: liveMarketData?.liquidity?.totalShares
+      });
+      
+      if (userPosition > 0) {
+        // Format user position as display string (no decimals for better readability)
+        // userPosition is already divided by 1_000_000 in useLiquidityShares.ts
+        userPositionDisplay = Math.floor(userPosition).toString();
         
-        if (totalLiquidity > 0) {
-          positionPercentage = (userPosition / totalLiquidity) * 100;
-          console.log(`Percentage calculation: (${userPosition} / ${totalLiquidity}) * 100 = ${positionPercentage}%`);
-        } else {
-          console.warn(`Total liquidity is zero or invalid for market ${market.marketId}`);
+        // Calculate percentage based on market's currentLiquidity if available
+        if (market.currentLiquidity > 0) {
+          // Calculate percentage with proper precision based on displayed currentLiquidity
+          positionPercentage = parseFloat((userPosition / market.currentLiquidity * 100).toFixed(2));
+          
+          console.log(`DEBUG - User position for market ${market.marketId}:`, {
+            rawUserPosition: userPosition,
+            formattedDisplay: userPositionDisplay,
+            currentLiquidity: market.currentLiquidity,
+            rawPercentage: (userPosition / market.currentLiquidity * 100),
+            formattedPercentage: positionPercentage.toFixed(2) + '%'
+          });
         }
-      } else {
-        console.log(`No calculation for market ${market.marketId}: userPosition=${userPosition}, hasLiquidityData=${!!liveMarketData?.liquidity?.totalLiquidity}`);
       }
       
       // Debug user positions for this market
@@ -216,7 +236,7 @@ const LiquidityPage: NextPage = () => {
         percentageOfTotal: positionPercentage > 0 ? `${positionPercentage.toFixed(1)}%` : 'N/A',
         hasPosition: userPosition > 0,
         liquidityShareId: liquidityShare?.id,
-        marketTotalLiquidity: liveMarketData?.liquidity?.totalLiquidityDisplay,
+        marketTotalShares: liveMarketData?.liquidity?.totalShares,
         liquidityShareRawValue: liquidityShare?.shares,
         allShares: userLiquidityShares.length
       });
@@ -270,13 +290,41 @@ const LiquidityPage: NextPage = () => {
       });
       
       // Calculate current liquidity from live data if available
-      const currentLiquidity = liveMarketData?.liquidity?.totalLiquidity !== undefined
-        ? Number(liveMarketData.liquidity.totalLiquidity) / 1_000_000
-        : market.currentLiquidity;
+      let currentLiquidity = market.currentLiquidity; 
+      
+      if (liveMarketData?.liquidity?.totalLiquidity !== undefined) {
+        const newLiquidity = Number(liveMarketData.liquidity.totalLiquidity) / 1_000_000;
+        
+        // Force the value to a valid number or use 0 if NaN
+        currentLiquidity = !isNaN(newLiquidity) ? newLiquidity : 0;
+        
+        // Debug log to check the current liquidity value
+        console.log(`Current liquidity updated for market ${market.marketId}:`, {
+          rawLiquidity: liveMarketData?.liquidity?.totalLiquidity,
+          calculatedLiquidity: currentLiquidity,
+          previousValue: market.currentLiquidity,
+          hasLiveData: !!liveMarketData?.liquidity
+        });
+      } else {
+        console.log(`Using existing liquidity for market ${market.marketId}: ${currentLiquidity}`);
+      }
+
+      // Add debug logging for this specific market's user position
+      console.log(`Finalized market ${market.marketId} user position:`, {
+        userPosition,
+        userPositionDisplay,
+        userPositionPercentage: positionPercentage,
+        userPositionObjectId: liquidityShare?.id,
+        rawShares: liquidityShare?.shares,
+        shareAmount: liquidityShare?.shareAmount,
+        // Add specific check for the market we're troubleshooting
+        isTargetMarket: market.marketId === '0x1b98cae4835709b14e5f182e98552d381b514bb526cb11d1812dc431f4bdaaa7'
+      });
 
       return {
         ...market,
         userPosition,
+        userPositionDisplay,
         userPositionPercentage: positionPercentage,
         userPositionObjectId: liquidityShare?.id,
         biddingDeadline,
@@ -441,6 +489,14 @@ const LiquidityPage: NextPage = () => {
         return prevIds.filter(id => id !== marketId);
       } else {
         // Otherwise, expand only this row and collapse any others
+        // When expanding a row, also fetch the latest data if needed
+        const expandedMarket = marketsWithPositions.find(m => m.marketId === marketId);
+        if (expandedMarket) {
+          console.log(`Expanded market: ${marketId}`, {
+            currentLiquidity: expandedMarket.currentLiquidity,
+            liveMarketData: liveMarketsInfo?.[marketId]?.liquidity
+          });
+        }
         return [marketId];
       }
     });
@@ -500,7 +556,7 @@ const LiquidityPage: NextPage = () => {
     try {
       // Convert amount to number for clarity and add a reasonable slippage protection
       const usdcAmount = amount;
-      const minLpTokens = amount * 0.98; // 2% slippage protection
+      const minLpTokens = amount * 0.58; // 2% slippage protection
       
       console.log(`Adding ${usdcAmount} USDC to market ${selectedMarket.marketId} with min LP tokens ${minLpTokens}`);
       
@@ -847,12 +903,12 @@ const LiquidityPage: NextPage = () => {
                           {market.userPosition > 0 ? (
                             <span 
                               className="text-green-400" 
-                              title={`${market.userPosition} USDC (${market.userPositionPercentage?.toFixed(1) || 0}% of total market liquidity)`}
+                              title={`${market.userPositionDisplay} (${market.userPositionPercentage?.toFixed(2) || 0}% of total market liquidity)`}
                             >
-                              ${parseFloat(market.userPosition.toFixed(2)).toLocaleString()}
+                              {market.userPositionDisplay} shares
                               {market.userPositionPercentage > 0 && (
                                 <span className="ml-1 text-xs text-green-300">
-                                  ({market.userPositionPercentage.toFixed(1)}%)
+                                  ({market.userPositionPercentage.toFixed(2)}%)
                                 </span>
                               )}
                             </span>
@@ -939,7 +995,9 @@ const LiquidityPage: NextPage = () => {
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                                 <div className="bg-gray-800/50 p-3 rounded-md">
                                   <h4 className="text-gray-400 text-xs mb-1">Current Liquidity</h4>
-                                  <p className="text-white text-lg font-medium">${market.currentLiquidity.toLocaleString()}</p>
+                                  <p className="text-white text-lg font-medium">
+                                    ${market.currentLiquidity.toLocaleString(undefined, {maximumFractionDigits: 2})}
+                                  </p>
                                 </div>
                                 <div className="bg-gray-800/50 p-3 rounded-md">
                                   <h4 className="text-gray-400 text-xs mb-1">Open Interest</h4>
