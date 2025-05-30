@@ -35,36 +35,51 @@ const Header = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 w-full backdrop-blur-md"
+      className="fixed top-0 left-0 w-full backdrop-blur-md bg-gradient-to-r from-indigo-950/90 to-violet-950/90 z-50 shadow-md shadow-indigo-900/20 border-b border-indigo-800/20"
       style={{
-        WebkitBackdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(16px)",
       }}
     >
-      <header className="w-full max-w-360 mx-auto h-20 flex items-center justify-between pt-5 pb-3 px-4 z-50">
+      <header className="w-full max-w-360 mx-auto h-20 flex items-center justify-between pt-4 pb-3 px-4">
         {/* Logo Link */}
         <div className="flex items-center gap-6">
-          <Link href="/">
-            <span className="text-xl lg:text-3xl font-extrabold">Skepsis</span>
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
+            <div className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-indigo-900/70 to-violet-900/70 rounded-lg shadow-sm">
+              <Image 
+                src="/images/skepsis-transparent.png" 
+                alt="Skepsis Logo" 
+                width={32} 
+                height={32} 
+                className="object-contain group-hover:scale-110 transition-transform duration-200"
+                priority={true}
+              />
+            </div>
+            <span className="text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent drop-shadow-sm">Skepsis</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-5">
             <Link href="/">
-              <span className="text-sm text-white/70 hover:text-white transition-colors">
+              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
                 Home
               </span>
             </Link>
             <Link href="/prediction">
-              <span className="text-sm text-white/70 hover:text-white transition-colors">
+              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
                 Prediction Markets
               </span>
             </Link>
             <Link href="/liquidity">
-              <span className="text-sm text-white/70 hover:text-white transition-colors">
+              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
                 Liquidity
               </span>
             </Link>
             <Link href="/faucet">
-              <span className="text-sm text-white/70 hover:text-white transition-colors">
+              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
                 Faucet
+              </span>
+            </Link>
+            <Link href="/docs">
+              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
+                Docs
               </span>
             </Link>
           </nav>
@@ -77,11 +92,11 @@ const Header = () => {
           <ConnectModal
             trigger={
               <button
-                className="h-full rounded-[11px] outline-none ring-0 xl:button-animate-105 overflow-hidden p-[1px]"
+                className="outline-none ring-0 xl:button-animate-105 overflow-hidden"
                 disabled={!!walletAddress}
               >
-                <div className="h-full px-5 py-4 flex items-center gap-2 rounded-xl bg-white/10">
-                  <span className="text-sm">
+                <div className="px-5 py-3 flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-colors shadow-md shadow-indigo-900/20">
+                  <span className="text-sm font-medium text-white">
                     {walletAddress ? "Connected" : "Connect Wallet"}
                   </span>
                   <LinkIcon size={17} className="text-white" />

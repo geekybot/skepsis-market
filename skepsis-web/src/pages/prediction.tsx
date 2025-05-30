@@ -5,7 +5,7 @@ import PredictionMarket from '@/components/markets/PredictionMarket';
 import { AppContext } from '@/context/AppContext';
 import { useContext } from 'react';
 import Header from '@/components/header';
-import { MARKETS, DEFAULT_MARKET_ID, SPREAD_COLORS } from '@/constants/appConstants';
+import { MARKETS, DEFAULT_MARKET_ID, SPREAD_COLORS, MARKET_SPREADS_METADATA } from '@/constants/appConstants';
 import { useLiveMarketInfo } from '@/hooks/useLiveMarketInfo';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/router';
@@ -135,15 +135,26 @@ const PredictionPage: NextPage = () => {
                 key={selectedMarketId} // Force component remount when marketId changes
                 marketId={selectedMarketId}
                 question={marketData.basic.question || selectedMarketBasicInfo.name}
-                options={marketData.spreads.details.map((spread, index) => ({
-                  id: spread.id || `spread-${spread.spreadIndex}`,
-                  label: spread.displayRange,
-                  value: spread.spreadIndex.toString(),
-                  buyPrice: spread.buyPriceDisplay || "0.000000",
-                  sellPrice: spread.sellPriceDisplay || null,
-                  percentage: spread.percentage,
-                  color: SPREAD_COLORS[index % SPREAD_COLORS.length] // Cycle through colors if more than 10 spreads
-                }))}
+                options={marketData.spreads.details.map((spread, index) => {
+                  // Get metadata for this market and spread if available
+                  const marketMetadata = MARKET_SPREADS_METADATA[selectedMarketId as keyof typeof MARKET_SPREADS_METADATA];
+                  const spreadMetadata = marketMetadata?.spreadLabels?.[index];
+                  
+                  return {
+                    id: spread.id || `spread-${spread.spreadIndex}`,
+                    // Use custom name if available, otherwise use displayRange
+                    label: spreadMetadata?.name || spread.displayRange,
+                    // Keep the original range description in metadata
+                    originalRange: spread.displayRange,
+                    value: spread.spreadIndex.toString(),
+                    buyPrice: spread.buyPriceDisplay || "0.000000",
+                    sellPrice: spread.sellPriceDisplay || null,
+                    percentage: spread.percentage,
+                    color: SPREAD_COLORS[index % SPREAD_COLORS.length], // Cycle through colors
+                    // Include metadata for detailed descriptions
+                    metadata: spreadMetadata
+                  };
+                })}
                 resolutionCriteria={marketData.basic.resolutionCriteria || "Not specified"}
                 resolver="Skepsis Protocol"
                 onTransactionComplete={refreshMarketData}

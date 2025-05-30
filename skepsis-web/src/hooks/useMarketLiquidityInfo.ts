@@ -123,9 +123,9 @@ export const useMarketLiquidityInfo = (
             marketId: marketId,
             name: basicInfo?.name || 'Unknown Market',
             // Use data from marketInfo when available
-            currentLiquidity: marketInfo && marketInfo.liquidity && marketInfo.liquidity.totalLiquidityDisplay 
-              ? parseFloat(marketInfo.liquidity.totalLiquidityDisplay) 
-              : Number(fields.total_liquidity || 0) / 1_000_000,
+            currentLiquidity: marketInfo && marketInfo.liquidity && marketInfo.liquidity.totalLiquidity 
+              ? Number(marketInfo.liquidity.totalLiquidity) / 1_000_000
+              : Number(fields.pool_balance || fields.total_liquidity || 0) / 1_000_000,
             // Use cumulative shares sold as open interest
             openInterest: marketInfo && marketInfo.liquidity && marketInfo.liquidity.cumulativeSharesSoldDisplay 
               ? parseFloat(marketInfo.liquidity.cumulativeSharesSoldDisplay)
