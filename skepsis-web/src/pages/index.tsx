@@ -1,37 +1,29 @@
-import React from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
+import { Inter } from "next/font/google";
+import { cn } from "@/lib/utils";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import LandingPage from "@/components/landingPage";
+import Head from "next/head";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   return (
     <>
       <Head>
-        <title>Skepsis - Reset Home</title>
-        <meta name="description" content="Skepsis home page" />
+        <title>Skepsis - Decentralized Continuous Outcome Prediction Markets</title>
+        <meta name="description" content="A decentralized prediction market platform on Sui blockchain that enables trading on continuous numerical outcome spaces rather than just binary outcomes." />
+        <link rel="icon" href="/images/skepsis-transparent.png" />
       </Head>
-
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white p-4">
-        <h1 className="text-4xl font-bold mb-8">Skepsis Navigation</h1>
-        
-        <div className="flex flex-col gap-4">
-          <Link href="/liquidity">
-            <button className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-              Go to Liquidity Page
-            </button>
-          </Link>
-          
-          <Link href="/prediction">
-            <button className="px-8 py-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
-              Go to Prediction Page
-            </button>
-          </Link>
-
-          <Link href="/test">
-            <button className="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
-              Go to Test Page
-            </button>
-          </Link>
-        </div>
+      <main
+        className={cn(
+          "relative w-full min-h-svh h-full max-w-360 flex flex-col items-center mx-auto pb-28 pt-20 px-4 z-10",
+          inter.className
+        )}
+      >
+        <Header />
+        <LandingPage />
+        <Footer />
       </main>
     </>
   );
