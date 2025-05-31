@@ -44,7 +44,8 @@ export interface UserPositionResponse {
 export function useMarketPositions(
   suiClient: SuiClient | null,
   marketId: string | null,
-  userAddress: string | null
+  userAddress: string | null,
+  spreadPrices?: {[spreadIndex: number]: number}
 ) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,8 +61,6 @@ export function useMarketPositions(
     user: string
   ): Promise<UserPositionResponse> => {
     try {
-      console.log(`\n👤 Querying get_user_position for market ${market}, user ${user}`);
-      
       const tx = new Transaction();
       
       tx.moveCall({
@@ -235,8 +234,6 @@ export function useMarketPositions(
           result.data.status = "active";
         }
         
-        console.log(`👤 User position for ${user} in market ${market}:`, result.data);
-        
         result.success = true;
         
       } catch (e) {
@@ -288,12 +285,26 @@ export function useMarketPositions(
       
       if (positionResult.success && positionResult.data.hasPosition) {
         // Convert blockchain position data to our Position interface format
-        const userPositions: Position[] = positionResult.data.spreads.map((spread) => ({
-          id: `${marketId}-${spread.spreadIndex}`, // Using a combination of market and spread index as ID
-          spreadIndex: spread.spreadIndex,
-          sharesAmount: Number(spread.shareAmount) / 1_000_000, // Convert from raw units (6 decimals)
-          value: Number(spread.shareAmount) * 0.5 / 1_000_000 // Simple estimated value calculation
-        }));
+        const userPositions: Position[] = positionResult.data.spreads.map((spread) => {
+          // Calculate value using spread prices if available, otherwise use a default estimation
+          // Both shareAmount and prices are in raw units (6 decimals)
+          let value = (Number(spread.shareAmount) * 0.5) / (1_000_000 * 1_000_000); // Default estimation with proper scaling
+          
+          // If spread prices are provided, use them for more accurate value calculation
+          if (spreadPrices && spread.spreadIndex in spreadPrices) {
+            const price = spreadPrices[spread.spreadIndex];
+            // Both share amount and price are in raw units (6 decimals)
+            // Divide by 1_000_000 twice to properly scale both values
+            value = (Number(spread.shareAmount) * price) / (1_000_000 * 1_000_000); // Calculate with proper scaling
+          }
+          
+          return {
+            id: `${marketId}-${spread.spreadIndex}`, // Using a combination of market and spread index as ID
+            spreadIndex: spread.spreadIndex,
+            sharesAmount: Number(spread.shareAmount) / 1_000_000, // Convert from raw units (6 decimals)
+            value: value // Value calculation using spread prices when available
+          };
+        });
         
         setPositions(userPositions);
       } else {
@@ -303,7 +314,7 @@ export function useMarketPositions(
         }
       }
     } catch (err) {
-      console.error("Failed to fetch user positions:", err);
+      // Silent error handling to avoid console logs
       setError(err instanceof Error ? err.message : "Unknown error");
       setPositions([]);
     } finally {

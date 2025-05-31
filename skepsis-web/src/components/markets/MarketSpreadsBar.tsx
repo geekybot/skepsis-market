@@ -43,20 +43,28 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
         {/* Left side bar (original) */}
         <div className="w-full flex overflow-hidden rounded-md bg-white/10 h-6">
           {data.spreads.details.map((spread, idx) => {
+            // Ensure spread has valid data 
+            if (!spread) return null;
+            
             // Get metadata for this market and spread if available
-            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA];
+            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA] || {};
             const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
-            const displayName = spreadMetadata?.name || spread.displayRange;
+            const displayName = spreadMetadata?.name || spread.displayRange || `Spread ${idx}`;
+            
+            // Ensure percentage is valid
+            const percentage = typeof spread.percentage === 'number' && !isNaN(spread.percentage) 
+              ? spread.percentage 
+              : 0;
             
             return (
               <div
-                key={`left-${spread.id}`}
+                key={`left-${spread.id || idx}`}
                 className={cn(
                   "h-full transition-all duration-300 flex items-center justify-center",
                 )}
                 style={{
-                  width: `${spread.percentage}%`,
-                  minWidth: spread.percentage > 2 ? "auto" : "0",
+                  width: `${percentage}%`,
+                  minWidth: percentage > 2 ? "auto" : "0",
                   backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length],
                 }}
               >
@@ -76,20 +84,28 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
         {/* Right side bar (mirrored) */}
         <div className="w-full flex flex-row-reverse overflow-hidden rounded-md bg-white/10 h-6">
           {data.spreads.details.map((spread, idx) => {
+            // Ensure spread has valid data 
+            if (!spread) return null;
+            
             // Get metadata for this market and spread if available
-            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA];
+            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA] || {};
             const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
-            const displayName = spreadMetadata?.name || spread.displayRange;
+            const displayName = spreadMetadata?.name || spread.displayRange || `Spread ${idx}`;
+            
+            // Ensure percentage is valid
+            const percentage = typeof spread.percentage === 'number' && !isNaN(spread.percentage) 
+              ? spread.percentage 
+              : 0;
             
             return (
               <div
-                key={`right-${spread.id}`}
+                key={`right-${spread.id || idx}`}
                 className={cn(
                   "h-full transition-all duration-300 flex items-center justify-center",
                 )}
                 style={{
-                  width: `${spread.percentage}%`,
-                  minWidth: spread.percentage > 2 ? "auto" : "0",
+                  width: `${percentage}%`,
+                  minWidth: percentage > 2 ? "auto" : "0",
                   backgroundColor: SPREAD_COLORS[idx % SPREAD_COLORS.length],
                 }}
               >
@@ -122,12 +138,19 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
         <div className="text-xs text-white/60 mb-2">Spread Ranges</div>
         <div className="flex flex-wrap gap-2">
           {data.spreads.details.map((spread, idx) => {
-            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA];
+            // Ensure spread has valid data
+            if (!spread) return null;
+            
+            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA] || {};
             const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            
+            // Import SpreadMetadata from constants
+            const safeMetadata: { name: string; description?: string; rangeDescription?: string } = 
+              spreadMetadata || { name: spread.displayRange || `Spread ${idx}` };
             
             return (
               <div 
-                key={`legend-${spread.id}`}
+                key={`legend-${spread.id || idx}`}
                 className="flex items-center bg-gray-800/50 px-2 py-1 rounded-md border border-gray-700/50"
               >
                 <div 
@@ -136,9 +159,9 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
                 ></div>
                 <div>
                   <span className="text-xs text-white">
-                    {spreadMetadata?.name || spread.displayRange}
-                    {spreadMetadata?.rangeDescription && (
-                      <span className="text-xs text-white/60 ml-1">({spreadMetadata.rangeDescription})</span>
+                    {safeMetadata.name || spread.displayRange}
+                    {safeMetadata.rangeDescription && (
+                      <span className="text-xs text-white/60 ml-1">({safeMetadata.rangeDescription})</span>
                     )}
                   </span>
                 </div>

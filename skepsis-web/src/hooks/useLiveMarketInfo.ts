@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { CONSTANTS, MODULES } from "@/constants/appConstants";
+import { MarketService } from "@/services/marketService";
 
 function byteArrayToString(byteArray: number[]): string {
   try {
@@ -83,10 +84,9 @@ export function useLiveMarketInfo(marketId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Add debug log for marketId changes and reset data
+  // Update useEffect hook
   useEffect(() => {
-    console.log("🔍 useLiveMarketInfo - marketId changed:", marketId);
-    // Reset data when marketId changes to prevent showing stale data
+    // console.log("🔍 useLiveMarketInfo - marketId changed:", marketId);
     setData(null);
     setLoading(true);
     setError(null);
@@ -97,80 +97,23 @@ export function useLiveMarketInfo(marketId: string) {
    */
   const getAllSpreadPrices = useCallback(async (marketId: string) => {
     try {
-      const tx = new Transaction();
-      
-      tx.moveCall({
-        target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`,
-        typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`],
-        arguments: [
-          tx.object(marketId)
-        ],
-      });
-      
-      const response = await suiClient.devInspectTransactionBlock({
-        transactionBlock: tx,
-        sender: CONSTANTS.NETWORK.DEFAULT_SENDER
-      });
-      
-      if (!response.results || !response.results[0]) {
-        throw new Error('No results returned for spread prices');
-      }
-      
-      const returnValues = response.results[0].returnValues;
-      if (!returnValues || returnValues.length < 2) {
-        throw new Error('Incomplete return values for spread prices');
-      }
-      
-      // Parse indices (vector<u64>)
-      const indicesBytes = returnValues[0][0];
-      let indices: number[] = [];
-      
-      // Vector bytes are formatted as [length, elem1, elem2, ...]
-      // Each u64 takes up 8 bytes
-      const numIndices = indicesBytes[0]; // First byte is length
-      for (let i = 0; i < numIndices; i++) {
-        let index = 0;
-        for (let j = 0; j < 8; j++) {
-          if (1 + i*8 + j < indicesBytes.length) {
-            // Using Math.pow(256, j) which is equivalent to 2^(8*j)
-            index += indicesBytes[1 + i*8 + j] * Math.pow(256, j);
-          }
-        }
-        indices.push(index);
-      }
-      
-      // Parse prices (vector<u64>)
-      const pricesBytes = returnValues[1][0];
-      let prices: number[] = [];
-      
-      // Vector bytes are formatted as [length, elem1, elem2, ...]
-      // Each u64 takes up 8 bytes
-      const numPrices = pricesBytes[0]; // First byte is length
-      for (let i = 0; i < numPrices; i++) {
-        let price = 0;
-        for (let j = 0; j < 8; j++) {
-          if (1 + i*8 + j < pricesBytes.length) {
-            // Using the same approach as for indices
-            price += pricesBytes[1 + i*8 + j] * Math.pow(256, j);
-          }
-        }
-        prices.push(price);
-      }
-      
-      return {
-        success: true,
-        indices,
-        prices
-      };
+      const marketService = new MarketService(suiClient);
+      return await marketService.getAllSpreadPrices(marketId);
     } catch (error) {
-      console.error(`Error getting spread prices:`, error);
+      // console.error(`Error getting spread prices:`, error);
+      const fallbackIndices = Array.from({ length: 10 }, (_, i) => i);
+      const fallbackPrices = Array(10).fill(100000); // Default 0.1 USDC with 6 decimals
+      
       return {
         success: false,
-        error: `Error getting spread prices: ${error}`
+        indices: fallbackIndices,
+        prices: fallbackPrices,
+        error: `Error getting spread prices: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }, [suiClient]);
 
+  // Update fetchMarketInfo function
   const fetchMarketInfo = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -225,9 +168,8 @@ export function useLiveMarketInfo(marketId: string) {
         
         // Timing info
         if ('bidding_deadline' in fields) {
-          console.log("==============================================");
-          
-          console.log(`Bidding deadline field found: ${fields.bidding_deadline}`);
+          // console.log("==============================================");
+          // console.log(`Bidding deadline field found: ${fields.bidding_deadline}`);
           
           const biddingDeadline = Number(fields.bidding_deadline);
           result.timing.biddingDeadline = biddingDeadline;
@@ -295,7 +237,7 @@ export function useLiveMarketInfo(marketId: string) {
             
             const spreadInfo: Spread = {
               spreadIndex: i,
-              id: spreadFields.id?.id || null,
+              id: spreadFields.id?.id || `spread-${i}`,
               precision: Number(spreadFields.precision || 0),
               lowerBound: Number(spreadFields.lower_bound || 0),
               upperBound: Number(spreadFields.upper_bound || 0),
@@ -314,30 +256,45 @@ export function useLiveMarketInfo(marketId: string) {
       const spreadPrices = await getAllSpreadPrices(marketId);
       
       // Add pricing info to the spreads
-      if (spreadPrices.success && spreadPrices.indices && spreadPrices.prices) {
-        for (let i = 0; i < spreadPrices.indices.length; i++) {
-          const spreadIndex = spreadPrices.indices[i];
-          const price = spreadPrices.prices[i];
-          
-          if (spreadIndex < result.spreads.details.length) {
-            const spread = result.spreads.details[spreadIndex];
+      if (spreadPrices && spreadPrices.indices && spreadPrices.prices) {
+        console.log(`📊 [useLiveMarketInfo] Processing ${spreadPrices.indices.length} spread prices`);
+        
+        // Validate we have both indices and prices with the same length
+        if (spreadPrices.indices.length === spreadPrices.prices.length) {
+          for (let i = 0; i < spreadPrices.indices.length; i++) {
+            const spreadIndex = spreadPrices.indices[i];
+            const price = spreadPrices.prices[i];
             
-            // Set buy price information
-            spread.buyPrice = price;
-            spread.buyPriceDisplay = (price / 1_000_000).toFixed(6);
-            
-            // Set sell price information if there are outstanding shares
-            // (simplified approach - in reality, buy/sell prices would differ due to spread)
-            if (spread.outstandingShares > 0) {
-              const sellPrice = Math.floor(price * 0.995); // Example: 0.5% spread
-              spread.sellPrice = sellPrice;
-              spread.sellPriceDisplay = (sellPrice / 1_000_000).toFixed(6);
+            // Validate spreadIndex and price are valid
+            if (typeof spreadIndex === 'number' && spreadIndex >= 0 && 
+                typeof price === 'number' && price >= 0 &&
+                spreadIndex < result.spreads.details.length) {
+                
+              const spread = result.spreads.details[spreadIndex];
+              
+              // Set buy price information
+              spread.buyPrice = price;
+              spread.buyPriceDisplay = (price / 1_000_000).toFixed(6);
+              
+              // Set sell price information if there are outstanding shares
+              // (simplified approach - in reality, buy/sell prices would differ due to spread)
+              if (spread.outstandingShares > 0) {
+                const sellPrice = Math.floor(price * 0.995); // Example: 0.5% spread
+                spread.sellPrice = sellPrice;
+                spread.sellPriceDisplay = (sellPrice / 1_000_000).toFixed(6);
+              } else {
+                spread.sellPrice = null;
+                spread.sellPriceDisplay = "N/A";
+              }
             } else {
-              spread.sellPrice = null;
-              spread.sellPriceDisplay = "N/A";
+              console.warn(`⚠️ [useLiveMarketInfo] Invalid spread data at index ${i}: spreadIndex=${spreadIndex}, price=${price}`);
             }
           }
+        } else {
+          console.error(`❌ [useLiveMarketInfo] Mismatch between indices length (${spreadPrices.indices.length}) and prices length (${spreadPrices.prices.length})`);
         }
+      } else {
+        console.warn(`⚠️ [useLiveMarketInfo] No valid spread prices received`);
       }
 
       // Calculate spread percentages based on outstandingShares

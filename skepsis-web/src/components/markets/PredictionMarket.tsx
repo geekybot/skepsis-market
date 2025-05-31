@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { DEFAULT_MARKET_ID, SPREAD_COLORS, CONSTANTS } from '@/constants/appConstants';
+import { DEFAULT_MARKET_ID, SPREAD_COLORS, CONSTANTS, SpreadMetadata } from '@/constants/appConstants';
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiClient } from '@mysten/sui/client';
 
@@ -29,7 +29,7 @@ const Countdown = ({ targetDate, label, onComplete }: {
   useEffect(() => {
     // Validate the date first to prevent Invalid time value errors
     if (!targetDate || isNaN(targetDate.getTime())) {
-      console.error("Invalid target date provided to Countdown:", targetDate);
+      // console.error("Invalid target date provided to Countdown:", targetDate);
       setIsCompleted(true);
       return;
     }
@@ -122,11 +122,9 @@ interface SpreadOption {
   sellPrice: string | null;
   percentage: number; // Dynamically calculated percentage
   color?: string; // Optional color for visualization
-  metadata?: { 
-    name: string; 
-    description: string; 
-    rangeDescription: string;
-  }; // Optional metadata for enhanced display
+  priceRefreshed?: boolean; // Flag indicating if price was refreshed
+  // Use the imported SpreadMetadata type for consistency
+  metadata?: SpreadMetadata;
 }
 
 interface PredictionMarketProps {
@@ -143,6 +141,7 @@ interface PredictionMarketProps {
   resolutionTime?: string; // Added resolution time
   biddingDeadline?: string; // Added bidding deadline
   resolvedValue?: number; // Added resolved value
+  spreadPrices?: {[spreadIndex: number]: number}; // Added spread prices for position value calculation
   marketTiming?: {
     createdAt?: string;
     updatedAt?: string;
@@ -166,6 +165,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   resolutionTime,
   biddingDeadline,
   resolvedValue,
+  spreadPrices,
   marketTiming
 }) => {
   const account = useCurrentAccount();
@@ -173,14 +173,14 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   
   // Log marketTiming props to debug timing information
-  console.log("🕰️ [PredictionMarket] Market Timing Debug:", {
-    marketId,
-    marketTiming,
-    biddingDeadline,
-    resolutionTime,
-    marketStatus,
-    marketStatusState
-  });
+  // console.log("🕰️ [PredictionMarket] Market Timing Debug:", {
+  //   marketId,
+  //   marketTiming,
+  //   biddingDeadline,
+  //   resolutionTime,
+  //   marketStatus,
+  //   marketStatusState
+  // });
   
   // Set default values for critical date fields if they're undefined
   // First try to get from marketTiming, then use a fallback date in the future
@@ -193,14 +193,14 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     
   
   // Add more debugging to identify the source of null values
-  console.log("🔍 [PredictionMarket] Props Debug:");
-  console.log("🔍 marketId:", marketId);
-  console.log("🔍 biddingDeadline (raw):", biddingDeadline);
-  console.log("🔍 marketTiming?.biddingEnd:", marketTiming?.biddingEnd);
-  console.log("🔍 defaultBiddingDeadline (calculated):", defaultBiddingDeadline);
-  console.log("🔍 resolutionTime (raw):", resolutionTime);
-  console.log("🔍 marketTiming?.resolutionDate:", marketTiming?.resolutionDate);
-  console.log("🔍 defaultResolutionTime (calculated):", defaultResolutionTime);
+  // console.log("🔍 [PredictionMarket] Props Debug:");
+  // console.log("🔍 marketId:", marketId);
+  // console.log("🔍 biddingDeadline (raw):", biddingDeadline);
+  // console.log("🔍 marketTiming?.biddingEnd:", marketTiming?.biddingEnd);
+  // console.log("🔍 defaultBiddingDeadline (calculated):", defaultBiddingDeadline);
+  // console.log("🔍 resolutionTime (raw):", resolutionTime);
+  // console.log("🔍 marketTiming?.resolutionDate:", marketTiming?.resolutionDate);
+  // console.log("🔍 defaultResolutionTime (calculated):", defaultResolutionTime);
   
   // Add fallbacks for testing - if both are null, use future dates
   // This ensures the component functions even with missing data
@@ -210,16 +210,15 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const finalResolutionTime = defaultResolutionTime || 
     (new Date(Date.now() + 172800000).toISOString()); // 2 days from now as fallback
     
-  console.log("🔍 [PredictionMarket] Final values with fallbacks:");
-  console.log("🔍 finalBiddingDeadline:", finalBiddingDeadline);
-  console.log("🔍 finalResolutionTime:", finalResolutionTime);
+  // console.log("🔍 [PredictionMarket] Final values with fallbacks:");
+  // console.log("🔍 finalBiddingDeadline:", finalBiddingDeadline);
+  // console.log("🔍 finalResolutionTime:", finalResolutionTime);
   
   // State to track the current market
   const [currentMarketId, setCurrentMarketId] = useState<string>(marketId);
   
   // Effect to detect and handle marketId changes
   useEffect(() => {
-    console.log("🔄 [PredictionMarket] MarketId changed from", currentMarketId, "to", marketId);
     if (currentMarketId !== marketId) {
       setCurrentMarketId(marketId);
     }
@@ -286,7 +285,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   } = useMarketPositions(
     suiClient, 
     currentMarketId, 
-    account?.address || null
+    account?.address || null,
+    spreadPrices
   );
   
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -297,7 +297,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   
   // Check if the bidding deadline has passed
-  console.log("================>, defaultBiddingDeadline:", defaultBiddingDeadline);
   const isBiddingClosed = finalBiddingDeadline ? new Date() > new Date(finalBiddingDeadline) : false;
   
   // Check if resolution time has passed (for claim functionality)
@@ -344,17 +343,9 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     //console.log(`⏱️ [PredictionMarket] Updating market status for marketId: ${currentMarketId}`);
     const startTime = performance.now();
     
-    // Log current timing information
+    // Use marketTimingInfo for status calculation
     if (marketTimingInfo) {
-      //console.log('⏱️ [PredictionMarket] Using these timing values for market status calculation:');
-      console.table({
-        'Market ID': currentMarketId,
-        'Created At': marketTimingInfo.createdAt || 'Not set',
-        'Updated At': marketTimingInfo.updatedAt || 'Not set',
-        'Bidding Start': marketTimingInfo.biddingStart || 'Not set',
-        'Bidding End': marketTimingInfo.biddingEnd || 'Not set',
-        'Resolution Date': marketTimingInfo.resolutionDate || 'Not set'
-      });
+      // Market timing info is available, proceed with status update
     }
     
     updateMarketStatus();
@@ -807,7 +798,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const getPositionValue = (position: Position): number => {
     if (isWinningPosition(position)) {
       // Winning positions are worth 1:1 (sharesAmount in USD)
-      return position.sharesAmount;
+      // position.sharesAmount is already properly scaled in useMarketPositions hook
+      return position.value;
     } else {
       // Non-winning positions are worth 0
       return 0;
@@ -1326,7 +1318,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                           <div className="flex-col items-end text-right">
                             <div className="text-white">{position.sharesAmount.toFixed(2)} shares</div>
                             <div className={winning ? "text-green-400" : "text-white/50"}>
-                              {winning ? `≈ $${positionValue.toFixed(2)}` : "$0.00"}
+                              {winning ? `≈ $${positionValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}` : "$0.00"}
                             </div>
                           </div>
                         </div>
@@ -1391,7 +1383,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                           </div>
                           <div className="flex justify-end items-center gap-2">
                             <div className="text-white text-center">{position.sharesAmount.toFixed(2)}</div>
-                            <div className="text-white">≈ ${position.value.toFixed(3)}</div>
+                            <div className="text-white">≈ ${position.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}</div>
                           </div>
                         </div>
                       </div>
@@ -1407,7 +1399,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined ? (
                     <>
                       <span className="text-white font-medium">
-                        ≈ ${positions.reduce((sum, pos) => sum + getPositionValue(pos), 0).toFixed(2)}
+                        ≈ ${positions.reduce((sum, pos) => sum + getPositionValue(pos), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}
                       </span>
                       {/* Show profit/loss when market is resolved */}
                       {positionData?.data?.totalInvested && (
@@ -1418,15 +1410,15 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                             : "text-red-400"
                         )}>
                           {positionData.data.totalInvested / 1_000_000 < positions.reduce((sum, pos) => sum + getPositionValue(pos), 0)
-                            ? `+$${(positions.reduce((sum, pos) => sum + getPositionValue(pos), 0) - positionData.data.totalInvested / 1_000_000).toFixed(2)}`
-                            : `-$${(positionData.data.totalInvested / 1_000_000 - positions.reduce((sum, pos) => sum + getPositionValue(pos), 0)).toFixed(2)}`
+                            ? `+$${(positions.reduce((sum, pos) => sum + getPositionValue(pos), 0) - positionData.data.totalInvested / 1_000_000).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}`
+                            : `-$${(positionData.data.totalInvested / 1_000_000 - positions.reduce((sum, pos) => sum + getPositionValue(pos), 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}`
                         }
                         </span>
                       )}
                     </>
                   ) : (
                     <>
-                      <span className="text-white font-medium">≈ ${totalPositionsValue.toFixed(3)}</span>
+                      <span className="text-white font-medium">≈ ${totalPositionsValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}</span>
                       {/* Show estimated profit/loss for active markets */}
                       {positionData?.data?.totalInvested && (
                         <span className={cn(
@@ -1436,8 +1428,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                             : "text-red-400"
                         )}>
                           {positionData.data.totalInvested / 1_000_000 < totalPositionsValue
-                            ? `+$${(totalPositionsValue - positionData.data.totalInvested / 1_000_000).toFixed(2)}`
-                            : `-$${(positionData.data.totalInvested / 1_000_000 - totalPositionsValue).toFixed(2)}`
+                            ? `+$${(totalPositionsValue - positionData.data.totalInvested / 1_000_000).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}`
+                            : `-$${(positionData.data.totalInvested / 1_000_000 - totalPositionsValue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}`
                           }
                         </span>
                       )}

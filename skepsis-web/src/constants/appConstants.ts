@@ -70,8 +70,23 @@ export const MARKETS = [
     marketId: '0x1b98cae4835709b14e5f182e98552d381b514bb526cb11d1812dc431f4bdaaa7',
     name: 'What will be the closing price of Bitcoin (BTC) in USD on May 31, 2025?',
     description: 'What will be the closing price of Bitcoin (BTC) in USD on May 31, 2025?'
-  }
-  
+  },
+  {
+    marketId: '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65',
+    name: 'What will be the Price of SUI in USD on 11:30 AM UTC, May 31, 2025?',
+    description: 'Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.'
+  },
+  {
+    marketId: '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff',
+    name: 'Who will win the UCL 2025?',
+    description: 'Based on the official UEFA Champions League website'
+  },
+  {
+    marketId: '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd',
+    name: 'Who Will win The Premier League 2025?',
+    description: 'Based on the final league standings published by the Premier Leaguee'
+  },
+
   // If you add more markets, add them here
   // {
   //   marketId: '0x...',
@@ -182,6 +197,13 @@ export const SKEPSIS_CONFIG = {
   default_market_id: CONSTANTS.OBJECTS.MARKET,
 };
 
+// Types for spread metadata to ensure consistency
+export interface SpreadMetadata {
+  name: string;
+  description?: string;
+  rangeDescription?: string;
+}
+
 // Market spread metadata - custom names and descriptions for the spreads
 export const MARKET_SPREADS_METADATA = {
   // Bitcoin price prediction market
@@ -196,35 +218,46 @@ export const MARKET_SPREADS_METADATA = {
     ]
   },
   // Temperature prediction market
-  '0xfd45b6a75752d9f4ecd73476c78948c883db927b01667adb2eb9d03fc13f6cd8': {
+  '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65': {
     spreadLabels: [
-      { name: "Freezing", description: "Below freezing point", rangeDescription: "Below 0°C" },
-      { name: "Cold", description: "Cold temperature", rangeDescription: "0-10°C" },
-      { name: "Cool", description: "Cool temperature", rangeDescription: "10-20°C" },
-      { name: "Mild", description: "Mild temperature", rangeDescription: "20-25°C" },
-      { name: "Warm", description: "Warm temperature", rangeDescription: "25-30°C" },
-      { name: "Hot", description: "Hot temperature", rangeDescription: "30-35°C" },
-      { name: "Very Hot", description: "Very hot temperature", rangeDescription: "Above 35°C" }
+      { name: "2.50 - 2.60 $" },
+      { name: "2.60 - 2.70 $" },
+      { name: "2.70 - 2.80 $" },
+      { name: "2.80 - 2.90 $" },
+      { name: "2.90 - 3.00 $" },
+      { name: "3.00 - 3.10 $" },
+      { name: "3.10 - 3.20 $" },
+      { name: "3.20 - 3.30 $" },
+      { name: "3.30 - 3.40 $" },
+      { name: "3.40 - 3.50 $" },
+      { name: "3.50 - 3.60 $" },
+      { name: "3.60 - 3.70 $" },
+      { name: "3.70 - 3.80 $" },
+      { name: "3.80 - 3.90 $" },
+      { name: "3.90 - 4.00 $" },
+      { name: "4.00 - 4.10 $" },
+      { name: "4.10 - 4.20 $" },
+      { name: "4.20 - 4.30 $" },
+      { name: "4.30 - 4.40 $" },
+      { name: "4.40 - 4.50 $" },
     ]
   },
   // Champions League winner market
-  '0xe15afe91546fe909fcb58b7ba362f6981001fae3eedf5409dcaae8e325ed5b6f': {
+  '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd': {
     spreadLabels: [
-      { name: "Manchester City", description: "English Premier League", rangeDescription: "Spread 0" },
-      { name: "Real Madrid", description: "La Liga", rangeDescription: "Spread 1" },
-      { name: "Bayern Munich", description: "Bundesliga", rangeDescription: "Spread 2" },
-      { name: "Liverpool", description: "English Premier League", rangeDescription: "Spread 3" },
-      { name: "PSG", description: "Ligue 1", rangeDescription: "Spread 4" },
-      { name: "Barcelona", description: "La Liga", rangeDescription: "Spread 5" },
-      { name: "Other", description: "Other teams", rangeDescription: "Spread 6" }
+      { name: "Manchester City"},
+      { name: "Liverpool"},
+      { name: "NewCastle"},
+      { name: "Chelsea"},
+      { name: "Arsenal"},
+      { name: "Aston Villa"},
     ]
   },
   // Champions League Inter vs PSG market
-  '0x8dc3f6b648e749022b84b9533cda9898884c175534e3eac34dba762c9dec09a3': {
+  '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff': {
     spreadLabels: [
-      { name: "Inter Milan Win", description: "Serie A team wins", rangeDescription: "Spread 0" },
-      { name: "Draw", description: "Match ends in draw", rangeDescription: "Spread 1" },
-      { name: "PSG Win", description: "Ligue 1 team wins", rangeDescription: "Spread 2" }
+      { name: "Inter Milan Win"},
+      { name: "PSG Win"}
     ]
   }
 };

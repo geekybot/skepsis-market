@@ -1,8 +1,18 @@
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { SKEPSIS_CONFIG, USDC_CONFIG, MODULES } from '@/constants/appConstants';
+import { SKEPSIS_CONFIG, USDC_CONFIG, MODULES, CONSTANTS } from '@/constants/appConstants';
 import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 import { bcs } from '@mysten/sui/bcs';
+
+/**
+ * Interface for the getAllSpreadPrices function response
+ */
+export interface SpreadPriceResponse {
+  success: boolean;
+  indices: number[];
+  prices: number[];
+  error?: string;
+}
 
 /**
  * Service for interacting with Skepsis prediction markets
@@ -183,7 +193,7 @@ export class MarketService {
    * @private
    */
   private generateMockSpreadPrices(marketId: string, spreadCount: number = 10): any {
-    console.log(`ℹ️ Using default price values for market ${marketId}`);
+    // console.log(`ℹ️ Using default price values for market ${marketId}`);
     return {
       success: true,
       indices: Array.from({ length: spreadCount }, (_, i) => i),
@@ -826,9 +836,244 @@ export class MarketService {
     }
   }
 
-  
-
-
+  /**
+   * Get all spread prices for a market in a single call
+   * 
+   * @param marketId - ID of the market to get prices for
+   * @returns An object with indices and corresponding prices
+   */
+  async getAllSpreadPrices(marketId: string): Promise<SpreadPriceResponse> {
+    try {
+      console.log(`📊 [MarketService] Fetching spread prices for market: ${marketId}`);
+      
+      if (!marketId) {
+        throw new Error('Market ID is required');
+      }
+      
+      // Create the transaction with required parameters
+      const tx = new Transaction();
+      
+      // The function only takes the market ID as a parameter and USDC as a type argument
+      tx.moveCall({
+        target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`,
+        typeArguments: [`${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`],
+        arguments: [
+          tx.object(marketId)
+        ],
+      });
+      
+      // Use a try-catch for the devInspectTransactionBlock call to handle network issues
+      let response;
+      try {
+        response = await this.client.devInspectTransactionBlock({
+          transactionBlock: tx,
+          sender: CONSTANTS.NETWORK.DEFAULT_SENDER
+        });
+      } catch (networkError) {
+        // Type-safe error handling
+        const errorMessage = networkError instanceof Error ? networkError.message : String(networkError);
+        console.error(`🔴 [MarketService] Network error fetching spread prices:`, errorMessage);
+        throw new Error(`Network error: ${errorMessage}`);
+      }
+      
+      // Validate that we have results
+      if (!response.results || !response.results[0]) {
+        console.error(`🔴 [MarketService] No results returned from blockchain`);
+        throw new Error('No results returned for spread prices');
+      }
+      
+      // Extract and validate return values
+      const returnValues = response.results[0].returnValues;
+      if (!returnValues || returnValues.length < 2) {
+        console.error(`🔴 [MarketService] Incomplete return values:`, returnValues);
+        throw new Error('Incomplete return values for spread prices');
+      }
+      
+      console.log(`🟢 [MarketService] Raw return values received from blockchain`);
+      
+      // The return type is (vector<u64>, vector<u64>) - first array is indices, second is prices
+      
+      // Enhanced parsing for indices (vector<u64>) with better error handling
+      const indicesValue = returnValues[0];
+      let indices: number[] = [];
+      console.log(`🔍 [MarketService] Parsing indices from return values`);
+      
+      console.log(returnValues[1]);
+      
+      if (indicesValue && indicesValue.length > 0 && Array.isArray(indicesValue[0])) {
+        try {
+          console.log(`🔍 [MarketService] Parsing indices from byte array`);
+          
+          // Each u64 is 8 bytes in little-endian format
+          const indicesBytes = indicesValue[0];
+          
+          // Ensure we have valid byte data before proceeding
+          if (!indicesBytes || !indicesBytes.length) {
+            throw new Error('Empty indices byte array');
+          }
+          
+          // Parse using similar approach as in useMarketPositions
+          // First byte represents the vector length
+          const numIndices = indicesBytes[0];
+          
+          console.log(`🔢 [MarketService] Found ${numIndices} indices to parse (using vector length byte)`);
+          
+          // Parse each u64 from the byte array 
+          for (let i = 0; i < numIndices; i++) {
+            let spreadIndex = 0;
+            // For each spread index, read 8 bytes starting after the vector length
+            for (let j = 0; j < 8; j++) {
+              const byteIndex = 1 + (i * 8) + j;
+              if (byteIndex < indicesBytes.length) {
+                // Use standard little-endian conversion - each byte is multiplied by 256^j
+                spreadIndex += Number(indicesBytes[byteIndex]) * Math.pow(256, j);
+              }
+            }
+            
+            indices.push(spreadIndex);
+          }
+          
+          console.log(`✅ [MarketService] Successfully parsed ${indices.length} indices:`, indices);
+          
+          // Validate indices are in a reasonable range
+          const invalidIndices = indices.filter(idx => idx < 0 || idx > 1000);
+          if (invalidIndices.length > 0) {
+            console.warn(`⚠️ [MarketService] Found ${invalidIndices.length} invalid indices, will use fallback`);
+            // Regenerate indices if any are invalid
+            indices = Array.from({ length: numIndices }, (_, i) => i);
+          }
+          
+        } catch (error) {
+          console.error(`🔴 [MarketService] Error parsing indices:`, error instanceof Error ? error.message : error);
+          // Provide fallback indices to avoid breaking the UI
+          indices = Array.from({ length: 10 }, (_, i) => i);
+          console.warn(`⚠️ [MarketService] Using fallback sequential indices`);
+        }
+      } else {
+        console.error(`🔴 [MarketService] Invalid indices value format:`, indicesValue);
+        indices = Array.from({ length: 10 }, (_, i) => i);
+        console.warn(`⚠️ [MarketService] Using fallback sequential indices due to invalid format`);
+      }
+      
+      // Enhanced parsing for prices (vector<u64>) with better error handling
+      const pricesValue = returnValues[1];
+      let prices: number[] = [];
+      
+      if (pricesValue && pricesValue.length > 0 && Array.isArray(pricesValue[0])) {
+        try {
+          console.log(`🔍 [MarketService] Parsing prices from byte array`);
+          
+          // Each u64 is 8 bytes in little-endian format
+          const pricesBytes = pricesValue[0];
+          
+          // Ensure we have valid byte data
+          if (!pricesBytes || !pricesBytes.length) {
+            throw new Error('Empty prices byte array');
+          }
+          
+          // Use the same approach as in useMarketPositions and for indices
+          // First byte represents the vector length
+          const numPrices = pricesBytes[0];
+          
+          console.log(`🔢 [MarketService] Found ${numPrices} prices to parse (using vector length byte)`);
+          
+          // Parse each u64 from the byte array using little-endian format
+          for (let i = 0; i < numPrices; i++) {
+            let price = 0;
+            
+            // For each price, read 8 bytes starting after the vector length
+            for (let j = 0; j < 8; j++) {
+              const byteIndex = 1 + (i * 8) + j;
+              if (byteIndex < pricesBytes.length) {
+                // Use standard little-endian conversion - each byte is multiplied by 256^j
+                price += Number(pricesBytes[byteIndex]) * Math.pow(256, j);
+              }
+            }
+            
+            // Add the parsed price to our array
+            if (price >= 0 && price <= Number.MAX_SAFE_INTEGER) {
+              prices.push(price);
+            } else {
+              console.warn(`⚠️ [MarketService] Price value ${price} is invalid, using fallback`);
+              // Use a default price as fallback
+              prices.push(100000); // Default 0.1 USDC with 6 decimals
+            }
+          }
+          
+          console.log(`✅ [MarketService] Successfully parsed ${prices.length} prices`);
+          
+          // Validate prices are in a reasonable range for USDC (between 0 and 1,000,000,000)
+          // This would be 0 to 1,000 USDC with 6 decimals
+          const invalidPrices = prices.filter(price => price < 0 || price > 1000000000);
+          if (invalidPrices.length > 0) {
+            console.warn(`⚠️ [MarketService] Found ${invalidPrices.length} invalid prices, will replace with defaults`);
+            // Replace invalid prices with defaults
+            prices = prices.map(price => 
+              (price < 0 || price > 1000000000) ? 100000 : price
+            );
+          }
+          
+          // Validate we have the same number of indices and prices
+          if (prices.length !== indices.length) {
+            console.warn(`⚠️ [MarketService] Mismatch between indices (${indices.length}) and prices (${prices.length})`);
+            
+            // Handle the mismatch - ensure arrays are the same length
+            if (prices.length > indices.length) {
+              // Trim extra prices
+              prices = prices.slice(0, indices.length);
+              console.log(`✂️ [MarketService] Trimmed extra prices to match indices length`);
+            } else {
+              // Add fallback prices for missing entries
+              const originalLength = prices.length;
+              while (prices.length < indices.length) {
+                prices.push(100000); // Default 0.1 USDC with 6 decimals
+              }
+              console.log(`➕ [MarketService] Added ${indices.length - originalLength} default prices to match indices`);
+            }
+          }
+        } catch (error) {
+          console.error(`🔴 [MarketService] Error parsing prices:`, error instanceof Error ? error.message : error);
+          // Provide fallback prices to avoid breaking the UI
+          prices = Array(indices.length).fill(100000); // Default 0.1 USDC with 6 decimals
+          console.warn(`⚠️ [MarketService] Using fallback prices due to parsing error`);
+        }
+      } else {
+        console.error(`🔴 [MarketService] Invalid prices value format:`, pricesValue);
+        prices = Array(indices.length).fill(100000);
+        console.warn(`⚠️ [MarketService] Using fallback prices due to invalid format`);
+      }
+      
+      console.log(`📊 [MarketService] Final spread prices:`, {
+        indicesCount: indices.length,
+        pricesCount: prices.length,
+        sampleIndices: indices.slice(0, 3),
+        samplePrices: prices.slice(0, 3).map(p => `${p} (${p/1_000_000} USDC)`)
+      });
+      
+      return {
+        success: true,
+        indices,
+        prices
+      };
+    } catch (error) {
+      console.error(`🔴 [MarketService] Error getting spread prices:`, error);
+      
+      // Return sequential indices and default prices as fallback
+      const fallbackIndices = Array.from({ length: 10 }, (_, i) => i);
+      const fallbackPrices = Array(10).fill(100000); // Default 0.1 USDC with 6 decimals
+      
+      // Extract error message in a type-safe way
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`⚠️ [MarketService] Using fallback spread prices due to error: ${errorMessage}`);
+      
+      return {
+        success: false,
+        indices: fallbackIndices, 
+        prices: fallbackPrices,
+        error: `Error getting spread prices: ${errorMessage}`
+      };
+    }
+  }
 }
 
 // default MarketService;

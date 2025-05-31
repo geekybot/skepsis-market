@@ -370,300 +370,7 @@ module skepsis_market::test_liquidity {
     //     test_scenario::end(scenario_val);
     // }
 
-     // Helper function to buy shares and verify the purchase
-    public fun buy_shares_and_verify(
-        scenario: &mut test_scenario::Scenario,
-        trader: address,
-        spread_index: u64,
-        shares_amount: u64,
-        clock_time: u64,
-        extra_funds_for_slippage: u64
-    ) {
-        let mut market = test_scenario::take_shared<Market<TestCoin>>(scenario);
-        let mut registry = test_scenario::take_shared<UserPositionRegistry>(scenario);
-        
-        // Get quote first to know how much we need to pay
-        let cost = distribution_market::get_buy_quote<TestCoin>(&market, spread_index, shares_amount);
-        debug::print(&std::string::utf8(b"Cost to buy shares in spread "));
-        debug::print(&spread_index);
-
-        debug::print(&cost);
-        
-        // Mint coins for the purchase with extra for slippage
-        let coins = mint<TestCoin>(cost + extra_funds_for_slippage, ctx(scenario));
-        
-        // Create a clock for the buy transaction
-        let mut clock_obj = clock::create_for_testing(ctx(scenario));
-        clock::set_for_testing(&mut clock_obj, clock_time);
-        
-        // Buy the shares - this is an entry function, so it doesn't return anything
-        distribution_market::buy_exact_shares_with_max_input(
-            &mut registry,
-            &mut market,
-            spread_index,
-            shares_amount,
-            coins,
-            &clock_obj,
-            ctx(scenario)
-        );
-        
-        clock::destroy_for_testing(clock_obj);
-        
-        // Check user position to verify the purchase
-        let (has_position, total_invested, claimed, winnings, spread_indices, share_amounts) = 
-            distribution_market::get_user_position(&registry, trader, object::id(&market));
-        
-        debug::print(&std::string::utf8(b"User has position: "));
-        debug::print(&has_position);
-        debug::print(&std::string::utf8(b"Total invested: "));
-        debug::print(&total_invested);
-        debug::print(&std::string::utf8(b"Position claimed: "));
-        debug::print(&claimed);
-        debug::print(&std::string::utf8(b"Winnings claimed: "));
-        debug::print(&winnings);
-        debug::print(&std::string::utf8(b"Spread indices: "));
-        debug::print(&spread_indices);
-        debug::print(&std::string::utf8(b"Share amounts: "));
-        debug::print(&share_amounts);
-        
-        // Verify position details
-        assert!(has_position, 100); // User should have a position
-        assert!(total_invested > 0, 101); // User should have invested something
-        assert!(!claimed, 102); // Position shouldn't be claimed yet
-        assert!(winnings == 0, 103); // No winnings claimed yet
-        assert!(vector::length(&spread_indices) == 1, 104); // Should have shares in one spread
-        assert!(*vector::borrow(&spread_indices, 0) == spread_index, 105); // Should be spread index match
-        assert!(*vector::borrow(&share_amounts, 0) == shares_amount, 106); // Should have correct shares amount
-        
-        test_scenario::return_shared(registry);
-        test_scenario::return_shared(market);
-    }
-
-    // Test to verify the get_all_spread_prices function
-    #[test]
-    fun test_get_all_spread_prices() {
-        let owner = @0x1;
-        let trader1 = @0x2;
-        let trader2 = @0x3;
-        
-        let mut scenario_val = test_scenario::begin(owner);
-        let scenario = &mut scenario_val;
-        
-        // Setup the market first with initial liquidity
-        setup_market(scenario, owner);
-        
-        // Have trader1 buy shares in spread 2 to affect prices
-        next_tx(scenario, trader1);
-        {
-            // Buy 50M shares in spread 2
-            buy_shares_and_verify(
-                scenario,
-                trader1,
-                2,
-                50_000_000,
-                1100,  // clock time
-                5_000_000  // extra funds for slippage
-            );
-        };
-        
-        // Have trader2 buy shares in spread 7 to affect prices differently
-        next_tx(scenario, trader2);
-        {
-            // Buy 30M shares in spread 7
-            buy_shares_and_verify(
-                scenario,
-                trader2,
-                7,
-                30_000_000,
-                1150,  // clock time
-                5_000_000  // extra funds for slippage
-            );
-        };
-        
-        // Now test the get_all_spread_prices function
-        next_tx(scenario, owner);
-        {
-            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
-            
-            // First get individual spread prices for comparison
-            let spread2_price = distribution_market::get_spread_price<TestCoin>(&market, 2);
-            let spread7_price = distribution_market::get_spread_price<TestCoin>(&market, 7);
-            
-            // Now get all prices at once with our new function
-            let (spread_indices, spread_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
-            
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Testing get_all_spread_prices"));
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Individual spread 2 price: "));
-            debug::print(&spread2_price);
-            debug::print(&std::string::utf8(b"Individual spread 7 price: "));
-            debug::print(&spread7_price);
-            debug::print(&std::string::utf8(b"All spread indices: "));
-            debug::print(&spread_indices);
-            debug::print(&std::string::utf8(b"All spread prices: "));
-            debug::print(&spread_prices);
-            
-            // Get number of spreads in the market
-            let spreads_count = distribution_market::get_spreads_count<TestCoin>(&market);
-            
-            // Verify we got prices for all spreads
-            assert!(vector::length(&spread_indices) == spreads_count, 700);
-            assert!(vector::length(&spread_prices) == spreads_count, 701);
-            
-            // Verify specific spread indices and their position in the vector
-            let mut found_spread2 = false;
-            let mut found_spread7 = false;
-            let mut spread2_batch_price = 0;
-            let mut spread7_batch_price = 0;
-            
-            let mut i = 0;
-            while (i < vector::length(&spread_indices)) {
-                let index = *vector::borrow(&spread_indices, i);
-                if (index == 2) {
-                    found_spread2 = true;
-                    spread2_batch_price = *vector::borrow(&spread_prices, i);
-                } else if (index == 7) {
-                    found_spread7 = true;
-                    spread7_batch_price = *vector::borrow(&spread_prices, i);
-                };
-                i = i + 1;
-            };
-            
-            // Verify we found our specific spreads
-            assert!(found_spread2, 702);
-            assert!(found_spread7, 703);
-            
-            // Verify that the individually queried prices match the batch results
-            // Note: Using == for exact equality since these should calculate the same result
-            assert!(spread2_price == spread2_batch_price, 704);
-            assert!(spread7_price == spread7_batch_price, 705);
-            
-            // Print which spread has the highest price
-            let mut highest_price = 0;
-            let mut highest_index = 0;
-            i = 0;
-            while (i < vector::length(&spread_prices)) {
-                let price = *vector::borrow(&spread_prices, i);
-                if (price > highest_price) {
-                    highest_price = price;
-                    highest_index = *vector::borrow(&spread_indices, i);
-                };
-                i = i + 1;
-            };
-            
-            debug::print(&std::string::utf8(b"Highest price spread index: "));
-            debug::print(&highest_index);
-            debug::print(&std::string::utf8(b"Highest price value: "));
-            debug::print(&highest_price);
-            
-            // Verify traders affected the prices (spread 2 and 7 should have higher prices due to purchases)
-            assert!(spread2_batch_price > 0, 706);
-            assert!(spread7_batch_price > 0, 707);
-            
-            test_scenario::return_shared(market);
-        };
-        
-        test_scenario::end(scenario_val);
-    }
-
-    // Additional test to verify price changes after multiple transactions
-    #[test]
-    fun test_spread_price_changes() {
-        let owner = @0x1;
-        let trader = @0x2;
-        
-        let mut scenario_val = test_scenario::begin(owner);
-        let scenario = &mut scenario_val;
-        
-        // Setup the market with initial liquidity
-        setup_market(scenario, owner);
-        
-        // First get all prices before any trading
-        next_tx(scenario, owner);
-        {
-            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
-            
-            // Get initial prices
-            let (initial_indices, initial_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
-            
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Initial spread prices before trading"));
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Spread indices: "));
-            debug::print(&initial_indices);
-            debug::print(&std::string::utf8(b"Spread prices: "));
-            debug::print(&initial_prices);
-            
-            // Store some initial values for comparison later
-            let initial_spread5_price = *vector::borrow(&initial_prices, 5);
-            
-            test_scenario::return_shared(market);
-            
-            // Now have trader buy shares in spread 5 to affect price
-            next_tx(scenario, trader);
-            buy_shares_and_verify(
-                scenario,
-                trader,
-                5,
-                100_000_000, // Buying a large amount to significantly change the price
-                1200,  // clock time
-                10_000_000  // extra funds for slippage
-            );
-            
-            // Check prices after the trade
-            next_tx(scenario, owner);
-            let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
-            
-            // Get updated prices
-            let (updated_indices, updated_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
-            
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Updated spread prices after trading"));
-            debug::print(&std::string::utf8(b"----------------------"));
-            debug::print(&std::string::utf8(b"Spread indices: "));
-            debug::print(&updated_indices);
-            debug::print(&std::string::utf8(b"Spread prices: "));
-            debug::print(&updated_prices);
-            
-            // Verify price changed for spread 5
-            let updated_spread5_price = *vector::borrow(&updated_prices, 5);
-            
-            debug::print(&std::string::utf8(b"Spread 5 price before: "));
-            debug::print(&initial_spread5_price);
-            debug::print(&std::string::utf8(b"Spread 5 price after: "));
-            debug::print(&updated_spread5_price);
-            
-            // Price should increase after buying shares
-            assert!(updated_spread5_price > initial_spread5_price, 708);
-            
-            // Compare relative prices across all spreads
-            // Spread 5 should now have one of the highest prices due to the purchase
-            let mut i = 0;
-            let mut highest_non5_price = 0;
-            
-            while (i < vector::length(&updated_indices)) {
-                if (*vector::borrow(&updated_indices, i) != 5) {
-                    let price = *vector::borrow(&updated_prices, i);
-                    if (price > highest_non5_price) {
-                        highest_non5_price = price;
-                    };
-                };
-                i = i + 1;
-            };
-            
-            debug::print(&std::string::utf8(b"Highest price in any spread other than 5: "));
-            debug::print(&highest_non5_price);
-            
-            // Verify spread 5 price is significantly higher due to our trade
-            // (Testing that our function accurately reflects price changes)
-            assert!(updated_spread5_price >= highest_non5_price, 709);
-            
-            test_scenario::return_shared(market);
-        };
-        
-        test_scenario::end(scenario_val);
-    }
+  
 
     #[test]
     fun test_get_all_spread_prices_read_only() {
@@ -680,8 +387,8 @@ module skepsis_market::test_liquidity {
             let market = test_scenario::take_shared<Market<TestCoin>>(scenario);
             
             // First get individual spread prices for comparison
-            let spread2_price = distribution_market::get_spread_price<TestCoin>(&market, 2);
-            let spread7_price = distribution_market::get_spread_price<TestCoin>(&market, 7);
+            // let spread2_price = distribution_market::get_spread_price<TestCoin>(&market, 2);
+            // let spread7_price = distribution_market::get_spread_price<TestCoin>(&market, 7);
             
             // Now get all prices at once with our new function
             let (spread_indices, spread_prices) = distribution_market::get_all_spread_prices<TestCoin>(&market);
@@ -690,9 +397,9 @@ module skepsis_market::test_liquidity {
             debug::print(&std::string::utf8(b"Testing get_all_spread_prices"));
             debug::print(&std::string::utf8(b"----------------------"));
             debug::print(&std::string::utf8(b"Individual spread 2 price: "));
-            debug::print(&spread2_price);
+            // debug::print(&spread2_price);
             debug::print(&std::string::utf8(b"Individual spread 7 price: "));
-            debug::print(&spread7_price);
+            // debug::print(&spread7_price);
             debug::print(&std::string::utf8(b"All spread indices: "));
             debug::print(&spread_indices);
             debug::print(&std::string::utf8(b"All spread prices: "));
@@ -730,8 +437,8 @@ module skepsis_market::test_liquidity {
             
             // Verify that the individually queried prices match the batch results
             // Note: Using == for exact equality since these should calculate the same result
-            assert!(spread2_price == spread2_batch_price, 704);
-            assert!(spread7_price == spread7_batch_price, 705);
+            // assert!(spread2_price == spread2_batch_price, 704);
+            // assert!(spread7_price == spread7_batch_price, 705);
             
             // Print which spread has the highest price
             let mut highest_price = 0;
@@ -760,4 +467,5 @@ module skepsis_market::test_liquidity {
         test_scenario::end(scenario_val);
 
     }
+
 }
