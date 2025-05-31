@@ -3,3 +3,4 @@ generated
 */*.lock
 */ignored
 ping_log.txt
+.DS_Store
