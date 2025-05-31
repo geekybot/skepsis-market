@@ -33,9 +33,9 @@ async function main() {
   );
   console.log(publishOut);
   const publishJson = JSON.parse(publishOut);
-  const adminCapObj = publishJson.objectChanges.find((o: any) => o.objectType && o.objectType.includes('AdminCap'));
-  if (!adminCapObj) throw new Error('AdminCap not found in publish output');
-  const adminCapId = adminCapObj.objectId;
+  // const adminCapObj = publishJson.objectChanges.find((o: any) => o.objectType && o.objectType.includes('AdminCap'));
+  // if (!adminCapObj) throw new Error('AdminCap not found in publish output');
+  // const adminCapId = adminCapObj.objectId;
   const published = publishJson.objectChanges.find((o: any) => o.type === 'published');
   const packageId = published?.packageId;
   if (!packageId) throw new Error('PackageId not found in publish output');
@@ -46,7 +46,7 @@ async function main() {
   );
   const positionRegistryId = positionRegistryObj?.objectId;
 
-  console.log('AdminCap:', adminCapId, 'Package:', packageId);
+  // console.log('AdminCap:', adminCapId, 'Package:', packageId);
   console.log('UserPositionRegistry:', positionRegistryId || 'Not found');
 
   console.log('PackageId:', packageId); // Log for user inspection
@@ -74,7 +74,7 @@ async function main() {
   txb1.moveCall({
     target: `${packageId}::distribution_market_factory::initialize_factory`,
     typeArguments: ['0x7c2e2815e1b4d345775fa1494b50625aeabde0a3c49225fa63092367ddb341de::usdc::USDC'],
-    arguments: [txb1.object(adminCapId)],
+    arguments: [],
   });
   const { bytes: bytes1, signature: sig1 } = await txb1.sign({ signer: keypair, client });
   const result1 = await client.executeTransactionBlock({
@@ -150,7 +150,7 @@ async function main() {
     target: `${packageId}::distribution_market_factory::create_market_and_add_liquidity`,
     typeArguments: [`${CONSTANTS.PACKAGES.USDC}::usdc::USDC`],
     arguments: [
-      txb2.object(adminCapId), // AdminCap parameter
+      // txb2.object(adminCapId), // AdminCap parameter
       txb2.object(factoryId), // Factory parameter
       txb2.pure.string(marketParams.question),
       txb2.pure.string(marketParams.resolutionCriteria),
@@ -198,7 +198,7 @@ async function main() {
       objects: {
         factory: factoryId,
         market: marketId,
-        admin_cap: adminCapId,
+        // admin_cap: adminCapId,
         liquidity_share: liquidityShareId,
         position_registry: positionRegistryId || null
       },
@@ -241,7 +241,6 @@ async function main() {
   OBJECTS: {
     FACTORY: '${factoryId}',
     MARKET: '${marketId}',
-    ADMIN_CAP: '${adminCapId}',
     LIQUIDITY_SHARE: '${liquidityShareId || ''}',
     POSITION_REGISTRY: '${positionRegistryId || ''}'
   }
@@ -249,7 +248,7 @@ async function main() {
 `;
       
       // Write updated constants file
-      fs.writeFileSync(constantsPath, updatedConstants);
+      // fs.writeFileSync(constantsPath, updatedConstants);
       console.log(`✅ Constants updated in ${constantsPath}`);
     } catch (error) {
       console.error('Failed to update constants.ts:', error);

@@ -36,15 +36,15 @@ async function main() {
 
   // Market parameters - you can customize these
   const marketParams = {
-    question: "Who will win the champions leauge in 2025, Between Inter and PSG?",
-    resolutionCriteria: "Skepsis Keeper will check the winner on 2025-06-01",
-    steps: 2, // Number of buckets/spreads
-    lowerBound: 0, // Minimum value (e.g., 0%)
-    upperBound: 2, // Maximum value (e.g., 100%)
-    initialLiquidity: 1000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)
+    question: "What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?",
+    resolutionCriteria: "Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.",
+    steps: 50, // Number of buckets/spreads
+    lowerBound: 200, // Minimum value (e.g., 0%)
+    upperBound: 700, // Maximum value (e.g., 100%)
+    initialLiquidity: 30000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)
     // Calculate timestamps (in milliseconds) for deadlines
-    resolutionTimeMs: Date.now() +  65 * 60 * 1000, // 120 minutes from now
-    biddingDeadlineMs: Date.now() +  59 * 60 * 1000, // 115 minutes from now
+    resolutionTimeMs: 1749209400000, // 120 minutes from now
+    biddingDeadlineMs: 1749205800000, // 115 minutes from now
   };
   
   console.log('\n📊 Market Parameters:');
@@ -180,7 +180,7 @@ async function createMarket(
     const txb = new Transaction();
     
     // Get the admin cap object
-    const adminCap = CONSTANTS.OBJECTS.ADMIN_CAP;
+    // const adminCap = CONSTANTS.OBJECTS.ADMIN_CAP;
     
     // Find user's USDC coin to use for initial liquidity
     const { data: coins } = await client.getCoins({
@@ -223,7 +223,7 @@ async function createMarket(
       target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::distribution_market_factory::create_market_and_add_liquidity`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`], // USDC type
       arguments: [
-        txb.object(adminCap), // AdminCap parameter
+        // txb.object(adminCap), // AdminCap parameter
         txb.object(CONSTANTS.OBJECTS.FACTORY), // Factory parameter
         txb.pure.string(params.question),
         txb.pure.string(params.resolutionCriteria),

@@ -180,11 +180,14 @@ async function addLiquidityToMarket(
     
     // Call the add_liquidity_to_existing_position function
     txb.moveCall({
-      target: `${CONSTANTS.PACKAGES.SKEPSIS_MARKET}::distribution_market::add_liquidity_to_existing_position`,
+      target: `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::distribution_market::add_liquidity_to_existing_position`,
       typeArguments: [`${CONSTANTS.PACKAGES.USDC}::${CONSTANTS.MODULES.USDC}::USDC`],
       arguments: [
         txb.object(marketId),
-        liquidityCoin
+        txb.object('0x87588b0e6dca8c0c9054e5145bf4696bf5e7a7f887a19cac1f0fb697a3f9971d'), 
+        liquidityCoin,
+        txb.pure.u64(liquidityAmount*0.98), // 2% slippage tolerance
+        txb.object('0x6'), // Clock object ID
       ],
     });
     

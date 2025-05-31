@@ -62,6 +62,7 @@ module skepsis_market::distribution_market {
 
     public struct Market<phantom CoinType> has key{
         id: UID,
+        creator: address, // Address of the market creator
         question: vector<u8>,
         resolution_criteria: vector<u8>,
         steps: u64,    // eg: for temp market 0.5 * 10^6, for lower bound of 20 to 40 20-20.5, 20.5-21
@@ -71,8 +72,9 @@ module skepsis_market::distribution_market {
         market_state: u64,                  // 0: open, 1: resolved, 2: canceled
         spreads: vector<SpreadInfo>,
         resolved_value: u64,
-        total_shares: u64,                  // maximum number of shares
-        total_liquidity: Balance<CoinType>,
+        total_shares: u64,                  // maximum number of shares, liquidity added is the max number of shares protocol can sell and cover 
+        pool_balance: Balance<CoinType>,
+        liquditiy_share: u64,               // liquidity share minted to the creator
         cumulative_shares_sold: u64,        // Total shares sold so far (for enforcing share cap)
         // Added fee configuration
         fees_collected: Balance<CoinType>,  // Fees collected in this market
@@ -165,6 +167,7 @@ module skepsis_market::distribution_market {
         
         let market = Market {
             id: object::new(ctx),
+            creator: tx_context::sender(ctx),
             question,
             resolution_criteria,
             steps,
@@ -175,7 +178,8 @@ module skepsis_market::distribution_market {
             spreads: spread,
             resolved_value: 0,
             total_shares,
-            total_liquidity: coin::into_balance(initial_liquidity),
+            pool_balance: coin::into_balance(initial_liquidity),
+            liquditiy_share: total_shares, // Initial liquidity share minted to the creator
             cumulative_shares_sold: 0,
             fees_collected: balance::zero<CoinType>(), // Initialize fees collected
             fee_bps: DEFAULT_FEE_BPS, // Set default fee basis points
@@ -270,7 +274,7 @@ module skepsis_market::distribution_market {
         
         // Add the payment to the market's liquidity
         let payment_balance = coin::into_balance(payment);
-        balance::join(&mut market.total_liquidity, payment_balance);
+        balance::join(&mut market.pool_balance, payment_balance);
         
         // Update the outstanding shares for the selected spread
         let spread = vector::borrow_mut(&mut market.spreads, spread_index);
@@ -347,7 +351,7 @@ module skepsis_market::distribution_market {
         record_share_sale(registry, market, spread_index, shares_in, proceeds, ctx);
         
         // Extract the proceeds from the market's liquidity
-        let output_coin = coin::take(&mut market.total_liquidity, proceeds, ctx);
+        let output_coin = coin::take(&mut market.pool_balance, proceeds, ctx);
         // Return the proceeds to the user
         transfer::public_transfer(output_coin, tx_context::sender(ctx));
     }
@@ -424,43 +428,7 @@ module skepsis_market::distribution_market {
         before_cost - after_cost
     }
 
-    /// Get the current price of a specific spread in the market
-    /// @param market The market object
-    /// @param spread_index The index of the spread
-    /// @return The current price (0-1 represented as fixed point)
-    public fun get_spread_price<CoinType>(
-        market: &Market<CoinType>,
-        spread_index: u64
-    ): u64 {
-        assert!(spread_index < vector::length(&market.spreads), ERROR_VECTOR_INDEX_OUT_OF_BOUND);
-        
-        // Get current quantities for all spreads
-        let mut quantities = vector::empty<u64>();
-        let mut i = 0;
-        let spreads_count = vector::length(&market.spreads);
-        
-        while (i < spreads_count) {
-            let spread = vector::borrow(&market.spreads, i);
-            let quantity = spread.outstanding_shares;
-            vector::push_back(&mut quantities, quantity);
-            i = i + 1;
-        };
-        
-        // Calculate liquidity parameter b
-        let _b = market.total_shares / spreads_count;
-        
-        // Simple approximation for demo - can be improved for accuracy
-        let cost_before = get_buy_quote<CoinType>(market, spread_index, 0);
-        let cost_after = get_buy_quote<CoinType>(market, spread_index, PRECISION / 100); // Buy a small amount
-        let marginal_price = ((cost_after - cost_before) * PRECISION) / (PRECISION / 100);
-        
-        // Normalize to 0-1 range with PRECISION decimal places
-        if (marginal_price > PRECISION) {
-            PRECISION // Cap at 1.0
-        } else {
-            marginal_price
-        }
-    }
+    
 
     /// Multi-spread buy to get exact shares in multiple spreads (with slippage protection)
     #[allow(lint(self_transfer))]
@@ -508,7 +476,7 @@ module skepsis_market::distribution_market {
         
         // Add the payment to the market's liquidity
         let payment_balance = coin::into_balance(payment);
-        balance::join(&mut market.total_liquidity, payment_balance);
+        balance::join(&mut market.pool_balance, payment_balance);
         
         // Update outstanding shares for each spread
         i = 0;
@@ -546,21 +514,24 @@ module skepsis_market::distribution_market {
     
         // Calculate the proportion of new liquidity to existing liquidity
         let new_amount = coin::value(&liquidity_amount);
-        let existing_liquidity = balance::value(&market.total_liquidity);
+        let existing_liquidity: u64 = balance::value(&market.pool_balance);
         
         // Calculate LP tokens to mint proportional to contribution
         // new_lp_tokens = (new_amount * market.total_shares) / existing_liquidity
-        let lp_tokens_to_mint = (new_amount * market.total_shares) / existing_liquidity;
+        let numerator = (new_amount as u128) * (market.liquditiy_share as u128);
+        let lp_tokens_to_mint = (numerator / (existing_liquidity as u128)) as u64;
+
         
         // Check minimum LP tokens constraint
         assert!(lp_tokens_to_mint >= min_lp_tokens, ERROR_SLIPPAGE_TOO_HIGH); // Slippage too high
         
         // Add the liquidity to the market
         let liquidity_balance = coin::into_balance(liquidity_amount);
-        balance::join(&mut market.total_liquidity, liquidity_balance);
+        balance::join(&mut market.pool_balance, liquidity_balance);
         
         // Update total shares
-        market.total_shares = market.total_shares + new_amount;
+        market.liquditiy_share = market.liquditiy_share + lp_tokens_to_mint;
+        market.total_shares = market.total_shares + lp_tokens_to_mint;
         create_liquidity_share(object::id(market), lp_tokens_to_mint, tx_context::sender(ctx), ctx);
         
         // Return the amount of LP tokens minted
@@ -581,12 +552,30 @@ module skepsis_market::distribution_market {
         assert!(object::id(market) == liquidity_share.market, ERROR_MARKET_MISMATCH);
         assert!(tx_context::sender(ctx) == liquidity_share.user, ERROR_NOT_OWNER);
         assert!(market.market_state == 0, ERROR_MARKET_CLOSED); // Market must be open
+        let current_time = timestamp_ms(clock);
+        assert!(current_time < market.bidding_deadline, ERROR_MARKET_BIDDING_IS_OVER);
+        let new_amount = coin::value(&additional_liquidity);
+        let existing_liquidity: u64 = balance::value(&market.pool_balance);
         
-        // Calculate new LP tokens based on the proportion of added liquidity
-        let lp_tokens_to_mint = add_liquidity<CoinType>(market, additional_liquidity, min_lp_tokens, clock, ctx);
+        // Calculate LP tokens to mint proportional to contribution
+        // new_lp_tokens = (new_amount * market.total_shares) / existing_liquidity
         
-        // Update the user's liquidity shares
+        let numerator = (new_amount as u128) * (market.liquditiy_share as u128);
+        let lp_tokens_to_mint = (numerator / (existing_liquidity as u128)) as u64;
+
+
+        // Check minimum LP tokens constraint
+        assert!(lp_tokens_to_mint >= min_lp_tokens, ERROR_SLIPPAGE_TOO_HIGH); // Slippage too high
+        
+        // Add the liquidity to the market
+        let liquidity_balance = coin::into_balance(additional_liquidity);
+        balance::join(&mut market.pool_balance, liquidity_balance);
+        
+        // Update total shares
+        market.total_shares = market.total_shares + lp_tokens_to_mint;
+        market.liquditiy_share = market.liquditiy_share + lp_tokens_to_mint;
         liquidity_share.shares = liquidity_share.shares + lp_tokens_to_mint;
+        
     }
     
     /// Allows a user to claim their liquidity after market resolution
@@ -605,7 +594,7 @@ module skepsis_market::distribution_market {
         let current_time = timestamp_ms(clock);
         assert!(current_time >= market.bidding_deadline, ERROR_MARKET_RESOLUTION_IS_NOT_OVER);
     
-        let total_liquidity = balance::value(&market.total_liquidity);
+        let total_liquidity = balance::value(&market.pool_balance);
         // calculate the winning spread and lock liquidity of the winning spread before distributing the
         // liquidity back to the LPs
         let winning_spread_index = find_winning_spread(market, market.resolved_value);
@@ -614,13 +603,15 @@ module skepsis_market::distribution_market {
 
         // get the wiiing spread's total outstanding shares
         // Calculate the user's share of the total liquidity
-        let amount_to_withdraw = (liquidity_share.shares * (total_liquidity - outstanding_amount)) / market.total_shares;
+        
+        let numerator = (liquidity_share.shares as u128) * ((total_liquidity - outstanding_amount) as u128);
+        let amount_to_withdraw = (numerator / (market.liquditiy_share as u128)) as u64;
         
         // Take the funds from the market
-        let output_coin = coin::take(&mut market.total_liquidity, amount_to_withdraw, ctx);
+        let output_coin = coin::take(&mut market.pool_balance, amount_to_withdraw, ctx);
         
         // Update market total shares
-        market.total_shares = market.total_shares - liquidity_share.shares;
+        market.liquditiy_share = market.liquditiy_share - liquidity_share.shares;
         
         // Reset the user's shares
         liquidity_share.shares = 0;
@@ -859,7 +850,7 @@ module skepsis_market::distribution_market {
             winnings = winning_shares;
             
             // Transfer winnings to user
-            let output_coin = coin::take(&mut market.total_liquidity, winnings, ctx);
+            let output_coin = coin::take(&mut market.pool_balance, winnings, ctx);
             transfer::public_transfer(output_coin, user);
             
             // Mark position as claimed
@@ -890,7 +881,16 @@ module skepsis_market::distribution_market {
     ): u64 {
         let mut i = 0;
         let spreads_count = vector::length(&market.spreads);
-        
+        let spread_first = vector::borrow(&market.spreads, 0);
+        let spread_last = vector::borrow(&market.spreads, spreads_count - 1);
+        if (resolved_value < spread_first.lower_bound){
+            return 0 // If resolved value is below the first spread, return first spread
+        };
+        if(resolved_value > spread_last.upper_bound) {
+            // If resolved value is outside the range of spreads, return last spread
+            return spreads_count - 1
+        };
+
         while (i < spreads_count) {
             let spread = vector::borrow(&market.spreads, i);
             
@@ -973,7 +973,7 @@ module skepsis_market::distribution_market {
     
     /// Get market liquidity and shares information, , @comment: not required can read the Market object directly
     public fun get_market_liquidity_info<CoinType>(market: &Market<CoinType>): (u64, u64) {
-        (market.total_shares, market.cumulative_shares_sold)
+        (market.liquditiy_share, balance::value<CoinType>(&market.pool_balance))
     }
     
     /// Get number of spreads in the market, @comment: not required can read the Market object directly
@@ -992,7 +992,7 @@ module skepsis_market::distribution_market {
     
     /// Get the market's total liquidity, @comment: not required can read the Market object directly
     public fun get_total_liquidity<CoinType>(market: &Market<CoinType>): u64 {
-        balance::value(&market.total_liquidity)
+        balance::value(&market.pool_balance)
     }
 
     /// Get prices for all spreads in the market in a single call
@@ -1007,23 +1007,11 @@ module skepsis_market::distribution_market {
         let mut spread_indices = vector::empty<u64>();
         let mut spread_prices = vector::empty<u64>();
         
-        // Get current quantities once for all spreads (more efficient)
-        let mut quantities = vector::empty<u64>();
-        let mut i = 0;
-        
-        // Collect all outstanding shares quantities
-        while (i < spreads_count) {
-            let spread = vector::borrow(&market.spreads, i);
-            let quantity = spread.outstanding_shares;
-            vector::push_back(&mut quantities, quantity);
-            i = i + 1;
-        };
-        
         // Calculate liquidity parameter b once
         // let b = market.total_shares / spreads_count;
         
         // Calculate price for each spread
-        i = 0;
+        let mut i = 0;
         while (i < spreads_count) {
             
             // Cap at 1.0 if needed

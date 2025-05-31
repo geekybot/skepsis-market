@@ -124,7 +124,7 @@ export const HoldingsCard: React.FC<HoldingsCardProps> = ({
                     {position.sharesAmount.toFixed(2)}
                   </div>
                   <div className="col-span-4 text-white text-right">
-                    ${position.value.toFixed(3)}
+                    ${position.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}
                   </div>
                 </div>
               </div>
@@ -136,7 +136,7 @@ export const HoldingsCard: React.FC<HoldingsCardProps> = ({
       {/* Total Value */}
       <div className="mt-4 flex justify-between items-center pt-3 border-t border-white/10">
         <span className="text-white font-medium">Total</span>
-        <span className="text-white font-medium">${totalValue.toFixed(3)}</span>
+        <span className="text-white font-medium">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}</span>
       </div>
     </div>
   );

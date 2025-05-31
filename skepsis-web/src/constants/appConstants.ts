@@ -27,7 +27,7 @@ export const CONSTANTS = {
     USDC: '0x7c2e2815e1b4d345775fa1494b50625aeabde0a3c49225fa63092367ddb341de',
   },
   OBJECTS: {
-    MARKET: '0x1b98cae4835709b14e5f182e98552d381b514bb526cb11d1812dc431f4bdaaa7',
+    MARKET: '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65',
     POSITION_REGISTRY: '0x004881fb1b7202d503986585e209638ab0644a2220017be049d1a342803d3080',
     FAUCET: '0xa101d25417a108a94b49f68f39adfbcd2e7d882dc039728ff1c0f7d85fca1cca',
     DIST_UPGRADE_CAP: '0xec4f9b57a1017956eb199b4e754e3f8f2e7d4d2dbf963fa2e9e474cf9e15e8ca',
@@ -66,12 +66,28 @@ export const DEFAULT_MARKET_ID = CONSTANTS.OBJECTS.MARKET;
 // List of all available markets - this can be expanded as more markets are created
 // Each market has a unique ID and name for display
 export const MARKETS = [
-  {
-    marketId: '0x1b98cae4835709b14e5f182e98552d381b514bb526cb11d1812dc431f4bdaaa7',
-    name: 'What will be the closing price of Bitcoin (BTC) in USD on May 31, 2025?',
-    description: 'What will be the closing price of Bitcoin (BTC) in USD on May 31, 2025?'
-  }
   
+  {
+    marketId: '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65',
+    name: 'What will be the Price of SUI in USD on 11:30 AM UTC, May 31, 2025?',
+    description: 'Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.'
+  },
+  {
+    marketId: '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff',
+    name: 'Who will win the UCL 2025?',
+    description: 'Based on the official UEFA Champions League website'
+  },
+  {
+    marketId: '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd',
+    name: 'Who Will win The Premier League 2025?',
+    description: 'Based on the final league standings published by the Premier Leaguee'
+  },
+  {
+    marketId: '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41',
+    name: 'What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?',
+    description: 'Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.'
+  },
+
   // If you add more markets, add them here
   // {
   //   marketId: '0x...',
@@ -182,49 +198,111 @@ export const SKEPSIS_CONFIG = {
   default_market_id: CONSTANTS.OBJECTS.MARKET,
 };
 
+// Types for spread metadata to ensure consistency
+export interface SpreadMetadata {
+  name: string;
+  description?: string;
+  rangeDescription?: string;
+}
+
 // Market spread metadata - custom names and descriptions for the spreads
 export const MARKET_SPREADS_METADATA = {
   // Bitcoin price prediction market
-  'What will be the closing price of Bitcoin (BTC) in USD on May 31, 2025?': {
+  '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41': {
     spreadLabels: [
-      { name: "Bear Market", description: "Below expected price range", rangeDescription: "0-10k" },
-      { name: "Conservative", description: "Lower price range", rangeDescription: "10k-25k" },
-      { name: "Current Range", description: "Around current price levels", rangeDescription: "25k-50k" },
-      { name: "Bullish", description: "Higher growth expected", rangeDescription: "50k-75k" },
-      { name: "Super Bullish", description: "Strong growth expected", rangeDescription: "75k-100k" },
-      { name: "Moon Shot", description: "Exceptional growth", rangeDescription: "100k+" }
-    ]
+  { name: "2.00 - 2.10 $" },
+  { name: "2.10 - 2.20 $" },
+  { name: "2.20 - 2.30 $" },
+  { name: "2.30 - 2.40 $" },
+  { name: "2.40 - 2.50 $" },
+  { name: "2.50 - 2.60 $" },
+  { name: "2.60 - 2.70 $" },
+  { name: "2.70 - 2.80 $" },
+  { name: "2.80 - 2.90 $" },
+  { name: "2.90 - 3.00 $" },
+  { name: "3.00 - 3.10 $" },
+  { name: "3.10 - 3.20 $" },
+  { name: "3.20 - 3.30 $" },
+  { name: "3.30 - 3.40 $" },
+  { name: "3.40 - 3.50 $" },
+  { name: "3.50 - 3.60 $" },
+  { name: "3.60 - 3.70 $" },
+  { name: "3.70 - 3.80 $" },
+  { name: "3.80 - 3.90 $" },
+  { name: "3.90 - 4.00 $" },
+  { name: "4.00 - 4.10 $" },
+  { name: "4.10 - 4.20 $" },
+  { name: "4.20 - 4.30 $" },
+  { name: "4.30 - 4.40 $" },
+  { name: "4.40 - 4.50 $" },
+  { name: "4.50 - 4.60 $" },
+  { name: "4.60 - 4.70 $" },
+  { name: "4.70 - 4.80 $" },
+  { name: "4.80 - 4.90 $" },
+  { name: "4.90 - 5.00 $" },
+  { name: "5.00 - 5.10 $" },
+  { name: "5.10 - 5.20 $" },
+  { name: "5.20 - 5.30 $" },
+  { name: "5.30 - 5.40 $" },
+  { name: "5.40 - 5.50 $" },
+  { name: "5.50 - 5.60 $" },
+  { name: "5.60 - 5.70 $" },
+  { name: "5.70 - 5.80 $" },
+  { name: "5.80 - 5.90 $" },
+  { name: "5.90 - 6.00 $" },
+  { name: "6.00 - 6.10 $" },
+  { name: "6.10 - 6.20 $" },
+  { name: "6.20 - 6.30 $" },
+  { name: "6.30 - 6.40 $" },
+  { name: "6.40 - 6.50 $" },
+  { name: "6.50 - 6.60 $" },
+  { name: "6.60 - 6.70 $" },
+  { name: "6.70 - 6.80 $" },
+  { name: "6.80 - 6.90 $" },
+  { name: "6.90 - 7.00 $" }
+]
   },
   // Temperature prediction market
-  '0xfd45b6a75752d9f4ecd73476c78948c883db927b01667adb2eb9d03fc13f6cd8': {
+  '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65': {
     spreadLabels: [
-      { name: "Freezing", description: "Below freezing point", rangeDescription: "Below 0°C" },
-      { name: "Cold", description: "Cold temperature", rangeDescription: "0-10°C" },
-      { name: "Cool", description: "Cool temperature", rangeDescription: "10-20°C" },
-      { name: "Mild", description: "Mild temperature", rangeDescription: "20-25°C" },
-      { name: "Warm", description: "Warm temperature", rangeDescription: "25-30°C" },
-      { name: "Hot", description: "Hot temperature", rangeDescription: "30-35°C" },
-      { name: "Very Hot", description: "Very hot temperature", rangeDescription: "Above 35°C" }
+      { name: "2.50 - 2.60 $" },
+      { name: "2.60 - 2.70 $" },
+      { name: "2.70 - 2.80 $" },
+      { name: "2.80 - 2.90 $" },
+      { name: "2.90 - 3.00 $" },
+      { name: "3.00 - 3.10 $" },
+      { name: "3.10 - 3.20 $" },
+      { name: "3.20 - 3.30 $" },
+      { name: "3.30 - 3.40 $" },
+      { name: "3.40 - 3.50 $" },
+      { name: "3.50 - 3.60 $" },
+      { name: "3.60 - 3.70 $" },
+      { name: "3.70 - 3.80 $" },
+      { name: "3.80 - 3.90 $" },
+      { name: "3.90 - 4.00 $" },
+      { name: "4.00 - 4.10 $" },
+      { name: "4.10 - 4.20 $" },
+      { name: "4.20 - 4.30 $" },
+      { name: "4.30 - 4.40 $" },
+      { name: "4.40 - 4.50 $" },
     ]
   },
   // Champions League winner market
-  '0xe15afe91546fe909fcb58b7ba362f6981001fae3eedf5409dcaae8e325ed5b6f': {
+  '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd': {
     spreadLabels: [
-      { name: "Manchester City", description: "English Premier League", rangeDescription: "Spread 0" },
-      { name: "Real Madrid", description: "La Liga", rangeDescription: "Spread 1" },
-      { name: "Bayern Munich", description: "Bundesliga", rangeDescription: "Spread 2" },
-      { name: "Liverpool", description: "English Premier League", rangeDescription: "Spread 3" },
-      { name: "PSG", description: "Ligue 1", rangeDescription: "Spread 4" },
-      { name: "Barcelona", description: "La Liga", rangeDescription: "Spread 5" },
-      { name: "Other", description: "Other teams", rangeDescription: "Spread 6" }
+      { name: "Manchester City"},
+      { name: "Liverpool"},
+      { name: "NewCastle"},
+      { name: "Chelsea"},
+      { name: "Arsenal"},
+      { name: "Aston Villa"},
     ]
   },
   // Champions League Inter vs PSG market
-  '0x8dc3f6b648e749022b84b9533cda9898884c175534e3eac34dba762c9dec09a3': {
+  '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff': {
     spreadLabels: [
-      { name: "Inter Milan Win", description: "Serie A team wins", rangeDescription: "Spread 0" },
-      { name: "Draw", description: "Match ends in draw", rangeDescription: "Spread 1" },
-      { name: "PSG Win", description: "Ligue 1 team wins", rangeDescription: "Spread 2" }
+      { name: "Inter Milan Win"},
+      { name: "PSG Win"}
     ]
   }
 };

@@ -1,16 +1,15 @@
 {
-  "deployment_date": "2025-05-25T20:12:57.537Z",
+  "deployment_date": "2025-05-30T12:42:45.959Z",
   "network": "devnet",
   "packages": {
-    "distribution_market_factory": "0xf8cac7e2af3e186a9821a6df801c2fadbf964403b1ba26757f2571a006d39284",
+    "distribution_market_factory": "0x7b9871542550d47c1d3caaac29c4a1d2ad9527c53f666d813a28be2c8155758e",
     "usdc": "0x7c2e2815e1b4d345775fa1494b50625aeabde0a3c49225fa63092367ddb341de"
   },
   "objects": {
-    "factory": "0x6b8013e635b26842109a35ff573230bbe539c720478d1187336f4291a14358b1",
-    "market": "0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9",
-    "admin_cap": "0xacf7625aeea4083dad749cf76a81316869ca53165449b0d868f578da62898021",
-    "liquidity_share": "0xa769385a52146ab77a79a9af118a070476ec393c7e7201ceba840ddb49ffced5",
-    "position_registry": "0x607bb436a792e6302b413b5e9a6edcc4e5f664d576aa4071b6415f1c06d7b971"
+    "factory": "0x0dbeece3734a8e11d072db998f40ec162db2559ca3e3c8153be5be8210d92e3f",
+    "market": "0x832896bb00869e7738adfe470639754405b66f07678c62653b9bbf1a463acf0d",
+    "liquidity_share": "0xa347ad530632c5d0a9e4cd2601c6c8ffe70a0c9ddf35bbd7110bba3d646d2545",
+    "position_registry": "0x004881fb1b7202d503986585e209638ab0644a2220017be049d1a342803d3080"
   },
   "market_params": {
     "question": "Will Bitcoin price exceed $100,000 by end of 2025?",
@@ -19,10 +18,10 @@
     "lowerBound": 0,
     "upperBound": 100,
     "initialLiquidity": 1000000000,
-    "resolutionTimeMs": 1748205774907,
-    "biddingDeadlineMs": 1748205474908,
-    "resolution_time": "2025-05-25T20:42:54.907Z",
-    "bidding_deadline": "2025-05-25T20:37:54.908Z",
+    "resolutionTimeMs": 1748610763339,
+    "biddingDeadlineMs": 1748610463342,
+    "resolution_time": "2025-05-30T13:12:43.339Z",
+    "bidding_deadline": "2025-05-30T13:07:43.342Z",
     "initial_liquidity_usdc": 1000
   }
 }

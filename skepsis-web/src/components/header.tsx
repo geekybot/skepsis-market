@@ -23,7 +23,6 @@ const Header = () => {
     
     // If the wallet changed
     if (previousWalletId !== currentWallet.id) {
-      console.log("Wallet changed from", previousWalletId, "to", currentWallet.id);
       setPreviousWalletId(currentWallet.id);
       refreshWalletState();
       
