@@ -20,6 +20,17 @@ Powered by Bucket Protocol.
 * Headless, fully customizable UI component
 * Save 80% of the initial setting time. You can build your project/product way faster
 
+## Environment Variables
+
+The application uses environment variables for configuration. Create a `.env.local` file in the root directory with the following variables:
+
+```
+# Google Tag Manager configuration
+NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX  # Replace with your actual Google Tag Manager ID
+```
+
+For development, you can copy the `.env.example` file and rename it to `.env.local`, then update the values accordingly.
+
 ## Components
 * Basic series
   * BasicDataField
