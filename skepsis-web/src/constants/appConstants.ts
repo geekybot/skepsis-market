@@ -178,6 +178,21 @@ export const NETWORK_CONFIG = {
   mainnetRpcUrl: 'https://fullnode.mainnet.sui.io',
 };
 
+// Google Analytics and GTM configuration
+export const ANALYTICS_CONFIG = {
+  // Google Tag Manager ID from environment variable
+  gtmId: process.env.NEXT_PUBLIC_GTM_ID || '',
+  
+  // Enable/disable analytics based on environment and if GTM ID exists
+  enabled: !!process.env.NEXT_PUBLIC_GTM_ID, // Only enable if GTM ID is provided
+  
+  // Additional analytics settings
+  options: {
+    debug: process.env.NODE_ENV === 'development',
+    send_page_view: true,
+  },
+};
+
 // Skepsis testnet deployment configuration
 export const SKEPSIS_CONFIG = {
   // Packages
@@ -328,5 +343,6 @@ export default {
   SPREAD_COLORS,
   USDC_CONFIG,
   SKEPSIS_CONFIG,
-  MODULES
+  MODULES,
+  ANALYTICS_CONFIG
 };
