@@ -49,6 +49,116 @@
   .animate-pulse-slow {
     animation: pulse-slow 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+  
+  /* Milestone marker animations */
+  .milestone-marker {
+    transition: all 0.4s ease-out;
+  }
+  
+  .milestone-marker:hover {
+    transform: translateY(-5px);
+    filter: drop-shadow(0 8px 15px rgba(99, 102, 241, 0.5));
+    z-index: 20;
+  }
+  
+  /* Star twinkling animation */
+  @keyframes twinkle {
+    0%, 100% {
+      opacity: 1;
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+    }
+    50% {
+      opacity: 0.5;
+      filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+    }
+  }
+  
+  @keyframes spin-slow {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  
+  .animate-spin-slow {
+    animation: spin-slow 15s linear infinite;
+  }
+  
+  .twinkle-delay-1 {
+    animation-delay: 1s;
+  }
+  
+  .twinkle-delay-2 {
+    animation-delay: 2s;
+  }
+  
+  /* Moving dot animation - using simpler animation for broader compatibility */
+  @keyframes floatDot {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-15px) translateX(10px);
+    }
+    50% {
+      transform: translateY(0) translateX(20px);
+    }
+    75% {
+      transform: translateY(15px) translateX(10px);
+    }
+  }
+  
+  .moving-dot {
+    position: absolute;
+    animation: floatDot 10s ease-in-out infinite;
+  }
+  
+  .moving-dot-1 {
+    top: 80px;
+    left: 200px;
+    animation-duration: 12s;
+  }
+  
+  .moving-dot-2 {
+    top: 200px;
+    left: 400px;
+    animation-duration: 18s;
+    animation-delay: -3s;
+  }
+  
+  .moving-dot-3 {
+    top: 350px;
+    left: 150px;
+    animation-duration: 15s;
+    animation-delay: -7s;
+  }
+  
+  .moving-dot-4 {
+    top: 500px;
+    left: 450px;
+    animation-duration: 20s;
+    animation-delay: -10s;
+  }
+  
+  /* Arrow animation */
+  @keyframes bounce-right {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(15px);
+    }
+  }
+  
+  .arrow-right {
+    animation: bounce-right 2s infinite;
+  }
 
   .Toastify__toast {
     background-color: #141b1d;

@@ -288,6 +288,485 @@ const LandingPage = () => {
         </div>
       </div>
       
+      {/* Roadmap Section */}
+      <div className="w-full max-w-5xl mb-20">
+        <div className="bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md rounded-xl p-8 border border-indigo-800/30 shadow-lg">
+          <div className="relative mb-8">
+            <div className="absolute -z-10 w-[300px] h-[100px] bg-blue-500/10 rounded-full blur-[60px] top-0 right-0"></div>
+            <h2 className="text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent mb-4">Project Roadmap</h2>
+            <p className="text-white/90 text-lg">Our journey from concept to fully decentralized prediction markets</p>
+          </div>
+          
+          <div className="relative mt-12 mb-10">
+            {/* Background blur effects */}
+            <div className="absolute -z-10 w-[400px] h-[300px] bg-purple-500/10 rounded-full blur-[100px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            
+            {/* Desktop version - only visible on md screens and up */}
+            <div className="hidden md:block">
+              <div className="relative">
+                {/* Main timeline line */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1.5 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+                
+                {/* Timeline milestones */}
+                <div className="space-y-32">
+                
+                  {/* Q2 2025 - Ideation & Research */}
+                  <div className="relative">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -mt-5">
+                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-emerald-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-sm">Q2</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-20 pt-20">
+                      <div className="flex justify-end">
+                        {/* Empty */}
+                      </div>
+                      <div>
+                        <div className="bg-indigo-800/90 rounded-xl p-6 border border-indigo-700/30 shadow-lg w-80">
+                          <h3 className="text-xl font-bold text-white mb-3">Ideation & Research</h3>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Define platform mission</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Market analysis & research</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Develop whitepaper</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Development & Testing */}
+                  <div className="relative">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -mt-5">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-blue-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-sm">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-20 pt-20">
+                      <div className="flex justify-end">
+                        <div className="bg-indigo-800/90 rounded-xl p-6 border border-indigo-700/30 shadow-lg w-80">
+                          <h3 className="text-xl font-bold text-white mb-3">Development & Testing</h3>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Smart contracts with LMSR</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">User-friendly interface</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Testnet deployment</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div>
+                        {/* Empty */}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Beta Launch */}
+                  <div className="relative">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -mt-5">
+                      <div className="w-16 h-16 bg-gradient-to-br from-violet-400 to-violet-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-violet-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-sm">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-20 pt-20">
+                      <div className="flex justify-end">
+                        {/* Empty */}
+                      </div>
+                      <div>
+                        <div className="bg-indigo-800/90 rounded-xl p-6 border border-indigo-700/30 shadow-lg w-80">
+                          <h3 className="text-xl font-bold text-white mb-3">Beta Launch & Community</h3>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Public beta testing</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Community channels</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Iterative improvements</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Mainnet Launch */}
+                  <div className="relative">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -mt-5">
+                      <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-amber-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-sm">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-20 pt-20">
+                      <div className="flex justify-end">
+                        <div className="bg-indigo-800/90 rounded-xl p-6 border border-indigo-700/30 shadow-lg w-80">
+                          <h3 className="text-xl font-bold text-white mb-3">Mainnet Launch & Expansion</h3>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Deploy on mainnet</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Staking & reward systems</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Marketing campaigns</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div>
+                        {/* Empty */}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Governance */}
+                  <div className="relative">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -mt-5">
+                      <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-pink-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-sm">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-20 pt-20">
+                      <div className="flex justify-end">
+                        {/* Empty */}
+                      </div>
+                      <div>
+                        <div className="bg-indigo-800/90 rounded-xl p-6 border border-indigo-700/30 shadow-lg w-80">
+                          <h3 className="text-xl font-bold text-white mb-3">Governance & Decentralization</h3>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Governance token</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Community-led model</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Community development</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Scaling */}
+                  <div className="relative">
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -mt-5">
+                      <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-indigo-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-sm">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-20 pt-20">
+                      <div className="flex justify-end">
+                        <div className="bg-indigo-800/90 rounded-xl p-6 border border-indigo-700/30 shadow-lg w-80">
+                          <h3 className="text-xl font-bold text-white mb-3">Scaling & Improvement</h3>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Cross-chain interoperability</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Advanced analytics</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="text-indigo-300">•</span>
+                              <span className="text-white/90">Strategic partnerships</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div>
+                        {/* Empty */}
+                      </div>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+            
+            {/* Mobile version - only visible on smaller screens */}
+            <div className="md:hidden">
+              <div className="relative">
+                {/* Main timeline line */}
+                <div className="absolute left-8 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+                
+                {/* Timeline milestones */}
+                <div className="space-y-12">
+                  {/* Q2 2025 - Ideation & Research */}
+                  <div className="relative">
+                    <div className="absolute left-8 transform -translate-x-1/2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-emerald-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-xs">Q2</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-16 pt-2">
+                      <div className="bg-indigo-800/90 rounded-xl p-5 border border-indigo-700/30 shadow-lg">
+                        <h3 className="text-lg font-bold text-white mb-2">Ideation & Research</h3>
+                        <ul className="space-y-1">
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Define platform mission</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Market analysis & research</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Develop whitepaper</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Development & Testing */}
+                  <div className="relative">
+                    <div className="absolute left-8 transform -translate-x-1/2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-blue-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-xs">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-16 pt-2">
+                      <div className="bg-indigo-800/90 rounded-xl p-5 border border-indigo-700/30 shadow-lg">
+                        <h3 className="text-lg font-bold text-white mb-2">Development & Testing</h3>
+                        <ul className="space-y-1">
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Smart contracts with LMSR</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">User-friendly interface</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Testnet deployment</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Beta Launch */}
+                  <div className="relative">
+                    <div className="absolute left-8 transform -translate-x-1/2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-violet-400 to-violet-600 rounded-lg flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-violet-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-xs">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-16 pt-2">
+                      <div className="bg-indigo-800/90 rounded-xl p-5 border border-indigo-700/30 shadow-lg">
+                        <h3 className="text-lg font-bold text-white mb-2">Beta Launch & Community</h3>
+                        <ul className="space-y-1">
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Public beta testing</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Community channels</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Iterative improvements</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Continue with other milestones */}
+                  {/* Q3 2025 - Mainnet Launch */}
+                  <div className="relative">
+                    <div className="absolute left-8 transform -translate-x-1/2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-amber-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-xs">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-16 pt-2">
+                      <div className="bg-indigo-800/90 rounded-xl p-5 border border-indigo-700/30 shadow-lg">
+                        <h3 className="text-lg font-bold text-white mb-2">Mainnet Launch & Expansion</h3>
+                        <ul className="space-y-1">
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Deploy on mainnet</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Staking & reward systems</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Marketing campaigns</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Governance */}
+                  <div className="relative">
+                    <div className="absolute left-8 transform -translate-x-1/2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-pink-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-xs">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-16 pt-2">
+                      <div className="bg-indigo-800/90 rounded-xl p-5 border border-indigo-700/30 shadow-lg">
+                        <h3 className="text-lg font-bold text-white mb-2">Governance & Decentralization</h3>
+                        <ul className="space-y-1">
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Governance token</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Community-led model</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Community development</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Q3 2025 - Scaling */}
+                  <div className="relative">
+                    <div className="absolute left-8 transform -translate-x-1/2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-indigo-300/50">
+                        <div className="transform -rotate-45">
+                          <div className="text-center">
+                            <div className="text-xs">Q3</div>
+                            <div className="text-xs">2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-16 pt-2">
+                      <div className="bg-indigo-800/90 rounded-xl p-5 border border-indigo-700/30 shadow-lg">
+                        <h3 className="text-lg font-bold text-white mb-2">Scaling & Improvement</h3>
+                        <ul className="space-y-1">
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Cross-chain interoperability</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Advanced analytics</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-indigo-300">•</span>
+                            <span className="text-white/90 text-sm">Strategic partnerships</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Built On Section */}
       <div className="w-full max-w-4xl mb-20 flex flex-col items-center">
         <div className="px-8 py-5 rounded-xl bg-gradient-to-br from-indigo-950/50 to-violet-950/50 flex flex-col sm:flex-row items-center gap-3 sm:gap-8 border border-indigo-800/30">
