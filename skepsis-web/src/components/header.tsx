@@ -66,6 +66,11 @@ const Header = () => {
                 Prediction Markets
               </span>
             </Link>
+            <Link href="/create-market">
+              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
+                Create Market
+              </span>
+            </Link>
             <Link href="/liquidity">
               <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
                 Liquidity
