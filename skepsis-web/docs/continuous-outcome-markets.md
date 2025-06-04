@@ -188,13 +188,18 @@ When a market resolves:
 1. **Resolution Value Submission**: The actual outcome value is submitted
 2. **Winning Spread Determination**: The system identifies which spread contains this value
 3. **State Update**: The market state changes to "Resolved"
-4. **Winning Position Calculation**: Positions in the winning spread become valuable
+4. **Share Value Determination**: 
+   - Shares in the winning spread become worth exactly 1 USDC each, regardless of the purchase price
+   - Shares in all other spreads become worthless (0 USDC value)
 5. **Claiming Process**: Users can claim their winnings if they hold positions in the winning spread
+
+For example, if a user bought 10 shares in the winning spread at 0.3 USDC each (total cost: 3 USDC), they can redeem those shares for 10 USDC after resolution, yielding a 7 USDC profit.
 
 Resolution rules ensure that:
 1. Only the spread containing the exact value is considered winning
 2. Edge cases (values at boundaries) are handled consistently
 3. The resolution can be verified by all participants
+4. The binary payout structure (1 USDC per winning share, 0 for others) creates clear incentives
 
 ## UI Visualization
 

@@ -100,8 +100,8 @@ The Skepsis trading interface provides an intuitive way to interact with predict
 When the resolution time arrives:
 
 1. The actual outcome is determined based on the resolution criteria
-2. Shares in the winning spread become redeemable for their full value
-3. Shares in other spreads become worthless
+2. Shares in the winning spread become redeemable for exactly 1 USDC each
+3. Shares in other spreads become completely worthless (0 USDC value)
 4. Users with winning positions can claim their rewards by clicking the "Claim" button
 
 ## Market Types
@@ -300,7 +300,7 @@ Skepsis is an open platform that welcomes contributions. If you're interested in
 
 For questions or support:
 - Join our community Discord
-- Email support@skepsis.io
+- Email team@skepsis.live
 - Check out our GitHub repository
 
 ---

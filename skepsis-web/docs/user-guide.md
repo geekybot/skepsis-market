@@ -6,7 +6,7 @@ Welcome to Skepsis, a decentralized prediction market platform that allows you t
 
 ### Connecting Your Wallet
 
-1. **Access the Platform**: Visit the Skepsis web application at [skepsis.io](https://skepsis.io)
+1. **Access the Platform**: Visit the Skepsis web application at [skepsis.live](https://skepsis.live)
 2. **Connect Your Wallet**: 
    - Click the "Connect Wallet" button in the top-right corner
    - Select your preferred Sui wallet
@@ -143,6 +143,10 @@ When a market's resolution time arrives:
 1. The actual outcome is determined based on the resolution criteria
 2. The market state changes to "Resolved"
 3. The winning spread is identified (the one containing the actual outcome)
+4. Shares in the winning spread become worth exactly 1 USDC each
+5. Shares in all other spreads become completely worthless (0 USDC value)
+
+This "winner-takes-all" resolution mechanism ensures clear outcomes and incentivizes accurate predictions.
 
 ### Claiming Rewards
 
@@ -152,7 +156,12 @@ If you hold positions in the winning spread:
 2. Review your winning positions (marked with a "Winner" badge)
 3. Click the "Claim Rewards" button for each winning position
 4. Approve the transaction in your wallet
-5. Your rewards will be transferred to your wallet
+5. Your rewards will be transferred to your wallet at exactly 1 USDC per share
+
+For example:
+- If you bought 10 shares for 0.2 USDC each (total cost: 2 USDC) in what turned out to be the winning spread, you can redeem them for 10 USDC, making an 8 USDC profit.
+- If you bought 10 shares for 0.8 USDC each (total cost: 8 USDC) in what turned out to be the winning spread, you can redeem them for 10 USDC, making a 2 USDC profit.
+- If you bought shares in any other spread, these shares become worthless (0 USDC value).
 
 ![Claiming Rewards](../examples/claiming-rewards.png)
 
@@ -227,7 +236,7 @@ If you encounter issues:
 
 1. Check the FAQ section
 2. Join the community Discord for support
-3. Contact support@skepsis.io for assistance
+3. Contact team@skepsis.live for assistance
 
 ---
 

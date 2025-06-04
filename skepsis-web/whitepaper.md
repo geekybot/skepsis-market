@@ -18,30 +18,41 @@ Skepsis is a decentralized prediction market protocol built on the Sui blockchai
 
 ## Table of Contents
 
-1. [Problem Statement](#problem-statement)
-2. [The Skepsis Solution](#the-skepsis-solution)
-3. [Continuous Outcome Markets](#continuous-outcome-markets)
-   - [What They Are](#what-they-are)
-   - [Why They Matter](#why-they-matter)
-4. [Mechanism Design](#mechanism-design)
-   - [The LMSR Mechanism](#the-lmsr-mechanism)
-   - [Why It's Better Than Binary/Betting Platforms](#why-its-better-than-binarybetting-platforms)
-   - [Adapting LMSR for Distribution-Based Markets](#adapting-lmsr-for-distribution-based-markets)
-5. [Market Lifecycle](#market-lifecycle)
-   - [Market Creation](#market-creation)
-   - [Trading](#trading)
-   - [Resolution](#resolution)
-6. [Architecture on Sui](#architecture-on-sui)
-   - [Object-Based Market Instantiation](#object-based-market-instantiation)
-   - [Coin\<T\> Handling](#coint-handling)
-   - [Clock Usage](#clock-usage)
-7. [Incentive Design](#incentive-design)
-   - [Benefits for Different Participants](#benefits-for-different-participants)
-   - [Ensuring Honest Behavior](#ensuring-honest-behavior)
-8. [Use Cases](#use-cases)
-9. [Future Work](#future-work)
-10. [Technical Implementation](#technical-implementation)
-11. [Conclusion](#conclusion)
+- [Abstract](#abstract)
+- [Table of Contents](#table-of-contents)
+- [Problem Statement](#problem-statement)
+- [The Skepsis Solution](#the-skepsis-solution)
+- [Continuous Outcome Markets](#continuous-outcome-markets)
+  - [What They Are](#what-they-are)
+  - [Why They Matter](#why-they-matter)
+- [Mechanism Design](#mechanism-design)
+  - [The LMSR Mechanism](#the-lmsr-mechanism)
+  - [Why It's Better Than Binary/Betting Platforms](#why-its-better-than-binarybetting-platforms)
+  - [Adapting LMSR for Distribution-Based Markets](#adapting-lmsr-for-distribution-based-markets)
+- [Market Lifecycle](#market-lifecycle)
+  - [Market Creation](#market-creation)
+  - [Trading](#trading)
+  - [Resolution](#resolution)
+- [Architecture on Sui](#architecture-on-sui)
+  - [Object-Based Market Instantiation](#object-based-market-instantiation)
+  - [Coin Handling](#coin-handling)
+  - [Clock Usage](#clock-usage)
+- [Incentive Design](#incentive-design)
+  - [Benefits for Different Participants](#benefits-for-different-participants)
+  - [Ensuring Honest Behavior](#ensuring-honest-behavior)
+- [Use Cases](#use-cases)
+- [Future Work](#future-work)
+  - [Decentralized Oracle Integration](#decentralized-oracle-integration)
+  - [Advanced Staking Models](#advanced-staking-models)
+  - [Enhanced Distribution Implementation](#enhanced-distribution-implementation)
+  - [User Experience and Client Enhancements](#user-experience-and-client-enhancements)
+  - [Integration and Composability](#integration-and-composability)
+- [Technical Implementation](#technical-implementation)
+  - [Core Move Modules](#core-move-modules)
+  - [Optimized Market Data Access](#optimized-market-data-access)
+  - [Client Utilities](#client-utilities)
+- [Conclusion](#conclusion)
+- [Contact \& References](#contact--references)
 
 ## Problem Statement
 
@@ -302,7 +313,7 @@ Pricing is determined automatically by our LMSR implementation, which adjusts pr
         3
       </div>
       <div>
-        Shares in the winning spread become redeemable for their full value
+        Shares in the winning spread become redeemable for exactly 1 USDC each
       </div>
     </div>
   </li>
@@ -312,7 +323,7 @@ Pricing is determined automatically by our LMSR implementation, which adjusts pr
         4
       </div>
       <div>
-        Shares in other spreads become worthless
+        Shares in all other spreads become worthless (0 USDC value)
       </div>
     </div>
   </li>
@@ -600,7 +611,7 @@ The protocol ensures safety through comprehensive error handling, secure mathema
   <p style="max-width: 600px; margin: 0 auto;">Ready to explore continuous outcome prediction markets? Learn more about Skepsis, participate in markets, or contribute to the protocol.</p>
   
   <div style="display: inline-block; margin-top: 20px; padding: 15px 30px; background-color: #6366f1; color: white; border-radius: 8px; font-weight: bold;">
-    Visit skepsis.io
+    Visit skepsis.live
   </div>
 </div>
 
@@ -611,8 +622,8 @@ The protocol ensures safety through comprehensive error handling, secure mathema
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">
   <div>
     <h3>Contact Information</h3>
-    <p><strong>Website:</strong> <a href="https://skepsis.io">https://skepsis.io</a></p>
-    <p><strong>Email:</strong> team@skepsis.io</p>
+    <p><strong>Website:</strong> <a href="https://skepsis.live">https://skepsis.live</a></p>
+    <p><strong>Email:</strong> team@skepsis.live</p>
     <p><strong>GitHub:</strong> <a href="https://github.com/skepsis-protocol">github.com/skepsis-protocol</a></p>
     <p><strong>Twitter:</strong> <a href="https://twitter.com/SkepsisProtocol">@SkepsisProtocol</a></p>
     <p><strong>Discord:</strong> <a href="https://discord.gg/skepsis">discord.gg/skepsis</a></p>
@@ -622,7 +633,7 @@ The protocol ensures safety through comprehensive error handling, secure mathema
     <h3>Key References</h3>
     <ol style="padding-left: 20px;">
       <li>Hanson, R. (2003). "Combinatorial Information Market Design"</li>
-      <li>Paradigm Research (2023). "Distribution Markets: AMMs for Continuous Outcome Spaces"</li>
+      <li>Paradigm Research (2023). <a href="https://www.paradigm.xyz/2024/12/distribution-markets">"Distribution Markets: AMMs for Continuous Outcome Spaces"</a></li>
       <li>Sui Move Documentation: <a href="https://docs.sui.io/move">https://docs.sui.io/move</a></li>
       <li>LMSR Market Maker: <a href="https://www.econ2.jhu.edu/faculty/hanson/mktscore.pdf">Original Paper</a></li>
     </ol>

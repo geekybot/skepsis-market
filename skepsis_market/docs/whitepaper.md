@@ -46,7 +46,7 @@ Continuous outcome markets offer several advantages:
 2. **Better Calibration**: Traders can express nuanced beliefs and confidence levels
 3. **More Realistic**: Most real-world predictions concern continuous variables
 4. **Capital Efficiency**: A single continuous market can replace dozens of binary markets
-5. **Fairer Rewards**: Participants are rewarded based on how close their prediction was to the actual outcome
+5. **Incentive Alignment**: The binary payout structure (1 USDC per winning spread share, 0 for others) creates clear incentives for accurate predictions
 
 ## Mechanism Design
 
@@ -126,8 +126,8 @@ When the resolution time arrives:
 
 1. A resolving participant submits the actual outcome value using our `resolve-market` script
 2. The system determines which spread contains the true outcome
-3. Shares in the winning spread become redeemable for their full value
-4. Shares in other spreads become worthless
+3. Shares in the winning spread become redeemable for exactly 1 USDC each
+4. Shares in other spreads become completely worthless (0 USDC value)
 5. Market participants can claim their winnings through our secure claiming functions
 
 Our resolution mechanism includes checks to ensure the resolution time has passed and that the market hasn't been previously resolved. Users can easily verify the resolution status through our market-info script, which provides comprehensive market data with just two blockchain calls.

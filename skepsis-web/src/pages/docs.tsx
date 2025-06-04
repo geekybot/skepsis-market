@@ -666,7 +666,7 @@ async function placeSkepsisTrade(marketId, tradeAmount, outcomeIndex) {
             <ol className="list-decimal pl-5 text-white/80 space-y-2">
               <li>Check the <span className="text-white font-medium">FAQ section</span> on the Skepsis website</li>
               <li>Join the <a href="https://discord.gg/skepsis" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2">community Discord</a> for support</li>
-              <li>Contact <a href="mailto:support@skepsis.io" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2">support@skepsis.io</a> for assistance</li>
+              <li>Contact <a href="mailto:team@skepsis.live" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2">team@skepsis.live</a> for assistance</li>
             </ol>
             
             <div className="mt-4 p-3 bg-indigo-950/30 rounded-lg">
