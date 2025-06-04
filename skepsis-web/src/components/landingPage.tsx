@@ -394,7 +394,7 @@ const LandingPage = () => {
                       <div className="w-16 h-16 bg-gradient-to-br from-violet-400 to-violet-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-violet-300/50">
                         <div className="transform -rotate-45">
                           <div className="text-center">
-                            <div className="text-sm">Q3</div>
+                            <div className="text-sm">Q4</div>
                             <div className="text-xs">2025</div>
                           </div>
                         </div>
@@ -433,8 +433,8 @@ const LandingPage = () => {
                       <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-amber-300/50">
                         <div className="transform -rotate-45">
                           <div className="text-center">
-                            <div className="text-sm">Q3</div>
-                            <div className="text-xs">2025</div>
+                            <div className="text-sm">Q1</div>
+                            <div className="text-xs">2026</div>
                           </div>
                         </div>
                       </div>
@@ -472,8 +472,8 @@ const LandingPage = () => {
                       <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-pink-300/50">
                         <div className="transform -rotate-45">
                           <div className="text-center">
-                            <div className="text-sm">Q3</div>
-                            <div className="text-xs">2025</div>
+                            <div className="text-sm">Q2</div>
+                            <div className="text-xs">2026</div>
                           </div>
                         </div>
                       </div>
@@ -511,8 +511,8 @@ const LandingPage = () => {
                       <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center text-white font-semibold shadow-lg transform rotate-45 border-2 border-indigo-300/50">
                         <div className="transform -rotate-45">
                           <div className="text-center">
-                            <div className="text-sm">Q3</div>
-                            <div className="text-xs">2025</div>
+                            <div className="text-sm">Q2+</div>
+                            <div className="text-xs">2026</div>
                           </div>
                         </div>
                       </div>
