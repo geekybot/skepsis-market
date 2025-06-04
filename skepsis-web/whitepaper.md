@@ -626,7 +626,6 @@ The protocol ensures safety through comprehensive error handling, secure mathema
     <p><strong>Email:</strong> team@skepsis.live</p>
     <p><strong>GitHub:</strong> <a href="https://github.com/skepsis-protocol">github.com/skepsis-protocol</a></p>
     <p><strong>Twitter:</strong> <a href="https://twitter.com/skepsis_market">@skepsis_market</a></p>
-    <p><strong>Discord:</strong> <a href="https://discord.gg/skepsis">discord.gg/skepsis</a></p>
   </div>
   
   <div>
