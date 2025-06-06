@@ -27,7 +27,7 @@ export const CONSTANTS = {
     USDC: '0x7c2e2815e1b4d345775fa1494b50625aeabde0a3c49225fa63092367ddb341de',
   },
   OBJECTS: {
-    MARKET: '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65',
+    MARKET: '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e',
     POSITION_REGISTRY: '0x004881fb1b7202d503986585e209638ab0644a2220017be049d1a342803d3080',
     FAUCET: '0xa101d25417a108a94b49f68f39adfbcd2e7d882dc039728ff1c0f7d85fca1cca',
     DIST_UPGRADE_CAP: '0xec4f9b57a1017956eb199b4e754e3f8f2e7d4d2dbf963fa2e9e474cf9e15e8ca',
@@ -86,6 +86,11 @@ export const MARKETS = [
     marketId: '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41',
     name: 'What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?',
     description: 'Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.'
+  },
+  {
+    marketId: '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e',
+    name: "What will be the Price of SUI in USD on 11:30 AM UTC, June 15, 2025?",
+    description: "Based on the price reported by CoinMarketCap on June 15, 2025 at 11:30 AM UTC."
   },
 
   // If you add more markets, add them here
@@ -319,7 +324,33 @@ export const MARKET_SPREADS_METADATA = {
       { name: "Inter Milan Win"},
       { name: "PSG Win"}
     ]
-  }
+  },
+  // Temperature prediction market
+  '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e': {
+    spreadLabels: [
+      { name: "2.50 - 2.60 $" },
+      { name: "2.60 - 2.70 $" },
+      { name: "2.70 - 2.80 $" },
+      { name: "2.80 - 2.90 $" },
+      { name: "2.90 - 3.00 $" },
+      { name: "3.00 - 3.10 $" },
+      { name: "3.10 - 3.20 $" },
+      { name: "3.20 - 3.30 $" },
+      { name: "3.30 - 3.40 $" },
+      { name: "3.40 - 3.50 $" },
+      { name: "3.50 - 3.60 $" },
+      { name: "3.60 - 3.70 $" },
+      { name: "3.70 - 3.80 $" },
+      { name: "3.80 - 3.90 $" },
+      { name: "3.90 - 4.00 $" },
+      { name: "4.00 - 4.10 $" },
+      { name: "4.10 - 4.20 $" },
+      { name: "4.20 - 4.30 $" },
+      { name: "4.30 - 4.40 $" },
+      { name: "4.40 - 4.50 $" },
+    ]
+  },
+  
 };
 
 // Transaction utilities

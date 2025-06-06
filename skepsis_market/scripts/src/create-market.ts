@@ -36,15 +36,15 @@ async function main() {
 
   // Market parameters - you can customize these
   const marketParams = {
-    question: "What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?",
-    resolutionCriteria: "Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.",
+    question: "What will be the Price of SUI in USD on 11:30 AM UTC, June 15, 2025?",
+    resolutionCriteria: "Based on the price reported by CoinMarketCap on June 15, 2025 at 11:30 AM UTC.",
     steps: 50, // Number of buckets/spreads
     lowerBound: 200, // Minimum value (e.g., 0%)
     upperBound: 700, // Maximum value (e.g., 100%)
     initialLiquidity: 30000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)
     // Calculate timestamps (in milliseconds) for deadlines
-    resolutionTimeMs: 1749209400000, // 120 minutes from now
-    biddingDeadlineMs: 1749205800000, // 115 minutes from now
+    resolutionTimeMs: 1749987000000, // 120 minutes from now
+    biddingDeadlineMs: 1749967200000, // 115 minutes from now
   };
   
   console.log('\n📊 Market Parameters:');
