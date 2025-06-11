@@ -280,7 +280,8 @@ The platform uses enhanced metadata to provide context for each spread:
 {
   name: "Bear Market",
   description: "Below expected price range",
-  rangeDescription: "0-10k"
+  rangeDescription: "0-10k",
+  range: "0-10000"
 }
 ```
 

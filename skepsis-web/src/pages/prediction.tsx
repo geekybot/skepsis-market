@@ -5,7 +5,8 @@ import PredictionMarket from '@/components/markets/PredictionMarket';
 import { AppContext } from '@/context/AppContext';
 import { useContext } from 'react';
 import Header from '@/components/header';
-import { MARKETS, DEFAULT_MARKET_ID, SPREAD_COLORS, MARKET_SPREADS_METADATA, SpreadMetadata } from '@/constants/appConstants';
+import { MARKETS, DEFAULT_MARKET_ID, SPREAD_COLORS } from '@/constants/appConstants';
+import { MARKET_SPREAD_LABELS, SpreadLabel } from '@/constants/marketDetails';
 import { useLiveMarketInfo } from '@/hooks/useLiveMarketInfo';
 import { useRouter } from 'next/router';
 import { useSuiClient } from '@mysten/dapp-kit';
@@ -293,9 +294,12 @@ const PredictionPage: NextPage = () => {
                 spreadPrices={spreadPrices}
                 options={marketData.spreads.details.map((spread, index) => {
                   // Get metadata for this market and spread if available
-                  const marketMetadata = MARKET_SPREADS_METADATA[selectedMarketId as keyof typeof MARKET_SPREADS_METADATA];
-                  // Explicitly type the spread metadata to avoid type errors
-                  const spreadMetadata: SpreadMetadata | undefined = marketMetadata?.spreadLabels?.[index];
+                  const spreadLabels = MARKET_SPREAD_LABELS[selectedMarketId] || [];
+                  // Find the correct spread metadata by matching spreadIndex instead of using array index
+                  const spreadMetadata: SpreadLabel | undefined = spreadLabels.find(label => 
+                    // Match by spreadIndex to ensure correct label-to-spread mapping
+                    label.index === spread.spreadIndex
+                  );
                   
                   // Check if we have refreshed price data for this spread
                   const hasRefreshedPrice = spreadPrices && 
@@ -324,9 +328,12 @@ const PredictionPage: NextPage = () => {
                     // Include metadata for detailed descriptions with proper type handling
                     metadata: {
                       name: spreadMetadata?.name || '',
+                      index: spreadMetadata?.index !== undefined ? spreadMetadata.index : spread.spreadIndex,
+                      lowerBound: spreadMetadata?.lowerBound !== undefined ? spreadMetadata.lowerBound : spread.spreadIndex * 10,
+                      upperBound: spreadMetadata?.upperBound !== undefined ? spreadMetadata.upperBound : spread.spreadIndex * 10 + 10,
                       description: spreadMetadata?.description || '',
                       rangeDescription: spreadMetadata?.rangeDescription || spread.displayRange
-                    } as SpreadMetadata,
+                    } as SpreadLabel,
                     // Flag to indicate this price was refreshed
                     priceRefreshed: hasRefreshedPrice
                   };

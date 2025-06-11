@@ -286,23 +286,27 @@ export function useMarketPositions(
       if (positionResult.success && positionResult.data.hasPosition) {
         // Convert blockchain position data to our Position interface format
         const userPositions: Position[] = positionResult.data.spreads.map((spread) => {
-          // Calculate value using spread prices if available, otherwise use a default estimation
-          // Both shareAmount and prices are in raw units (6 decimals)
-          let value = (Number(spread.shareAmount) * 0.5) / (1_000_000 * 1_000_000); // Default estimation with proper scaling
+          // Calculate value - shares are already in the proper scale (6 decimals)
+          // The sharesAmount represents how many shares the user owns (scaled by 10^6)
+          const sharesInStandard = Number(spread.shareAmount) / 1_000_000;
           
-          // If spread prices are provided, use them for more accurate value calculation
-          if (spreadPrices && spread.spreadIndex in spreadPrices) {
-            const price = spreadPrices[spread.spreadIndex];
-            // Both share amount and price are in raw units (6 decimals)
-            // Divide by 1_000_000 twice to properly scale both values
-            value = (Number(spread.shareAmount) * price) / (1_000_000 * 1_000_000); // Calculate with proper scaling
+          // Calculate value based on shares and spread prices
+          let value = sharesInStandard; // Default value if no spread prices available
+          
+          // If spread prices are provided, use them for accurate value calculation
+          if (spreadPrices && spreadPrices[spread.spreadIndex] !== undefined) {
+            // buyPrice comes from the blockchain with 6 decimal places (same as shares)
+            // We need to scale it down by dividing by 1,000,000 to get the USDC price
+            const buyPrice = spreadPrices[spread.spreadIndex] / 1_000_000;
+            // Calculate the value as shares * buy price
+            value = sharesInStandard * buyPrice;
           }
           
           return {
             id: `${marketId}-${spread.spreadIndex}`, // Using a combination of market and spread index as ID
             spreadIndex: spread.spreadIndex,
-            sharesAmount: Number(spread.shareAmount) / 1_000_000, // Convert from raw units (6 decimals)
-            value: value // Value calculation using spread prices when available
+            sharesAmount: sharesInStandard, // Convert from raw units (6 decimals)
+            value: value // Value calculated using spread buy price when available
           };
         });
         

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { CONSTANTS, MODULES } from "@/constants/appConstants";
+import { getMarketDetails } from "@/constants/marketDetails";
 // Import MarketInfo type directly, not the hook
 import { MarketInfo, Spread } from "./useLiveMarketInfo";
 import { formatNumberWithCommas } from "@/lib/format";
@@ -182,6 +183,9 @@ export function useLiveMarketsInfo(marketIds: string[]) {
   // Helper function to fetch a single market's data
   async function fetchMarketInfo(marketId: string): Promise<MarketInfo> {
     try {
+      // Get the static market details first
+      const staticDetails = getMarketDetails(marketId);
+      
       // Get the market data
       const marketObjResponse = await suiClient.getObject({
         id: marketId,
@@ -202,12 +206,14 @@ export function useLiveMarketsInfo(marketIds: string[]) {
       // Cast the fields to our expected type
       const marketFields = marketObj.fields as unknown as MarketFields;
       
-      // Extract basic information
-      const question = marketFields.question?.fields?.bytes ? 
-        byteArrayToString(marketFields.question.fields.bytes) : 'Unknown Market';
+      // Use static data for basic information where available
+      const question = staticDetails.question || 
+        (marketFields.question?.fields?.bytes ? 
+          byteArrayToString(marketFields.question.fields.bytes) : 'Unknown Market');
       
-      const resolutionCriteria = marketFields.resolution_criteria?.fields?.bytes ? 
-        byteArrayToString(marketFields.resolution_criteria.fields.bytes) : 'No resolution criteria specified';
+      const resolutionCriteria = staticDetails.resolutionCriteria ||
+        (marketFields.resolution_criteria?.fields?.bytes ? 
+          byteArrayToString(marketFields.resolution_criteria.fields.bytes) : 'No resolution criteria specified');
       
       // Extract timing information
       const creationTime = Number(marketFields.creation_time || 0);

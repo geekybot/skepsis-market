@@ -168,26 +168,7 @@ const LiquidityPage: NextPage = () => {
   
   // Create a combined view of markets with user positions
   const marketsWithPositions = useMemo(() => {
-    // Reduce logging frequency to improve performance
-    if (process.env.NODE_ENV !== 'production') {
-      console.log("Building marketsWithPositions with current data:", { 
-        markets: marketData.length, 
-        today: new Date().toISOString(),
-        userLiquidityShare: Object.keys(userLiquidityByMarket).length,
-        liveMarkets: liveMarketsInfo ? Object.keys(liveMarketsInfo).length : 0
-      });
-    }
-    
-    // Debug the user's liquidity positions
-    console.log("DEBUG - User Liquidity by Market:", userLiquidityByMarket);
-    console.log("DEBUG - All User Liquidity Shares:", userLiquidityShares);
-    
-    // Debug the correlation between marketData and userLiquidityShares
-    console.log("DEBUG - Market IDs correlation:", {
-      marketDataIds: marketData.map(m => m.marketId),
-      userSharesIds: userLiquidityShares.map(s => s.marketId),
-      matchingIds: marketData.filter(m => userLiquidityShares.some(s => s.marketId === m.marketId)).map(m => m.marketId)
-    });
+    // Process markets data to combine with user positions
     
     return marketData.map(market => {
       // Find the user's liquidity position for this market
@@ -201,45 +182,20 @@ const LiquidityPage: NextPage = () => {
       let positionPercentage = 0;
       let userPositionDisplay = undefined;
       
-      console.log(`DEBUG - Processing market ${market.marketId}:`, {
-        marketName: market.name,
-        userPosition,
-        hasLiquidityShare: !!liquidityShare,
-        liquidityShareData: liquidityShare,
-        hasLiveMarketData: !!liveMarketData,
-        totalShares: liveMarketData?.liquidity?.totalShares
-      });
+      // Process market data and user positions
       
-      if (userPosition > 0) {
-        // Format user position as display string (no decimals for better readability)
-        // userPosition is already divided by 1_000_000 in useLiquidityShares.ts
-        userPositionDisplay = Math.floor(userPosition).toString();
+      // Always set userPositionDisplay, even for zero positions
+      userPositionDisplay = userPosition > 0 ? Math.floor(userPosition).toString() : '0';
+      
+      // Calculate percentage based on market's currentLiquidity if available
+      if (userPosition > 0 && market.currentLiquidity > 0) {
+        // Calculate percentage with proper precision based on displayed currentLiquidity
+        positionPercentage = parseFloat((userPosition / market.currentLiquidity * 100).toFixed(2));
         
-        // Calculate percentage based on market's currentLiquidity if available
-        if (market.currentLiquidity > 0) {
-          // Calculate percentage with proper precision based on displayed currentLiquidity
-          positionPercentage = parseFloat((userPosition / market.currentLiquidity * 100).toFixed(2));
-          
-          console.log(`DEBUG - User position for market ${market.marketId}:`, {
-            rawUserPosition: userPosition,
-            formattedDisplay: userPositionDisplay,
-            currentLiquidity: market.currentLiquidity,
-            rawPercentage: (userPosition / market.currentLiquidity * 100),
-            formattedPercentage: positionPercentage.toFixed(2) + '%'
-          });
-        }
+        // Calculate position percentage
       }
       
-      // Debug user positions for this market
-      console.log(`User position summary for market ${market.marketId}:`, {
-        position: userPosition,
-        percentageOfTotal: positionPercentage > 0 ? `${positionPercentage.toFixed(1)}%` : 'N/A',
-        hasPosition: userPosition > 0,
-        liquidityShareId: liquidityShare?.id,
-        marketTotalShares: liveMarketData?.liquidity?.totalShares,
-        liquidityShareRawValue: liquidityShare?.shares,
-        allShares: userLiquidityShares.length
-      });
+      // Prepare market data with user position information
       
       // Find market details from appConstants - ensure type safety
       const marketDetails = MARKETS.find(m => 
@@ -248,9 +204,6 @@ const LiquidityPage: NextPage = () => {
       
       // Get bidding deadline from live data if available, otherwise calculate it
       let biddingDeadline = '';
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Processing market ${market.marketId} with live data:`, liveMarketData);
-      }
       
       if (liveMarketData?.timing?.biddingDeadlineDisplay) {
         biddingDeadline = liveMarketData.timing.biddingDeadlineDisplay;
@@ -279,15 +232,7 @@ const LiquidityPage: NextPage = () => {
         resolutionTime
       );
       
-      console.log(`MARKET STATE for market ${market.marketId}:`, {
-        rawState,
-        newStateDisplay: stateDisplay,
-        newState: state,
-        oldStateDisplay: liveMarketData?.basic?.stateDisplay || market.stateDisplay,
-        biddingDeadline,
-        resolutionTime,
-        now: new Date().toISOString()
-      });
+      // Market state determined
       
       // Calculate current liquidity from live data if available
       let currentLiquidity = market.currentLiquidity; 
@@ -298,33 +243,17 @@ const LiquidityPage: NextPage = () => {
         // Force the value to a valid number or use 0 if NaN
         currentLiquidity = !isNaN(newLiquidity) ? newLiquidity : 0;
         
-        // Debug log to check the current liquidity value
-        console.log(`Current liquidity updated for market ${market.marketId}:`, {
-          rawLiquidity: liveMarketData?.liquidity?.totalLiquidity,
-          calculatedLiquidity: currentLiquidity,
-          previousValue: market.currentLiquidity,
-          hasLiveData: !!liveMarketData?.liquidity
-        });
+        // Updated liquidity from live data
       } else {
-        console.log(`Using existing liquidity for market ${market.marketId}: ${currentLiquidity}`);
+        // Use existing liquidity
       }
 
-      // Add debug logging for this specific market's user position
-      console.log(`Finalized market ${market.marketId} user position:`, {
-        userPosition,
-        userPositionDisplay,
-        userPositionPercentage: positionPercentage,
-        userPositionObjectId: liquidityShare?.id,
-        rawShares: liquidityShare?.shares,
-        shareAmount: liquidityShare?.shareAmount,
-        // Add specific check for the market we're troubleshooting
-        isTargetMarket: market.marketId === '0x1b98cae4835709b14e5f182e98552d381b514bb526cb11d1812dc431f4bdaaa7'
-      });
+      // Finalize market position data
 
       return {
         ...market,
         userPosition,
-        userPositionDisplay,
+        userPositionDisplay: userPositionDisplay || '0', // Ensure this is never undefined
         userPositionPercentage: positionPercentage,
         userPositionObjectId: liquidityShare?.id,
         biddingDeadline,
@@ -353,29 +282,19 @@ const LiquidityPage: NextPage = () => {
   const isBiddingOpen = (market: MarketWithPosition): boolean => {
     // If no bidding deadline is provided, default to false as a safety measure
     if (!market.biddingDeadline) {
-      console.log(`Market ${market.id}: No bidding deadline, defaulting to closed`);
       return false;
     }
     
     const now = new Date();
     const deadline = new Date(market.biddingDeadline);
-    const isOpen = now < deadline;
-    
-    return isOpen;
+    return now < deadline;
   };
 
   // Check if market is eligible for adding liquidity
   const canAddLiquidity = (market: MarketWithPosition): boolean => {
     // Use stateDisplay instead of raw state number for more accurate state determination
     const isStateValid = market.stateDisplay === 'Active';
-    const isEligible = isStateValid;
-    
-    // Limit logging to development environment
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Market ${market.id}: Eligibility for adding liquidity - State: ${market.state}, StateDisplay: ${market.stateDisplay} (Valid: ${isStateValid}), Final Result: ${isEligible}`);
-    }
-    
-    return isEligible;
+    return isStateValid;
   };
   
   // Maintain a ref to track if a fetch is in progress
@@ -438,12 +357,10 @@ const LiquidityPage: NextPage = () => {
     const now = Date.now();
     // Don't allow refreshes more frequently than every 10 seconds
     if (now - lastRefreshTimeRef.current < 10000) {
-      console.log('Refresh throttled - please wait before refreshing again');
       return;
     }
     
     lastRefreshTimeRef.current = now;
-    console.log("Refreshing all data...");
     
     // Force a complete refresh by using the current timestamp
     setRefreshTrigger(now);
@@ -490,13 +407,6 @@ const LiquidityPage: NextPage = () => {
       } else {
         // Otherwise, expand only this row and collapse any others
         // When expanding a row, also fetch the latest data if needed
-        const expandedMarket = marketsWithPositions.find(m => m.marketId === marketId);
-        if (expandedMarket) {
-          console.log(`Expanded market: ${marketId}`, {
-            currentLiquidity: expandedMarket.currentLiquidity,
-            liveMarketData: liveMarketsInfo?.[marketId]?.liquidity
-          });
-        }
         return [marketId];
       }
     });
@@ -558,7 +468,7 @@ const LiquidityPage: NextPage = () => {
       const usdcAmount = amount;
       const minLpTokens = amount * 0.58; // 2% slippage protection
       
-      console.log(`Adding ${usdcAmount} USDC to market ${selectedMarket.marketId} with min LP tokens ${minLpTokens}`);
+      // Prepare transaction parameters
       
       // Use the intelligent handler that decides which contract function to call
       const tx = await usemarketService.addLiquidityIntelligent(
@@ -577,7 +487,6 @@ const LiquidityPage: NextPage = () => {
             toast.success(`Successfully added ${amount} USDC liquidity to "${selectedMarket.name}" market`);
             
             // Immediately update UI to reflect changes
-            console.log("Refreshing user liquidity positions after adding liquidity");
             refreshData(); // Use the comprehensive refresh function
             
             // Close the modal
@@ -585,13 +494,11 @@ const LiquidityPage: NextPage = () => {
             setSelectedMarket(null);
           },
           onError: (error) => {
-            console.error('Transaction failed:', error);
             toast.error(`Failed to add liquidity: ${error.message}`);
           }
         }
       );
     } catch (error: any) {
-      console.error('Error adding liquidity:', error);
       toast.error(error.message || 'Failed to add liquidity');
     }
   };
@@ -617,7 +524,6 @@ const LiquidityPage: NextPage = () => {
             toast.success(`Successfully removed ${amount} USDC liquidity from "${selectedMarket.name}" market`);
             
             // Immediately update UI to reflect changes
-            console.log("Refreshing user liquidity positions after removing liquidity");
             refreshData(); // Use the comprehensive refresh function
             
             // Close the modal
@@ -625,7 +531,6 @@ const LiquidityPage: NextPage = () => {
             setSelectedMarket(null);
           },
           onError: (error) => {
-            console.error('Transaction failed:', error);
             toast.error(`Failed to remove liquidity: ${error.message}`);
           }
         }
@@ -900,21 +805,23 @@ const LiquidityPage: NextPage = () => {
                           </div>
                         </td>
                         <td className="py-3 text-right pr-4">
-                          {market.userPosition > 0 ? (
-                            <span 
-                              className="text-green-400" 
-                              title={`${market.userPositionDisplay} (${market.userPositionPercentage?.toFixed(2) || 0}% of total market liquidity)`}
-                            >
-                              {market.userPositionDisplay} shares
-                              {market.userPositionPercentage > 0 && (
-                                <span className="ml-1 text-xs text-green-300">
-                                  ({market.userPositionPercentage.toFixed(2)}%)
-                                </span>
-                              )}
-                            </span>
-                          ) : (
-                            <span className="text-gray-500">-</span>
-                          )}
+                          <span 
+                            className={market.userPosition > 0 ? "text-green-400" : "text-gray-500"}
+                            title={`Raw: ${market.userPosition}, Display: ${market.userPositionDisplay}, Pct: ${market.userPositionPercentage}`}
+                          >
+                            {market.userPosition > 0 ? (
+                              <>
+                                {market.userPositionDisplay} shares
+                                {market.userPositionPercentage > 0 && (
+                                  <span className="ml-1 text-xs text-green-300">
+                                    ({market.userPositionPercentage.toFixed(2)}%)
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              "-"
+                            )}
+                          </span>
                         </td>
                         <td className="py-3 text-center">
                           <span className={cn(
@@ -930,10 +837,7 @@ const LiquidityPage: NextPage = () => {
                         <td className="py-3 text-center">
                           <div className="flex justify-center space-x-2">
                             <button 
-                              onClick={(e) => {
-                                console.log(`+ button clicked for Market ${market.id}`);
-                                handleAddLiquidityClick(market, e);
-                              }}
+                              onClick={(e) => handleAddLiquidityClick(market, e)}
                               disabled={!canAddLiquidity(market)}
                               className={cn(
                                 "p-1 rounded font-bold",

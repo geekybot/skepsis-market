@@ -449,40 +449,37 @@ interface SpreadOption {
 }
 ```
 
-### SpreadMetadata
+### SpreadLabel
 
 ```typescript
-interface SpreadMetadata {
+interface SpreadLabel {
   name: string;         // Display name (e.g., "Bear Market")
-  description: string;  // Context or explanation
-  rangeDescription: string; // Numerical representation
+  description?: string; // Context or explanation
+  rangeDescription?: string; // Numerical representation
+  range?: string;       // Alternative range representation
 }
 ```
 
 ## Constants
 
-### MARKET_SPREADS_METADATA
+### MARKET_SPREAD_LABELS
 
 Metadata for market spreads to enhance the user experience.
 
 ```typescript
-const MARKET_SPREADS_METADATA = {
-  [marketId: string]: {
-    spreadLabels: SpreadMetadata[]
-  }
+const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
+  [marketId: string]: SpreadLabel[]
 };
 ```
 
 **Example:**
 ```typescript
-const MARKET_SPREADS_METADATA = {
-  '0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9': {
-    spreadLabels: [
-      { name: "Bear Market", description: "Below expected price range", rangeDescription: "0-10k" },
-      { name: "Conservative", description: "Lower price range", rangeDescription: "10k-25k" },
-      // More spreads...
-    ]
-  }
+const MARKET_SPREAD_LABELS = {
+  '0xab0a331a405c41c2682b4cd318b22915056fdcf5f8a5f852515ed18d94e3bac9': [
+    { name: "Bear Market", description: "Below expected price range", rangeDescription: "0-10k", range: "0-10000" },
+    { name: "Conservative", description: "Lower price range", rangeDescription: "10k-25k", range: "10000-25000" },
+    // More spreads...
+  ]
 };
 ```
 

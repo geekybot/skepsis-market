@@ -100,27 +100,27 @@ This structure is optimized for rendering the UI and providing all necessary inf
 To enhance user experience, Skepsis implements a metadata system that provides rich context for each spread:
 
 ```typescript
-interface SpreadMetadata {
+interface SpreadLabel {
   name: string;         // Display name (e.g., "Bear Market")
-  description: string;  // Context or explanation (e.g., "Below expected price range")
-  rangeDescription: string; // Numerical representation (e.g., "0-10k")
+  description?: string; // Context or explanation (e.g., "Below expected price range")
+  rangeDescription?: string; // Numerical representation (e.g., "0-10k")
+  range?: string;       // Alternative range representation
 }
 ```
 
 This metadata is defined in the application constants:
 
 ```typescript
-const MARKET_SPREADS_METADATA = {
-  [marketId]: {
-    spreadLabels: [
-      { 
-        name: "Bear Market", 
-        description: "Below expected price range", 
-        rangeDescription: "0-10k" 
-      },
-      // More spreads...
-    ]
-  },
+const MARKET_SPREAD_LABELS = {
+  [marketId]: [
+    { 
+      name: "Bear Market", 
+      description: "Below expected price range", 
+      rangeDescription: "0-10k",
+      range: "0-10000" 
+    },
+    // More spreads...
+  ],
   // More markets...
 };
 ```

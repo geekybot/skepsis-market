@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { DEFAULT_MARKET_ID, SPREAD_COLORS, CONSTANTS, SpreadMetadata } from '@/constants/appConstants';
+import { DEFAULT_MARKET_ID, SPREAD_COLORS, CONSTANTS } from '@/constants/appConstants';
+import { SpreadLabel, MARKET_SPREAD_LABELS } from '@/constants/marketDetails';
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiClient } from '@mysten/sui/client';
+import { findMatchingSpreadLabel, createSyntheticOption } from '@/utilities/spreadLabelUtils';
 
 // Import custom hooks
 import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
@@ -123,8 +125,8 @@ interface SpreadOption {
   percentage: number; // Dynamically calculated percentage
   color?: string; // Optional color for visualization
   priceRefreshed?: boolean; // Flag indicating if price was refreshed
-  // Use the imported SpreadMetadata type for consistency
-  metadata?: SpreadMetadata;
+  // Use the imported SpreadLabel type for consistency
+  metadata?: SpreadLabel;
 }
 
 interface PredictionMarketProps {
@@ -798,8 +800,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const getPositionValue = (position: Position): number => {
     if (isWinningPosition(position)) {
       // Winning positions are worth 1:1 (sharesAmount in USD)
-      // position.sharesAmount is already properly scaled in useMarketPositions hook
-      return position.value;
+      // For winning positions, each share is worth exactly $1
+      return position.sharesAmount;
     } else {
       // Non-winning positions are worth 0
       return 0;
@@ -908,6 +910,80 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     }
   };
   
+  // Debug utility function to help diagnose spread label matching issues
+  const debugSpreadLabelMatching = (position: Position, spreadLabels: SpreadLabel[] | undefined) => {
+    if (!spreadLabels || spreadLabels.length === 0) return;
+    
+    // Calculate position's expected range
+    const posMin = position.spreadIndex * 10;
+    const posMax = position.spreadIndex * 10 + 10;
+    
+    console.log('🔍 Spread Label Matching:', {
+      positionId: position.id.substring(0, 8),
+      spreadIndex: position.spreadIndex,
+      calculatedRange: `${posMin}-${posMax}`,
+      formattedRange: `${(posMin/100).toFixed(2)}-${(posMax/100).toFixed(2)} $`,
+      labels: spreadLabels.map(l => ({
+        index: l.index,
+        bounds: l.lowerBound !== undefined && l.upperBound !== undefined ? 
+          `${l.lowerBound}-${l.upperBound} (${(l.lowerBound/100).toFixed(2)}-${(l.upperBound/100).toFixed(2)} $)` : 
+          'undefined'
+      }))
+    });
+    
+    // Find the best match
+    const bestMatch = spreadLabels.find(label => {
+      if (label.index === position.spreadIndex) return true;
+      if (label.lowerBound === posMin && label.upperBound === posMax) return true;
+      return false;
+    });
+    
+    if (bestMatch) {
+      console.log('✅ Best match found:', {
+        name: bestMatch.name,
+        index: bestMatch.index,
+        range: bestMatch.lowerBound !== undefined ? 
+          `${(bestMatch.lowerBound/100).toFixed(2)}-${(bestMatch.upperBound!/100).toFixed(2)} $` : 
+          'undefined'
+      });
+    } else {
+      console.log('❌ No matching label found!');
+    }
+  };
+  
+  // Helper function to find the correct label for a position's spread index
+  const findMatchingSpreadLabel = (position: Position, spreadLabels: SpreadLabel[] | undefined): SpreadLabel | undefined => {
+    if (!spreadLabels || spreadLabels.length === 0) return undefined;
+    
+    // Calculate expected range for this position
+    const posMin = position.spreadIndex * 10;
+    const posMax = position.spreadIndex * 10 + 10;
+    
+    // First try to find an exact index match (most reliable)
+    const exactIndexMatch = spreadLabels.find(label => label.index === position.spreadIndex);
+    if (exactIndexMatch) {
+      console.log(`Found exact index match for position ${position.id.substring(0, 8)}: label.index=${exactIndexMatch.index} matches position.spreadIndex=${position.spreadIndex}`);
+      return exactIndexMatch;
+    }
+    
+    // If no exact index match, try to match by lowerBound/upperBound
+    const exactBoundsMatch = spreadLabels.find(label => 
+      label.lowerBound !== undefined && 
+      label.upperBound !== undefined && 
+      label.lowerBound === posMin && 
+      label.upperBound === posMax
+    );
+    
+    if (exactBoundsMatch) {
+      console.log(`Found exact bounds match for position ${position.id.substring(0, 8)}: ${exactBoundsMatch.lowerBound}-${exactBoundsMatch.upperBound} matches position range ${posMin}-${posMax}`);
+      return exactBoundsMatch;
+    }
+    
+    // If still no match, log a warning and return undefined
+    console.warn(`No matching spread label found for position ${position.id.substring(0, 8)} with spreadIndex ${position.spreadIndex}`);
+    return undefined;
+  };
+  
   // Render component
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -935,9 +1011,9 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                 <div 
                   className="absolute inset-0 rounded-lg transition-all"
                   style={{ 
-                    width: `${Math.max(5, option.percentage)}%`, 
+                    width: `${Math.max(5, option.percentage)}%`,
                     height: '100%',
-                    backgroundColor: option.color || SPREAD_COLORS[idx % SPREAD_COLORS.length],
+                    backgroundColor: option.color || SPREAD_COLORS[idx % SPREAD_COLORS.length], 
                     opacity: 0.8
                   }}
                 />
@@ -973,7 +1049,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
               </div>
             ))}
           </div>
-
+                    
           {/* Color legends with enhanced metadata */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 mb-4">
             {SPREAD_COLORS.slice(0, Math.min(options.length, SPREAD_COLORS.length)).map((color, idx) => {
@@ -1035,7 +1111,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     />
                     <span className="text-sm font-medium text-white">{realTimeMarketStatus.status}</span>
                   </div>
-                  
                   {/* Show resolved value if market is resolved - Better formatting */}
                   {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined && (
                     <div className="mt-2 p-2 bg-amber-900/30 rounded-md border border-amber-800/30">
@@ -1100,7 +1175,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   <div className="flex flex-col">
                     {new Date() < new Date(defaultBiddingDeadline) ? (
                       <Countdown 
-                        targetDate={new Date(defaultBiddingDeadline)} 
+                        targetDate={new Date(defaultBiddingDeadline)}
                         label="Bidding Closes In"
                         onComplete={handleBiddingDeadlineComplete}
                       />
@@ -1117,8 +1192,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                 {resolutionTime && (
                   <div className="col-span-2 mt-3 pt-3 border-t border-gray-700/50">
                     {new Date() < new Date(resolutionTime) ? (
-                      <Countdown 
-                        targetDate={new Date(resolutionTime)} 
+                      <Countdown
+                        targetDate={new Date(resolutionTime)}
                         label="Resolves In"
                         onComplete={handleResolutionTimeComplete}
                       />
@@ -1275,8 +1350,26 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
               {/* Positions List */}
               <div className="space-y-3">
                 {positions.map((position) => {
-                  // Find the corresponding option label for this position
-                  const option = options.find(opt => parseInt(opt.value) === position.spreadIndex);
+                  // Find the corresponding spread range from rawPosition (320-330)
+                  const positionRange = `${position.spreadIndex * 10}-${position.spreadIndex * 10 + 10}`;
+                  
+                  // Find the option by matching with the position spreadIndex
+                  let option = options.find(opt => parseInt(opt.value) === position.spreadIndex);
+                  
+                  // If we couldn't find an exact match, try to find by lowerBound/upperBound from metadata
+                  // This handles cases where the spread index doesn't match the display range
+                  if (!option) {
+                    // Check if we have MARKET_SPREAD_LABELS for this market
+                    const marketSpreadLabels = MARKET_SPREAD_LABELS[marketId];
+                    
+                    // Use our utility function to find the matching spread label
+                    const matchingLabel = findMatchingSpreadLabel(position, marketSpreadLabels);
+                    
+                    if (matchingLabel) {
+                      // Create a synthetic option using the found matching label
+                      option = createSyntheticOption(position, matchingLabel);
+                    }
+                  }
                   
                   // Check if this is a winning position in a resolved market
                   const winning = isWinningPosition(position);
@@ -1308,17 +1401,14 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <div className="text-white/70 text-xs">Position ID: {position.id.substring(0, 8)}...</div>
-                              {option?.metadata?.rangeDescription && (
-                                <div className="text-white/60 text-xs">({option.metadata.rangeDescription})</div>
-                              )}
-                            </div>
+                            {option?.metadata?.rangeDescription && (
+                              <div className="text-white/60 text-xs">{option.metadata.rangeDescription}</div>
+                            )}
                           </div>
                           <div className="flex-col items-end text-right">
                             <div className="text-white">{position.sharesAmount.toFixed(2)} shares</div>
                             <div className={winning ? "text-green-400" : "text-white/50"}>
-                              {winning ? `≈ $${positionValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}` : "$0.00"}
+                              {winning ? `≈ $${positionValue.toFixed(2)}` : "$0.00"}
                             </div>
                           </div>
                         </div>
@@ -1374,16 +1464,13 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         <div className="flex justify-between items-center mb-1">
                           <div className="flex-col">
                             <div className="text-white">{option?.label || `Spread #${position.spreadIndex}`}</div>
-                            <div className="flex items-center gap-1">
-                              <div className="text-white/70 text-xs">Position ID: {position.id.substring(0, 8)}...</div>
-                              {option?.metadata?.rangeDescription && (
-                                <div className="text-white/60 text-xs">({option.metadata.rangeDescription})</div>
-                              )}
-                            </div>
+                            {option?.metadata?.rangeDescription && (
+                              <div className="text-white/60 text-xs">{option.metadata.rangeDescription}</div>
+                            )}
                           </div>
                           <div className="flex justify-end items-center gap-2">
                             <div className="text-white text-center">{position.sharesAmount.toFixed(2)}</div>
-                            <div className="text-white">≈ ${position.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}</div>
+                            <div className="text-white">≈ ${position.value.toFixed(2)}</div>
                           </div>
                         </div>
                       </div>
@@ -1399,7 +1486,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined ? (
                     <>
                       <span className="text-white font-medium">
-                        ≈ ${positions.reduce((sum, pos) => sum + getPositionValue(pos), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})}
+                        ≈ ${positions.reduce((sum, pos) => sum + getPositionValue(pos), 0).toFixed(2)}
                       </span>
                       {/* Show profit/loss when market is resolved */}
                       {positionData?.data?.totalInvested && (

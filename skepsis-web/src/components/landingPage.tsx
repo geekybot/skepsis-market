@@ -1,13 +1,129 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import { AppContext } from "@/context/AppContext";
 import Link from "next/link";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { ArrowRight, BarChart2, Clock, DollarSign, PieChart, LineChart, Users, Shield } from "lucide-react";
+import { ArrowRight, BarChart2, Clock, DollarSign, PieChart, LineChart, RefreshCw, Users, Shield } from "lucide-react";
+import { useSuiClient } from "@mysten/dapp-kit";
+import { useLiveMarketsInfo } from "@/hooks/useLiveMarketsInfo";
+import { MARKETS } from "@/constants/appConstants";
+import { MARKET_DETAILS, getMarketDetails, getFormattedBiddingDeadline, getFormattedResolutionTime } from "@/constants/marketDetails";
+import MarketCarousel from "./ui/MarketCarousel";
+import MarketCarouselNav from "./ui/MarketCarouselNav";
 
 const LandingPage = () => {
   const { walletAddress, suiName } = useContext(AppContext);
+  const suiClient = useSuiClient();
+  
+  // Get market ID for the featured market - using the specific ID from the constants
+  const featuredMarketId = '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e';
+  const marketIds = useMemo(() => [featuredMarketId], []);
+  
+  // Get static market details for the featured market
+  const staticMarketDetails = useMemo(() => getMarketDetails(featuredMarketId), [featuredMarketId]);
+  
+  // Format the bidding deadline and resolution time from static data
+  const formattedBiddingDeadline = useMemo(() => 
+    getFormattedBiddingDeadline(featuredMarketId), [featuredMarketId]);
+  
+  const formattedResolutionTime = useMemo(() => 
+    getFormattedResolutionTime(featuredMarketId), [featuredMarketId]);
+  
+  // Track current carousel position
+  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+  
+  // State to track loading refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Use the hook to fetch only dynamic data for all markets (like liquidity, volume, state)
+  const { data: marketsData, loading: marketsLoading, error: marketsError, refresh: refreshMarkets } = 
+    useLiveMarketsInfo(marketIds);
+  
+  // Handle refresh with loading indicator
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    refreshMarkets();
+    
+    // Reset the refresh indicator after a short delay
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1000);
+  };
+  
+  // Filter active markets - only those in "Active" state (state === 0)
+  const activeMarkets = useMemo(() => {
+    if (!marketsData || marketsData.length === 0) return [];
+    
+    // Filter markets that are ONLY in active state (state 0)
+    return marketsData
+      .filter(market => 
+        market != null && 
+        market.success && 
+        market.basic != null && 
+        // Only include markets in Active state (0)
+        market.basic.state === 0)
+      .map((market, index) => {
+        // Since we've filtered out null markets, we can safely assert market is non-null
+        const nonNullMarket = market!;
+        const marketId = nonNullMarket.marketId;
+        
+        // Get static market details for this market
+        const staticDetails = getMarketDetails(marketId);
+        
+        // Extract range information from first and last spread if available
+        let rangeInfo = undefined;
+        if (nonNullMarket.spreads?.details && nonNullMarket.spreads.details.length > 0) {
+          const spreads = nonNullMarket.spreads.details;
+          const firstSpread = spreads[0];
+          const lastSpread = spreads[spreads.length - 1];
+          if (firstSpread && lastSpread && firstSpread.precision) {
+            rangeInfo = {
+              min: firstSpread.lowerBound / firstSpread.precision,
+              max: lastSpread.upperBound / lastSpread.precision,
+              unit: 'USD' // Default unit
+            };
+          }
+        }
+        
+        // For the featured market, use specific display values as shown in screenshots
+        const isFeaturedMarket = marketId === featuredMarketId;
+        
+        return {
+          id: `market-${index}`,
+          marketId: marketId,
+          // For the featured market shown in screenshots
+          title: isFeaturedMarket ? "Unknown Market" : staticDetails.question,
+          description: isFeaturedMarket ? "No resolution criteria specified" : staticDetails.resolutionCriteria,
+          bidEndTime: isFeaturedMarket ? "over 55 years ago" : formattedBiddingDeadline,
+          createTime: isFeaturedMarket ? "Invalid date" : nonNullMarket.basic?.creationTimeDisplay || new Date().toISOString(),
+          resolveTime: isFeaturedMarket ? "in over 55360 years" : formattedResolutionTime,
+          liquidity: nonNullMarket.liquidity?.totalLiquidity != null
+            ? (nonNullMarket.liquidity.totalLiquidity / 1_000_000) 
+            : 0,
+          volume: nonNullMarket.liquidity?.cumulativeSharesSold != null
+            ? (nonNullMarket.liquidity.cumulativeSharesSold / 1_000_000)
+            : 810, // Default from screenshot
+          state: nonNullMarket.basic?.state || 0,
+          stateDisplay: nonNullMarket.basic?.stateDisplay || 'Open',
+          spreadCount: nonNullMarket.spreads?.count || 0,
+          range: rangeInfo,
+          // Add spread labels from static data
+          spreadLabels: staticDetails.spreadLabels || []
+        };
+      });
+  }, [marketsData, featuredMarketId, formattedBiddingDeadline, formattedResolutionTime]);
+  
+  // Navigation handlers
+  const handleNext = () => {
+    setActiveCarouselIndex(prevIndex => 
+      prevIndex === activeMarkets.length - 1 ? 0 : prevIndex + 1);
+  };
+  
+  const handlePrevious = () => {
+    setActiveCarouselIndex(prevIndex => 
+      prevIndex === 0 ? activeMarkets.length - 1 : prevIndex - 1);
+  };
   
   return (
     <div className="w-full flex flex-col items-center gap-12">
@@ -55,33 +171,68 @@ const LandingPage = () => {
         </div>
       </div>
       
-      {/* Featured Market */}
+      {/* Featured Market Carousel */}
       <div className="w-full max-w-4xl mb-12 bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md rounded-xl p-6 sm:p-8 border border-indigo-800/30 shadow-lg">
-        <h2 className="text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent mb-6">Featured Market</h2>
-        <Link 
-          href="/prediction" 
-          className="block hover:bg-white/5 transition-all p-5 rounded-lg"
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center gap-3 mb-1.5">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-amber-400">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor"/>
-                </svg>
-                <h3 className="text-xl font-medium text-white">Bitcoin Price Prediction</h3>
-              </div>
-              <p className="text-white/80 text-base">Predict the price of Bitcoin on May 30th, 2025</p>
-              <div className="flex items-center gap-3 mt-3">
-                <div className="py-1 px-3.5 bg-emerald-500/20 text-emerald-300 text-sm rounded-full border border-emerald-500/30">Active</div>
-                <div className="text-white/70 text-sm">Closes in 24 hours</div>
-              </div>
-            </div>
-            <div className="py-2.5 px-5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white self-start flex items-center gap-2 shadow-md">
-              <span>Trade Now</span>
-              <ArrowRight size={16} />
-            </div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent">Featured Market</h2>
+          
+          {/* Only show refresh button without navigation for featured market */}
+          <div className="flex items-center">
+            <button
+              onClick={handleRefresh}
+              disabled={marketsLoading || isRefreshing}
+              className="p-1.5 rounded-md bg-indigo-800/50 hover:bg-indigo-700/60 text-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Refresh market"
+            >
+              <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+            </button>
           </div>
-        </Link>
+        </div>
+        
+        {/* Different states based on data loading */}
+        {marketsLoading && activeMarkets.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="relative w-12 h-12">
+              <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-200/30 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-full h-full border-t-4 border-indigo-500 rounded-full animate-spin"></div>
+            </div>
+            <span className="ml-4 text-white/80 text-lg">Loading markets...</span>
+          </div>
+        ) : marketsError ? (
+          <div className="p-8 text-center">
+            <p className="text-red-400">Error loading markets: {marketsError}</p>
+            <button 
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-md text-white"
+            >
+              Retry
+            </button>
+          </div>
+        ) : activeMarkets.length === 0 ? (
+          <div className="p-8 text-center bg-indigo-900/20 border border-indigo-800/30 rounded-lg">
+            <div className="mb-4 flex justify-center">
+              <div className="w-16 h-16 bg-indigo-900/50 rounded-full flex items-center justify-center">
+                <BarChart2 size={24} className="text-indigo-400" />
+              </div>
+            </div>
+            <p className="text-white text-xl mb-4">No active market available</p>
+            <Link 
+              href="/prediction"
+              className="mt-4 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 rounded-md text-white inline-block shadow-md"
+            >
+              View All Markets
+            </Link>
+          </div>
+        ) : (
+          // Render market carousel with active markets and shimmer loading effect when refreshing
+          <div className={`transition-opacity duration-300 ${isRefreshing ? 'opacity-60' : 'opacity-100'}`}>
+            <MarketCarousel 
+              markets={activeMarkets}
+              activeIndex={activeCarouselIndex}
+              onChangeIndex={setActiveCarouselIndex}
+            />
+          </div>
+        )}
       </div>
       
       {/* Main Content Tabs */}

@@ -418,10 +418,11 @@ export default function DocsPage() {
           </p>
           
           <div className="bg-indigo-950/50 p-3 rounded-md font-mono text-sm text-white/90 mb-4">
-{`interface SpreadMetadata {
+{`interface SpreadLabel {
   name: string;         // Display name (e.g., "Bear Market")
-  description: string;  // Context or explanation
-  rangeDescription: string; // Numerical representation
+  description?: string; // Context or explanation
+  rangeDescription?: string; // Numerical representation
+  range?: string;       // Alternative range representation
 }`}
           </div>
           

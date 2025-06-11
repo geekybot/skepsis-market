@@ -1,7 +1,8 @@
 import React from "react";
 import { useLiveMarketInfo } from "@/hooks/useLiveMarketInfo";
 import { cn } from "@/lib/utils";
-import { SPREAD_COLORS, MARKET_SPREADS_METADATA } from "@/constants/appConstants";
+import { SPREAD_COLORS } from "@/constants/appConstants";
+import { MARKET_SPREAD_LABELS } from "@/constants/marketDetails";
 
 interface MarketSpreadsBarProps {
   marketId: string;
@@ -47,8 +48,8 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
             if (!spread) return null;
             
             // Get metadata for this market and spread if available
-            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA] || {};
-            const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            const spreadLabels = MARKET_SPREAD_LABELS[marketId] || [];
+            const spreadMetadata = spreadLabels[idx];
             const displayName = spreadMetadata?.name || spread.displayRange || `Spread ${idx}`;
             
             // Ensure percentage is valid
@@ -88,8 +89,8 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
             if (!spread) return null;
             
             // Get metadata for this market and spread if available
-            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA] || {};
-            const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            const spreadLabels = MARKET_SPREAD_LABELS[marketId] || [];
+            const spreadMetadata = spreadLabels[idx];
             const displayName = spreadMetadata?.name || spread.displayRange || `Spread ${idx}`;
             
             // Ensure percentage is valid
@@ -141,8 +142,8 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
             // Ensure spread has valid data
             if (!spread) return null;
             
-            const marketMetadata = MARKET_SPREADS_METADATA[marketId as keyof typeof MARKET_SPREADS_METADATA] || {};
-            const spreadMetadata = marketMetadata?.spreadLabels?.[idx];
+            const spreadLabels = MARKET_SPREAD_LABELS[marketId] || [];
+            const spreadMetadata = spreadLabels[idx];
             
             // Import SpreadMetadata from constants
             const safeMetadata: { name: string; description?: string; rangeDescription?: string } = 

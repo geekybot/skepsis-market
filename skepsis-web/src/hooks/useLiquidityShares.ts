@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { SuiClient } from '@mysten/sui/client';
 import { useCurrentAccount } from '@mysten/dapp-kit';
-import { SKEPSIS_CONFIG } from '@/constants/appConstants';
-import { MARKET_CONSTANTS, MARKETS } from '@/constants/marketConstants';
+import { SKEPSIS_CONFIG, MARKETS } from '@/constants/appConstants';
+import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 
 export interface LiquidityShare {
   id: string;
@@ -52,22 +52,23 @@ export const useLiquidityShares = (
     setData(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Get all objects owned by the user
-      const { data: ownedObjects } = await client.getOwnedObjects({
+      // Use Sui's efficient server-side filtering to get only LiquidityShare objects
+      const liquidityShareType = `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::LiquidityShare`;
+      
+      // Query directly for LiquidityShare objects using the StructType filter
+      const { data: liquidityShares } = await client.getOwnedObjects({
         owner: account.address,
+        filter: {
+          StructType: liquidityShareType
+        },
         options: {
           showContent: true,
           showType: true,
         },
       });
-
-      // Filter for LiquidityShare objects
-      const liquidityShareType = `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::LiquidityShare`;
       
-      const liquidityShares = ownedObjects.filter(obj => {
-        const objType = obj.data?.type;
-        return objType && objType.includes(liquidityShareType);
-      });
+      console.log(`🔍 POSITION DEBUG - Server-side filtering applied for type ${liquidityShareType}`);
+      console.log(`🔍 POSITION DEBUG - Found ${liquidityShares.length} liquidity shares with efficient filtering`);
 
       // Process liquidity shares
       const shares: LiquidityShare[] = [];
@@ -75,12 +76,28 @@ export const useLiquidityShares = (
       let totalLiquidity = 0;
 
       // Initialize sharesByMarket with all available markets (setting default to 0)
-      MARKETS.forEach(market => {
-        sharesByMarket[market.marketId] = 0;
+      // Log debugging info to help diagnose position display issues
+      console.log(`🔍 POSITION DEBUG - Initializing positions for ${MARKETS.length} markets`);
+      
+      if (!Array.isArray(MARKETS) || MARKETS.length === 0) {
+        console.error("🚨 CRITICAL ERROR - MARKETS is not an array or is empty");
+      }
+      
+      // Ensure we properly set positions for all markets
+      MARKETS.forEach((market, index) => {
+        if (typeof market === 'object' && market && 'marketId' in market) {
+          sharesByMarket[market.marketId] = 0;
+          
+          // Log a few entries for debugging
+          if (index < 5) {
+            console.log(`🔍 POSITION DEBUG - Setting default position for market ${market.marketId}`);
+          }
+        } else {
+          console.error(`🚨 CRITICAL ERROR - Invalid market structure at index ${index}:`, market);
+        }
       });
-
-      //console.log(`Found ${liquidityShares.length} liquidity shares for user ${account.address}`);
-      //console.log(`Available markets: ${MARKETS.length}`);
+      
+      console.log(`🔍 POSITION DEBUG - Found ${liquidityShares.length} liquidity shares for user ${account.address}`);
       
       for (const shareObj of liquidityShares) {
         if (shareObj.data?.content && shareObj.data.content.dataType === 'moveObject') {
@@ -132,18 +149,20 @@ export const useLiquidityShares = (
       }
 
       // Verify we have mapped all markets correctly
-      //console.log(`FINAL MAPPING RESULTS:`);
-      //console.log(`Total liquidity shares found: ${shares.length}`);
-      //console.log(`Expected number of markets: ${MARKETS.length}`);
+      console.log(`FILTERING RESULTS - Using server-side filtering:`);
+      console.log(`Total liquidity shares found: ${shares.length}`);
+      console.log(`Expected number of markets: ${MARKETS.length}`);
       
       // Log the sharesByMarket object to verify the mapping
       Object.entries(sharesByMarket).forEach(([marketId, amount]) => {
         const marketName = MARKETS.find(m => m.marketId === marketId)?.name || 'Unknown Market';
         const marketState = marketStates ? marketStates[marketId] : 'unknown';
-        //console.log(`Market: ${marketName} (ID: ${marketId})`);
-        //console.log(`- State: ${marketState}`);
-        //console.log(`- User Liquidity: ${amount}`);
-        //console.log(`- Can Withdraw: ${marketState !== undefined && marketState !== 0 ? 'YES' : 'NO'}`);
+        if (amount > 0) {
+          console.log(`Market: ${marketName} (ID: ${marketId})`);
+          console.log(`- State: ${marketState}`);
+          console.log(`- User Liquidity: ${amount}`);
+          console.log(`- Can Withdraw: ${marketState !== undefined && marketState !== 0 ? 'YES' : 'NO'}`);
+        }
       });
 
       setData({
@@ -155,7 +174,7 @@ export const useLiquidityShares = (
       });
 
     } catch (error) {
-      //console.error('Error fetching liquidity shares:', error);
+      console.error('Error fetching liquidity shares:', error);
       setData(prev => ({
         ...prev,
         loading: false,

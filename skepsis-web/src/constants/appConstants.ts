@@ -11,6 +11,8 @@
  * - Skepsis testnet deployment configuration
  */
 
+import { MARKET_DETAILS } from "./marketDetails";
+
 // Module names for contract calls
 export const MODULES = {
   DISTRIBUTION_MARKET_FACTORY: 'distribution_market_factory',
@@ -63,43 +65,14 @@ export const NETWORKS = {
 // Default market ID for the application
 export const DEFAULT_MARKET_ID = CONSTANTS.OBJECTS.MARKET;
 
-// List of all available markets - this can be expanded as more markets are created
-// Each market has a unique ID and name for display
-export const MARKETS = [
-  
-  {
-    marketId: '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65',
-    name: 'What will be the Price of SUI in USD on 11:30 AM UTC, May 31, 2025?',
-    description: 'Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.'
-  },
-  {
-    marketId: '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff',
-    name: 'Who will win the UCL 2025?',
-    description: 'Based on the official UEFA Champions League website'
-  },
-  {
-    marketId: '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd',
-    name: 'Who Will win The Premier League 2025?',
-    description: 'Based on the final league standings published by the Premier Leaguee'
-  },
-  {
-    marketId: '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41',
-    name: 'What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?',
-    description: 'Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.'
-  },
-  {
-    marketId: '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e',
-    name: "What will be the Price of SUI in USD on 11:30 AM UTC, June 15, 2025?",
-    description: "Based on the price reported by CoinMarketCap on June 15, 2025 at 11:30 AM UTC."
-  },
-
-  // If you add more markets, add them here
-  // {
-  //   marketId: '0x...',
-  //   name: 'Another Market',
-  //   description: 'Another market description'
-  // },
-];
+// List of all available markets - derived from MARKET_DETAILS in marketDetails.ts
+// This keeps a simpler reference and avoids duplication of market data
+export const MARKETS = Object.keys(MARKET_DETAILS).map(marketId => ({
+  marketId,
+  // Extract basic info from MARKET_DETAILS for backwards compatibility
+  name: MARKET_DETAILS[marketId].question,
+  description: MARKET_DETAILS[marketId].resolutionCriteria
+}));
 
 
 
@@ -151,18 +124,18 @@ export const SPREAD_COLORS = [
 export const USDC_CONFIG = {
   // Reference to base token configuration
   ...TOKENS.USDC,
-  
+
   // Package and module information
   packageId: CONSTANTS.PACKAGES.USDC,
   module: 'faucet',
   tokenType: `${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`,
-  
+
   // Functions
   faucetFunction: 'airdrop',
-  
+
   // Objects
   treasuryCap: CONSTANTS.OBJECTS.FAUCET,
-  
+
   // Faucet settings
   faucetAmount: 50_000_000, // 50 USDC with 6 decimals
   dailyLimit: 500_000_000, // 500 USDC daily limit
@@ -173,11 +146,11 @@ export const NETWORK_CONFIG = {
   current: 'devnet',
   defaultRpcUrl: NETWORKS.devnet.rpcUrl,
   isMainnet: false, // Set to true for mainnet deployment
-  
+
   // Explorer URLs
   explorerBaseUrl: 'https://testnet.sui.io',
   mainnetExplorerBaseUrl: 'https://sui.io',
-  
+
   // RPC URLs
   rpcUrl: 'https://fullnode.testnet.sui.io',
   mainnetRpcUrl: 'https://fullnode.mainnet.sui.io',
@@ -187,10 +160,10 @@ export const NETWORK_CONFIG = {
 export const ANALYTICS_CONFIG = {
   // Google Tag Manager ID from environment variable
   gtmId: process.env.NEXT_PUBLIC_GTM_ID || '',
-  
+
   // Enable/disable analytics based on environment and if GTM ID exists
   enabled: !!process.env.NEXT_PUBLIC_GTM_ID, // Only enable if GTM ID is provided
-  
+
   // Additional analytics settings
   options: {
     debug: process.env.NODE_ENV === 'development',
@@ -202,163 +175,28 @@ export const ANALYTICS_CONFIG = {
 export const SKEPSIS_CONFIG = {
   // Packages
   usdc: CONSTANTS.PACKAGES.USDC,
-  
+
   // Capabilities
   faucet: CONSTANTS.OBJECTS.FAUCET,
   dist_upgrade_cap: CONSTANTS.OBJECTS.DIST_UPGRADE_CAP,
   dist_admin_cap: CONSTANTS.OBJECTS.DIST_ADMIN_CAP,
-  
+
   // Core contracts
   distribution_market_factory: CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY,
   user_position_registry: CONSTANTS.OBJECTS.POSITION_REGISTRY,
   factory: CONSTANTS.OBJECTS.FACTORY,
   liquidity_share: CONSTANTS.OBJECTS.LIQUIDITY_SHARE,
-  
+
   // Default market ID
   default_market_id: CONSTANTS.OBJECTS.MARKET,
 };
 
-// Types for spread metadata to ensure consistency
-export interface SpreadMetadata {
-  name: string;
-  description?: string;
-  rangeDescription?: string;
-}
-
-// Market spread metadata - custom names and descriptions for the spreads
-export const MARKET_SPREADS_METADATA = {
-  // Bitcoin price prediction market
-  '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41': {
-    spreadLabels: [
-  { name: "2.00 - 2.10 $" },
-  { name: "2.10 - 2.20 $" },
-  { name: "2.20 - 2.30 $" },
-  { name: "2.30 - 2.40 $" },
-  { name: "2.40 - 2.50 $" },
-  { name: "2.50 - 2.60 $" },
-  { name: "2.60 - 2.70 $" },
-  { name: "2.70 - 2.80 $" },
-  { name: "2.80 - 2.90 $" },
-  { name: "2.90 - 3.00 $" },
-  { name: "3.00 - 3.10 $" },
-  { name: "3.10 - 3.20 $" },
-  { name: "3.20 - 3.30 $" },
-  { name: "3.30 - 3.40 $" },
-  { name: "3.40 - 3.50 $" },
-  { name: "3.50 - 3.60 $" },
-  { name: "3.60 - 3.70 $" },
-  { name: "3.70 - 3.80 $" },
-  { name: "3.80 - 3.90 $" },
-  { name: "3.90 - 4.00 $" },
-  { name: "4.00 - 4.10 $" },
-  { name: "4.10 - 4.20 $" },
-  { name: "4.20 - 4.30 $" },
-  { name: "4.30 - 4.40 $" },
-  { name: "4.40 - 4.50 $" },
-  { name: "4.50 - 4.60 $" },
-  { name: "4.60 - 4.70 $" },
-  { name: "4.70 - 4.80 $" },
-  { name: "4.80 - 4.90 $" },
-  { name: "4.90 - 5.00 $" },
-  { name: "5.00 - 5.10 $" },
-  { name: "5.10 - 5.20 $" },
-  { name: "5.20 - 5.30 $" },
-  { name: "5.30 - 5.40 $" },
-  { name: "5.40 - 5.50 $" },
-  { name: "5.50 - 5.60 $" },
-  { name: "5.60 - 5.70 $" },
-  { name: "5.70 - 5.80 $" },
-  { name: "5.80 - 5.90 $" },
-  { name: "5.90 - 6.00 $" },
-  { name: "6.00 - 6.10 $" },
-  { name: "6.10 - 6.20 $" },
-  { name: "6.20 - 6.30 $" },
-  { name: "6.30 - 6.40 $" },
-  { name: "6.40 - 6.50 $" },
-  { name: "6.50 - 6.60 $" },
-  { name: "6.60 - 6.70 $" },
-  { name: "6.70 - 6.80 $" },
-  { name: "6.80 - 6.90 $" },
-  { name: "6.90 - 7.00 $" }
-]
-  },
-  // Temperature prediction market
-  '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65': {
-    spreadLabels: [
-      { name: "2.50 - 2.60 $" },
-      { name: "2.60 - 2.70 $" },
-      { name: "2.70 - 2.80 $" },
-      { name: "2.80 - 2.90 $" },
-      { name: "2.90 - 3.00 $" },
-      { name: "3.00 - 3.10 $" },
-      { name: "3.10 - 3.20 $" },
-      { name: "3.20 - 3.30 $" },
-      { name: "3.30 - 3.40 $" },
-      { name: "3.40 - 3.50 $" },
-      { name: "3.50 - 3.60 $" },
-      { name: "3.60 - 3.70 $" },
-      { name: "3.70 - 3.80 $" },
-      { name: "3.80 - 3.90 $" },
-      { name: "3.90 - 4.00 $" },
-      { name: "4.00 - 4.10 $" },
-      { name: "4.10 - 4.20 $" },
-      { name: "4.20 - 4.30 $" },
-      { name: "4.30 - 4.40 $" },
-      { name: "4.40 - 4.50 $" },
-    ]
-  },
-  // Champions League winner market
-  '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd': {
-    spreadLabels: [
-      { name: "Manchester City"},
-      { name: "Liverpool"},
-      { name: "NewCastle"},
-      { name: "Chelsea"},
-      { name: "Arsenal"},
-      { name: "Aston Villa"},
-    ]
-  },
-  // Champions League Inter vs PSG market
-  '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff': {
-    spreadLabels: [
-      { name: "Inter Milan Win"},
-      { name: "PSG Win"}
-    ]
-  },
-  // Temperature prediction market
-  '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e': {
-    spreadLabels: [
-      { name: "2.50 - 2.60 $" },
-      { name: "2.60 - 2.70 $" },
-      { name: "2.70 - 2.80 $" },
-      { name: "2.80 - 2.90 $" },
-      { name: "2.90 - 3.00 $" },
-      { name: "3.00 - 3.10 $" },
-      { name: "3.10 - 3.20 $" },
-      { name: "3.20 - 3.30 $" },
-      { name: "3.30 - 3.40 $" },
-      { name: "3.40 - 3.50 $" },
-      { name: "3.50 - 3.60 $" },
-      { name: "3.60 - 3.70 $" },
-      { name: "3.70 - 3.80 $" },
-      { name: "3.80 - 3.90 $" },
-      { name: "3.90 - 4.00 $" },
-      { name: "4.00 - 4.10 $" },
-      { name: "4.10 - 4.20 $" },
-      { name: "4.20 - 4.30 $" },
-      { name: "4.30 - 4.40 $" },
-      { name: "4.40 - 4.50 $" },
-    ]
-  },
-  
-};
-
 // Transaction utilities
 export const getExplorerUrl = (txHash: string): string => {
-  const baseUrl = NETWORK_CONFIG.isMainnet ? 
-    NETWORK_CONFIG.mainnetExplorerBaseUrl : 
+  const baseUrl = NETWORK_CONFIG.isMainnet ?
+    NETWORK_CONFIG.mainnetExplorerBaseUrl :
     NETWORK_CONFIG.explorerBaseUrl;
-  
+
   return `${baseUrl}/transaction/${txHash}`;
 };
 
@@ -368,7 +206,6 @@ export default {
   NETWORKS,
   DEFAULT_MARKET_ID,
   MARKETS,
-  MARKET_SPREADS_METADATA,
   NETWORK_CONFIG,
   TOKENS,
   SPREAD_COLORS,
