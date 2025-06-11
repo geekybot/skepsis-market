@@ -7,6 +7,9 @@ import { SpreadLabel, MARKET_SPREAD_LABELS } from '@/constants/marketDetails';
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiClient } from '@mysten/sui/client';
 import { findMatchingSpreadLabel, createSyntheticOption } from '@/utilities/spreadLabelUtils';
+import { showTransactionSuccess, showTransactionInfo } from '@/lib/transactionToasts';
+import { parseClaimError, parseBuyError, parseSellError } from '@/lib/errorParser';
+import { getDetailedResolutionDisplay, getShortResolutionDisplay } from '@/lib/resolutionUtils';
 
 // Import custom hooks
 import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
@@ -469,7 +472,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
         );
         
         if (!validationResult.isValid) {
-          toast.error(`Transaction would fail: ${validationResult.error}`);
+          const friendlyError = parseBuyError(validationResult.error || '');
+          toast.error(friendlyError);
           setIsLoading(false);
           setTxLoading(false);
           return;
@@ -495,7 +499,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   if (result.createdObjects) {
                     result.createdObjects.forEach((obj: any) => {
                       if (obj.owner.AddressOwner === account.address) {
-                        toast.success(`Created new position: ${obj.reference.objectId.substring(0, 8)}...`);
+                        showTransactionInfo(`Created new position: ${obj.reference.objectId.substring(0, 8)}...`, digest);
                       }
                     });
                   }
@@ -506,10 +510,10 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                       if (event.type.includes('SharesPurchased')) {
                         const parsedEvent = event.parsedJson as any;
                         
-                        toast.success(`Purchased ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`);
+                        showTransactionSuccess(`Purchased ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`, digest);
                         
                         if (parsedEvent?.refund_amount) {
-                          toast.info(`Refunded ${(Number(parsedEvent?.refund_amount) / 1_000_000).toFixed(2)} USDC`);
+                          showTransactionInfo(`Refunded ${(Number(parsedEvent?.refund_amount) / 1_000_000).toFixed(2)} USDC`, digest);
                         }
                       }
                     });
@@ -573,7 +577,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           );
           
           if (!validationResult.isValid) {
-            toast.error(`Transaction would fail: ${validationResult.error}`);
+            const friendlyError = parseSellError(validationResult.error || '');
+            toast.error(friendlyError);
             setIsLoading(false);
             setTxLoading(false);
             return;
@@ -601,7 +606,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         if (event.type.includes('SharesSold')) {
                           const parsedEvent = event.parsedJson as any;
                           
-                          toast.success(`Sold ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`);
+                          showTransactionSuccess(`Sold ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`, digest);
                         }
                       });
                     }
@@ -691,7 +696,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       );
       
       if (!validationResult.isValid) {
-        toast.error(`Claim transaction would fail: ${validationResult.error}`);
+        const friendlyError = parseClaimError(validationResult.error || '');
+        toast.error(friendlyError);
         setIsLoading(false);
         setTxLoading(false);
         return;
@@ -712,7 +718,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
               
               if (result.success) {
                 //console.log('\n✅ Successfully claimed rewards!');
-                toast.success('Successfully claimed rewards!');
+                showTransactionSuccess('Successfully claimed rewards!', digest);
                 
                 // Display events
                 if (result.events) {
@@ -720,7 +726,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     if (event.type.includes('RewardsClaimed')) {
                       const parsedEvent = event.parsedJson as any;
                       
-                      toast.success(`Claimed rewards: ${(Number(parsedEvent?.amount) / 1_000_000).toFixed(2)} USDC`);
+                      showTransactionSuccess(`Claimed rewards: ${(Number(parsedEvent?.amount) / 1_000_000).toFixed(2)} USDC`, digest);
                     }
                   });
                 }
@@ -1112,62 +1118,20 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     <span className="text-sm font-medium text-white">{realTimeMarketStatus.status}</span>
                   </div>
                   {/* Show resolved value if market is resolved - Better formatting */}
-                  {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined && (
-                    <div className="mt-2 p-2 bg-amber-900/30 rounded-md border border-amber-800/30">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-amber-400/80">Resolved Value</span>
-                        <span className="text-sm font-medium text-amber-300">{resolvedValue}</span>
-                        {(() => {
-                          // Find which spread contains the resolved value
-                          // Use the same logic as isWinningPosition to ensure consistency
-                          const findContainingSpread = () => {
-                            for (const opt of options) {
-                              const range = opt.label.split(" - ");
-                              if (range.length !== 2) continue;
-                              
-                              const lowerBound = parseFloat(range[0]);
-                              const upperBound = parseFloat(range[1]);
-                              
-                              // Special handling for 0-1 spread when resolvedValue is exactly 1
-                              if (parseInt(opt.value) === 0 && resolvedValue === 1) {
-                                return opt;
-                              }
-                              
-                              // For boundary values, check if it's the highest spread
-                              if (resolvedValue === upperBound) {
-                                const isHighestSpread = !options.some(otherOpt => {
-                                  const otherRange = otherOpt.label.split(" - ");
-                                  if (otherRange.length !== 2) return false;
-                                  return parseFloat(otherRange[0]) > upperBound;
-                                });
-                                
-                                if (isHighestSpread && resolvedValue >= lowerBound) {
-                                  return opt;
-                                }
-                              }
-                              
-                              // Normal case - value is within bounds but not exactly at upper boundary
-                              if (resolvedValue >= lowerBound && resolvedValue < upperBound) {
-                                return opt;
-                              }
-                            }
-                            return null;
-                          };
-                          
-                          const containingSpread = findContainingSpread();
-                          
-                          if (containingSpread) {
-                            return (
-                              <span className="text-xs text-white/70 mt-1">
-                                Winning spread: <span className="text-amber-400">{containingSpread.label}</span>
-                              </span>
-                            );
-                          }
-                          return null;
-                        })()}
+                  {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined && (() => {
+                    // Get meaningful resolution display using our utility
+                    const resolutionDisplay = getDetailedResolutionDisplay(marketId, resolvedValue);
+                    
+                    return (
+                      <div className="mt-2 p-2 bg-amber-900/30 rounded-md border border-amber-800/30">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-amber-400/80">{resolutionDisplay.title}</span>
+                          <span className="text-sm font-medium text-amber-300">{resolutionDisplay.description}</span>
+                          <span className="text-xs text-white/60 mt-1">Resolution Value: {resolutionDisplay.value}</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
                 
                 {/* Countdown to bidding deadline */}

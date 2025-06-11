@@ -24,6 +24,7 @@ export interface SpreadLabel {
 
 // Define the market static details interface
 export interface MarketStaticDetails {
+    shortTag?: string; 
     question: string;
     resolutionCriteria: string;
     biddingDeadline: string | number;
@@ -127,59 +128,6 @@ export const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
         { name: "Aston Villa", index: 5, lowerBound: 5, upperBound: 6 },
     ],
 
-    // SUI price prediction market for June 6, 2025
-    // '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41': [
-    //     { name: "2.00 - 2.10 $", index: 0, lowerBound: 200, upperBound: 210 },
-    //     { name: "2.10 - 2.20 $", index: 1, lowerBound: 210, upperBound: 220 },
-    //     { name: "2.20 - 2.30 $", index: 2, lowerBound: 220, upperBound: 230 },
-    //     { name: "2.30 - 2.40 $", index: 3, lowerBound: 230, upperBound: 240 },
-    //     { name: "2.40 - 2.50 $", index: 4, lowerBound: 240, upperBound: 250 },
-    //     { name: "2.50 - 2.60 $", index: 5, lowerBound: 250, upperBound: 260 },
-    //     { name: "2.60 - 2.70 $", index: 6, lowerBound: 260, upperBound: 270 },
-    //     { name: "2.70 - 2.80 $", index: 7, lowerBound: 270, upperBound: 280 },
-    //     { name: "2.80 - 2.90 $", index: 8, lowerBound: 280, upperBound: 290 },
-    //     { name: "2.90 - 3.00 $", index: 9, lowerBound: 290, upperBound: 300 },
-    //     { name: "3.00 - 3.10 $", index: 10, lowerBound: 300, upperBound: 310 },
-    //     { name: "3.10 - 3.20 $", index: 11, lowerBound: 310, upperBound: 320 },
-    //     { name: "3.20 - 3.30 $", index: 12, lowerBound: 320, upperBound: 330 },
-    //     { name: "3.30 - 3.40 $", index: 13, lowerBound: 330, upperBound: 340 },
-    //     { name: "3.40 - 3.50 $", index: 14, lowerBound: 340, upperBound: 350 },
-    //     { name: "3.50 - 3.60 $", index: 15, lowerBound: 350, upperBound: 360 },
-    //     { name: "3.60 - 3.70 $", index: 16, lowerBound: 360, upperBound: 370 },
-    //     { name: "3.70 - 3.80 $", index: 17, lowerBound: 370, upperBound: 380 },
-    //     { name: "3.80 - 3.90 $", index: 18 },
-    //     { name: "3.90 - 4.00 $", index: 19 },
-    //     { name: "4.00 - 4.10 $", index: 20 },
-    //     { name: "4.10 - 4.20 $", index: 21 },
-    //     { name: "4.20 - 4.30 $", index: 22 },
-    //     { name: "4.30 - 4.40 $", index: 23 },
-    //     { name: "4.40 - 4.50 $", index: 24 },
-    //     { name: "4.50 - 4.60 $", index: 25 },
-    //     { name: "4.60 - 4.70 $", index: 26 },
-    //     { name: "4.70 - 4.80 $", index: 27 },
-    //     { name: "4.80 - 4.90 $", index: 28 },
-    //     { name: "4.90 - 5.00 $", index: 29 },
-    //     { name: "5.00 - 5.10 $", index: 30 },
-    //     { name: "5.10 - 5.20 $", index: 31 },
-    //     { name: "5.20 - 5.30 $", index: 32 },
-    //     { name: "5.30 - 5.40 $", index: 33 },
-    //     { name: "5.40 - 5.50 $", index: 34 },
-    //     { name: "5.50 - 5.60 $", index: 35 },
-    //     { name: "5.60 - 5.70 $", index: 36 },
-    //     { name: "5.70 - 5.80 $", index: 37 },
-    //     { name: "5.80 - 5.90 $", index: 38 },
-    //     { name: "5.90 - 6.00 $", index: 39 },
-    //     { name: "6.00 - 6.10 $", index: 40 },
-    //     { name: "6.10 - 6.20 $", index: 41 },
-    //     { name: "6.20 - 6.30 $", index: 42 },
-    //     { name: "6.30 - 6.40 $", index: 43 },
-    //     { name: "6.40 - 6.50 $", index: 44 },
-    //     { name: "6.50 - 6.60 $", index: 45 },
-    //     { name: "6.60 - 6.70 $", index: 46 },
-    //     { name: "6.70 - 6.80 $", index: 47 },
-    //     { name: "6.80 - 6.90 $", index: 48 },
-    //     { name: "6.90 - 7.00 $", index: 49 }
-    // ]
 };
 
 /**
@@ -189,6 +137,7 @@ export const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
 export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
     // SUI price prediction market for June 15, 2025
     '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e': {
+        shortTag: "SUI Market, 15th June 2025",
         question: "What will be the Price of SUI in USD on 11:30 AM UTC, June 15, 2025?",
         resolutionCriteria: "Based on the price reported by CoinMarketCap on June 15, 2025 at 11:30 AM UTC. Skepsis curator will close the market.",
         biddingDeadline: "2025-06-14T11:30:00.000Z", // 24 hours before resolution
@@ -198,6 +147,7 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
 
     // SUI price prediction market for May 31, 2025
     '0x6fe8b0d95e68472ff8e7fc034d301a44ca42bac150037c0483e6bda55d8f0f65': {
+        shortTag: "SUI Market, 31st May 2025",
         question: "What will be the Price of SUI in USD on 11:30 AM UTC, May 31, 2025?",
         resolutionCriteria: "Based on the price reported by CoinMarketCap on May 31, 2025 at 11:30 AM UTC.",
         biddingDeadline: "2025-05-30T11:30:00.000Z",
@@ -207,6 +157,7 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
 
     // UCL 2025 prediction market
     '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff': {
+        shortTag: "UCL 2025 Winner",
         question: "Who will win the UCL 2025?",
         resolutionCriteria: "Based on the official UEFA Champions League website",
         biddingDeadline: "2025-05-15T19:00:00.000Z", // Assuming UCL final is on May 17, 2025
@@ -216,6 +167,7 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
 
     // Premier League 2025 prediction market
     '0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd': {
+        shortTag: "Premier League 2025 Winner", 
         question: "Who Will win The Premier League 2025?",
         resolutionCriteria: "Based on the final league standings published by the Premier League",
         biddingDeadline: "2025-05-10T15:00:00.000Z", // Assuming Premier League ends mid-May

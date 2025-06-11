@@ -13,6 +13,7 @@ import { useSuiClient } from '@mysten/dapp-kit';
 import { MarketService } from '@/services/marketService';
 import { cn } from '@/lib/utils';
 import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
+import { MarketSelectorClean } from '@/components/ui/MarketSelectorClean';
 
 const PredictionPage: NextPage = () => {
   const { walletAddress, suiName } = useContext(AppContext);
@@ -251,21 +252,16 @@ const PredictionPage: NextPage = () => {
           </div>
         </div>
 
-        {/* Market selection dropdown */}
-        <div className="market-selector mb-4">
-          <select 
-            value={selectedMarketId}
-            onChange={(e) => handleMarketChange(e.target.value)}
-            className="p-2 rounded bg-gray-700/80 text-white border border-white/10"
-          >
-            {MARKETS.map(market => (
-              <option key={market.marketId} value={market.marketId}>
-                {marketData && marketData.marketId === market.marketId && marketData.basic.question 
-                  ? marketData.basic.question 
-                  : market.name}
-              </option>
-            ))}
-          </select>
+        {/* Market selection with clean marquee */}
+        <div className="market-selector mb-6">
+          <MarketSelectorClean
+            selectedMarketId={selectedMarketId}
+            onMarketChange={handleMarketChange}
+            isLoading={marketLoading || isChangingMarket}
+            speed={40}
+            direction="left"
+            className="w-full"
+          />
         </div>
 
         {/* Market loading state */}

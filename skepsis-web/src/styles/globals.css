@@ -37,6 +37,15 @@
     @apply bg-clip-text text-transparent;
   }
   
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
   @keyframes pulse-slow {
     0%, 100% {
       box-shadow: 0 0 15px 0 rgba(99, 102, 241, 0.4);

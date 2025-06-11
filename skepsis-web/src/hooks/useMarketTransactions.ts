@@ -3,6 +3,7 @@ import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { CONSTANTS, MODULES } from '@/constants/appConstants';
 import { Position } from './useMarketPositions';
+import { parseErrorMessage } from '@/lib/errorParser';
 
 export interface TransactionResult {
     success: boolean;
@@ -182,9 +183,10 @@ export function useMarketTransactions() {
             });
 
             if (dryRunRes.effects.status.status === "failure") {
+                const friendlyError = parseErrorMessage(dryRunRes.effects.status.error || '');
                 return {
                     isValid: false,
-                    error: dryRunRes.effects.status.error || "Unknown error"
+                    error: friendlyError
                 };
             }
 
@@ -193,9 +195,10 @@ export function useMarketTransactions() {
                 error: null
             };
         } catch (error) {
+            const friendlyError = parseErrorMessage(error instanceof Error ? error.message : 'Error validating transaction');
             return {
                 isValid: false,
-                error: error instanceof Error ? error.message : "Error validating transaction"
+                error: friendlyError
             };
         }
     };

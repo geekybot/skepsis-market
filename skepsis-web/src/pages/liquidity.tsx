@@ -15,6 +15,7 @@ import { MarketService } from '@/services/marketService';
 import Link from 'next/link';
 import { MARKETS } from '@/constants/appConstants';
 import { useMarketService } from '@/hooks/useMarketService';
+import { showTransactionSuccess } from '@/lib/transactionToasts';
 
 interface MarketWithPosition {
   id: number;
@@ -484,7 +485,7 @@ const LiquidityPage: NextPage = () => {
         },
         {
           onSuccess: (result) => {
-            toast.success(`Successfully added ${amount} USDC liquidity to "${selectedMarket.name}" market`);
+            showTransactionSuccess(`Successfully added ${amount} USDC liquidity to "${selectedMarket.name}" market`, result.digest);
             
             // Immediately update UI to reflect changes
             refreshData(); // Use the comprehensive refresh function
@@ -521,7 +522,7 @@ const LiquidityPage: NextPage = () => {
         },
         {
           onSuccess: (result) => {
-            toast.success(`Successfully removed ${amount} USDC liquidity from "${selectedMarket.name}" market`);
+            showTransactionSuccess(`Successfully removed ${amount} USDC liquidity from "${selectedMarket.name}" market`, result.digest);
             
             // Immediately update UI to reflect changes
             refreshData(); // Use the comprehensive refresh function

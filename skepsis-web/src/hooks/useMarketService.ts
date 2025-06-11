@@ -5,6 +5,7 @@ import { MarketService } from '@/services/marketService';
 import { toast } from 'react-toastify';
 import { MARKET_CONSTANTS } from '@/constants/marketConstants';
 import { Transaction } from '@mysten/sui/transactions';
+import { showTransactionSuccess } from '@/lib/transactionToasts';
 
 export interface MarketPosition {
   id: string;
@@ -73,7 +74,7 @@ export const useMarketService = () => {
         },
         {
           onSuccess: (result) => {
-            toast.success('Successfully purchased shares!');
+            showTransactionSuccess('Successfully purchased shares!', result.digest);
             // Refresh positions after buying
             fetchUserPositions(marketId);
             setIsLoading(false);
@@ -129,7 +130,7 @@ export const useMarketService = () => {
         },
         {
           onSuccess: (result) => {
-            toast.success('Successfully sold shares!');
+            showTransactionSuccess('Successfully sold shares!', result.digest);
             // Refresh positions after selling
             fetchUserPositions(marketId);
             setIsLoading(false);

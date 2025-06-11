@@ -3,6 +3,7 @@ import { useLiveMarketInfo } from "@/hooks/useLiveMarketInfo";
 import { cn } from "@/lib/utils";
 import { SPREAD_COLORS } from "@/constants/appConstants";
 import { MARKET_SPREAD_LABELS } from "@/constants/marketDetails";
+import { getShortResolutionDisplay } from "@/lib/resolutionUtils";
 
 interface MarketSpreadsBarProps {
   marketId: string;
@@ -131,6 +132,12 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
         <div className="text-right">
           <div className="text-xs text-white/60">Status</div>
           <div className="text-sm text-white">{data.basic.stateDisplay}</div>
+          {/* Show meaningful resolution information if market is resolved */}
+          {data.basic.stateDisplay === 'Resolved' && data.timing?.resolvedValue !== undefined && (
+            <div className="text-xs text-amber-400 mt-1">
+              {getShortResolutionDisplay(marketId, data.timing.resolvedValue)}
+            </div>
+          )}
         </div>
       </div>
       

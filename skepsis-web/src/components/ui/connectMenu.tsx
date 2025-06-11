@@ -13,7 +13,7 @@ import {
 } from "./dropdown-menu";
 import { useMemo } from "react";
 import useMeidaSize from "@/hooks/useMediaSize";
-import { ClipboardCopyIcon } from "lucide-react";
+import { ClipboardCopyIcon, User } from "lucide-react";
 import { toast } from "react-toastify";
 import RpcMenu from "./rpcMenu";
 import NetworkMenu from "./networkMenu";
@@ -79,6 +79,18 @@ const ConnectMenu = ({
               />
               <span className="text-sm text-white">Copy Address</span>
             </button>
+          </DropdownMenuItem>
+          {/* Dashboard */}
+          <DropdownMenuItem className="DropdownMenuItem w-full">
+            <Link
+              href="/dashboard"
+              className="w-full"
+            >
+              <button className="w-full flex items-center justify-start gap-2 rounded-lg px-3 py-2.5 hover:bg-indigo-800/30 transition-colors">
+                <User strokeWidth={2} className="h-4 w-4 text-indigo-200" />
+                <span className="text-sm text-white">Dashboard</span>
+              </button>
+            </Link>
           </DropdownMenuItem>
           {/* Explorer */}
           <DropdownMenuItem className="DropdownMenuItem w-full">

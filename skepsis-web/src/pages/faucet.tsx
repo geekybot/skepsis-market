@@ -13,6 +13,8 @@ import { Transaction } from '@mysten/sui/transactions';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { USDC_CONFIG, NETWORK_CONFIG, getExplorerUrl } from '@/constants/appConstants';
+import { showTransactionSuccess } from '@/lib/transactionToasts';
+import { parseErrorMessage } from '@/lib/errorParser';
 
 const FaucetPage: NextPage = () => {
   const { walletAddress } = useContext(AppContext);
@@ -111,7 +113,8 @@ const FaucetPage: NextPage = () => {
       });
       
       if (dryRunRes.effects.status.status === "failure") {
-        toast.error(`Transaction would fail: ${dryRunRes.effects.status.error}`);
+        const friendlyError = parseErrorMessage(dryRunRes.effects.status.error || '');
+        toast.error(friendlyError);
         setTxStatus('error');
         setIsLoading(false);
         return;
@@ -137,17 +140,19 @@ const FaucetPage: NextPage = () => {
             
             if (finalRes.effects?.status.status === "success") {
               setTxStatus('success');
-              toast.success(`Successfully sent ${displayAmount} ${USDC_CONFIG.symbol} to your wallet!`);
+              showTransactionSuccess(`Successfully sent ${displayAmount} ${USDC_CONFIG.symbol} to your wallet!`, digest);
             } else {
               setTxStatus('error');
-              toast.error(`Transaction failed: ${finalRes.effects?.status.error || "Unknown error"}`);
+              const friendlyError = parseErrorMessage(finalRes.effects?.status.error || 'Transaction failed');
+              toast.error(friendlyError);
             }
             setIsLoading(false);
           },
           onError: (error) => {
             console.error("Transaction failed:", error);
             setTxStatus('error');
-            toast.error(error.message || 'Transaction failed. Please try again.');
+            const friendlyError = parseErrorMessage(error.message || 'Transaction failed');
+            toast.error(friendlyError);
             setIsLoading(false);
           }
         }
@@ -155,7 +160,8 @@ const FaucetPage: NextPage = () => {
     } catch (error: any) {
       console.error('Faucet transaction error:', error);
       setTxStatus('error');
-      toast.error(error.message || 'Failed to send tokens. Please try again later.');
+      const friendlyError = parseErrorMessage(error.message || 'Failed to send tokens');
+      toast.error(friendlyError);
       setIsLoading(false);
     }
   };
