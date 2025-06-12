@@ -14,7 +14,9 @@ import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
 import { MarketService } from '@/services/marketService';
 import Link from 'next/link';
 import { MARKETS } from '@/constants/appConstants';
+import Footer from '@/components/footer';
 import { useMarketService } from '@/hooks/useMarketService';
+import { showTransactionSuccess } from '@/lib/transactionToasts';
 
 interface MarketWithPosition {
   id: number;
@@ -484,7 +486,7 @@ const LiquidityPage: NextPage = () => {
         },
         {
           onSuccess: (result) => {
-            toast.success(`Successfully added ${amount} USDC liquidity to "${selectedMarket.name}" market`);
+            showTransactionSuccess(`Successfully added ${amount} USDC liquidity to "${selectedMarket.name}" market`, result.digest);
             
             // Immediately update UI to reflect changes
             refreshData(); // Use the comprehensive refresh function
@@ -521,7 +523,7 @@ const LiquidityPage: NextPage = () => {
         },
         {
           onSuccess: (result) => {
-            toast.success(`Successfully removed ${amount} USDC liquidity from "${selectedMarket.name}" market`);
+            showTransactionSuccess(`Successfully removed ${amount} USDC liquidity from "${selectedMarket.name}" market`, result.digest);
             
             // Immediately update UI to reflect changes
             refreshData(); // Use the comprehensive refresh function
@@ -587,7 +589,7 @@ const LiquidityPage: NextPage = () => {
         return;
       }
       
-      console.log(`Fetching live data for ${marketIds.length} markets`);
+      //console.log(`Fetching live data for ${marketIds.length} markets`);
       
       // Call the getAllMarketsInfo method from MarketService
       const marketsInfoResponse = await usemarketService.getAllMarketsInfo(marketIds);
@@ -597,11 +599,11 @@ const LiquidityPage: NextPage = () => {
         marketsInfoResponse.markets : [];
       
       if (process.env.NODE_ENV !== 'production') {
-        console.log('Markets info response:', { 
-          success: marketsInfoResponse.success,
-          count: marketsInfoResponse.count,
-          marketsCount: marketsInfo.length
-        });
+        // console.log('Markets info response:', { 
+        //   success: marketsInfoResponse.success,
+        //   count: marketsInfoResponse.count,
+        //   marketsCount: marketsInfo.length
+        // });
       }
       
       // Convert the array of market info objects to a map for easier lookups
@@ -614,7 +616,7 @@ const LiquidityPage: NextPage = () => {
       
       // Minimize logging in production - only log when needed
       if (process.env.NODE_ENV !== 'production') {
-        console.log('Fetched live markets data');
+        // console.log('Fetched live markets data');
       }
       
       // Deep compare the actual market data that matters, not just keys
@@ -638,16 +640,16 @@ const LiquidityPage: NextPage = () => {
         
       if (hasChanged) {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('Live markets data has changed, updating state');
+          // console.log('Live markets data has changed, updating state');
         }
         setLiveMarketsInfo(marketsInfoMap);
       } else {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('Live markets data has not changed, skipping state update');
+          // console.log('Live markets data has not changed, skipping state update');
         }
       }
     } catch (error: any) {
-      console.error('Error fetching live markets data:', error);
+      // console.error('Error fetching live markets data:', error);
       
       // Increment the error counter to trigger exponential backoff
       fetchErrorCountRef.current = Math.min(8, fetchErrorCountRef.current + 1); // Cap at 256 seconds (2^8 * 1000ms)
@@ -659,7 +661,7 @@ const LiquidityPage: NextPage = () => {
       // Only update error state if it's not a spread price error
       // This prevents unnecessary re-renders and refresh cycles
       if (errorMessage.includes('spread prices') || errorMessage.includes('No results returned')) {
-        console.log('Ignoring non-critical spread price error to prevent refresh cycles');
+        // console.log('Ignoring non-critical spread price error to prevent refresh cycles');
       } else {
         setLiveMarketsError(errorMessage);
         
@@ -693,7 +695,7 @@ const LiquidityPage: NextPage = () => {
       {/* Header with wallet connection */}
       <Header />
 
-      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-24">
+      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-36">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Liquidity Management</h1>
@@ -952,6 +954,7 @@ const LiquidityPage: NextPage = () => {
             </button>
           </div>
         )}
+        <Footer />
       </main>
 
       {/* Add Liquidity Modal */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
@@ -7,6 +8,10 @@ import { SpreadLabel, MARKET_SPREAD_LABELS } from '@/constants/marketDetails';
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiClient } from '@mysten/sui/client';
 import { findMatchingSpreadLabel, createSyntheticOption } from '@/utilities/spreadLabelUtils';
+import { showTransactionSuccess, showTransactionInfo } from '@/lib/transactionToasts';
+import { parseClaimError, parseBuyError, parseSellError } from '@/lib/errorParser';
+import { getDetailedResolutionDisplay, getShortResolutionDisplay } from '@/lib/resolutionUtils';
+import { isCompetitionMarket, getTrackByMarketId } from '@/constants/competitionDetails';
 
 // Import custom hooks
 import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
@@ -31,7 +36,6 @@ const Countdown = ({ targetDate, label, onComplete }: {
   useEffect(() => {
     // Validate the date first to prevent Invalid time value errors
     if (!targetDate || isNaN(targetDate.getTime())) {
-      // console.error("Invalid target date provided to Countdown:", targetDate);
       setIsCompleted(true);
       return;
     }
@@ -175,15 +179,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   
   // Log marketTiming props to debug timing information
-  // console.log("🕰️ [PredictionMarket] Market Timing Debug:", {
-  //   marketId,
-  //   marketTiming,
-  //   biddingDeadline,
-  //   resolutionTime,
-  //   marketStatus,
-  //   marketStatusState
-  // });
-  
   // Set default values for critical date fields if they're undefined
   // First try to get from marketTiming, then use a fallback date in the future
   const defaultBiddingDeadline = biddingDeadline || 
@@ -191,18 +186,10 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     
   const defaultResolutionTime = resolutionTime || 
     (marketTiming?.resolutionDate ? marketTiming.resolutionDate : null);
-    // console.log("🕰️ [PredictionMarket] Default Dates Debug:", defaultResolutionTime);
     
   
   // Add more debugging to identify the source of null values
   // console.log("🔍 [PredictionMarket] Props Debug:");
-  // console.log("🔍 marketId:", marketId);
-  // console.log("🔍 biddingDeadline (raw):", biddingDeadline);
-  // console.log("🔍 marketTiming?.biddingEnd:", marketTiming?.biddingEnd);
-  // console.log("🔍 defaultBiddingDeadline (calculated):", defaultBiddingDeadline);
-  // console.log("🔍 resolutionTime (raw):", resolutionTime);
-  // console.log("🔍 marketTiming?.resolutionDate:", marketTiming?.resolutionDate);
-  // console.log("🔍 defaultResolutionTime (calculated):", defaultResolutionTime);
   
   // Add fallbacks for testing - if both are null, use future dates
   // This ensures the component functions even with missing data
@@ -211,10 +198,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     
   const finalResolutionTime = defaultResolutionTime || 
     (new Date(Date.now() + 172800000).toISOString()); // 2 days from now as fallback
-    
-  // console.log("🔍 [PredictionMarket] Final values with fallbacks:");
-  // console.log("🔍 finalBiddingDeadline:", finalBiddingDeadline);
-  // console.log("🔍 finalResolutionTime:", finalResolutionTime);
   
   // State to track the current market
   const [currentMarketId, setCurrentMarketId] = useState<string>(marketId);
@@ -469,7 +452,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
         );
         
         if (!validationResult.isValid) {
-          toast.error(`Transaction would fail: ${validationResult.error}`);
+          const friendlyError = parseBuyError(validationResult.error || '');
+          toast.error(friendlyError);
           setIsLoading(false);
           setTxLoading(false);
           return;
@@ -495,7 +479,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   if (result.createdObjects) {
                     result.createdObjects.forEach((obj: any) => {
                       if (obj.owner.AddressOwner === account.address) {
-                        toast.success(`Created new position: ${obj.reference.objectId.substring(0, 8)}...`);
+                        showTransactionInfo(`Created new position: ${obj.reference.objectId.substring(0, 8)}...`, digest);
                       }
                     });
                   }
@@ -506,10 +490,10 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                       if (event.type.includes('SharesPurchased')) {
                         const parsedEvent = event.parsedJson as any;
                         
-                        toast.success(`Purchased ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`);
+                        showTransactionSuccess(`Purchased ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`, digest);
                         
                         if (parsedEvent?.refund_amount) {
-                          toast.info(`Refunded ${(Number(parsedEvent?.refund_amount) / 1_000_000).toFixed(2)} USDC`);
+                          showTransactionInfo(`Refunded ${(Number(parsedEvent?.refund_amount) / 1_000_000).toFixed(2)} USDC`, digest);
                         }
                       }
                     });
@@ -573,7 +557,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           );
           
           if (!validationResult.isValid) {
-            toast.error(`Transaction would fail: ${validationResult.error}`);
+            const friendlyError = parseSellError(validationResult.error || '');
+            toast.error(friendlyError);
             setIsLoading(false);
             setTxLoading(false);
             return;
@@ -601,7 +586,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         if (event.type.includes('SharesSold')) {
                           const parsedEvent = event.parsedJson as any;
                           
-                          toast.success(`Sold ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`);
+                          showTransactionSuccess(`Sold ${(Number(parsedEvent?.shares_amount) / 1_000_000).toFixed(2)} shares for ${(Number(parsedEvent?.payment_amount) / 1_000_000).toFixed(2)} USDC`, digest);
                         }
                       });
                     }
@@ -691,7 +676,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       );
       
       if (!validationResult.isValid) {
-        toast.error(`Claim transaction would fail: ${validationResult.error}`);
+        const friendlyError = parseClaimError(validationResult.error || '');
+        toast.error(friendlyError);
         setIsLoading(false);
         setTxLoading(false);
         return;
@@ -712,7 +698,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
               
               if (result.success) {
                 //console.log('\n✅ Successfully claimed rewards!');
-                toast.success('Successfully claimed rewards!');
+                showTransactionSuccess('Successfully claimed rewards!', digest);
                 
                 // Display events
                 if (result.events) {
@@ -720,7 +706,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     if (event.type.includes('RewardsClaimed')) {
                       const parsedEvent = event.parsedJson as any;
                       
-                      toast.success(`Claimed rewards: ${(Number(parsedEvent?.amount) / 1_000_000).toFixed(2)} USDC`);
+                      showTransactionSuccess(`Claimed rewards: ${(Number(parsedEvent?.amount) / 1_000_000).toFixed(2)} USDC`, digest);
                     }
                   });
                 }
@@ -852,24 +838,24 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     let biddingEndDate = null;
     
     // Log structured market timing information for debugging
-    console.log("🌟 [Market State Calculation]", {
-      now: now.toISOString(),
-      rawState: state,
-      marketId,
-      biddingDeadline: defaultBiddingDeadline,
-      resolutionTime: defaultResolutionTime,
-      marketStatusState
-    });
+    // console.log("🌟 [Market State Calculation]", {
+    //   now: now.toISOString(),
+    //   rawState: state,
+    //   marketId,
+    //   biddingDeadline: defaultBiddingDeadline,
+    //   resolutionTime: defaultResolutionTime,
+    //   marketStatusState
+    // });
     
     // 1. First check if the market has been explicitly resolved (state = 1)
     if (state === 1 || marketStatusState === 1) {
-      console.log("🌟 Market is Resolved: explicit state = 1");
+      // console.log("🌟 Market is Resolved: explicit state = 1");
       return { status: 'Resolved', state: 1 };
     }
     
     // 2. Check for special states like Canceled
     if (state === 2 || marketStatusState === 2) {
-      console.log("🌟 Market is Canceled: explicit state = 2");
+      // console.log("🌟 Market is Canceled: explicit state = 2");
       return { status: 'Canceled', state: 2 };
     }
     
@@ -888,24 +874,24 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       console.error('🌟 Error parsing market timing dates:', e);
     }
     
-    console.log("🌟 Parsed dates for calculation:", {
-      biddingEndDate: biddingEndDate?.toISOString() || "Not available",
-      resolutionDate: resolutionDate?.toISOString() || "Not available"
-    });
+    // console.log("🌟 Parsed dates for calculation:", {
+    //   biddingEndDate: biddingEndDate?.toISOString() || "Not available",
+    //   resolutionDate: resolutionDate?.toISOString() || "Not available"
+    // });
     
     // 3. Check if resolution time has passed
     if (resolutionDate && now >= resolutionDate) {
-      console.log("🌟 Market is Waiting for Resolution: current time >= resolution time");
+      // console.log("🌟 Market is Waiting for Resolution: current time >= resolution time");
       return { status: 'Waiting for Resolution', state: 0 };
     } 
     // 4. Check if bidding deadline has passed but resolution time hasn't
     else if (biddingEndDate && now >= biddingEndDate) {
-      console.log("🌟 Market is Waiting for Resolution: current time >= bidding deadline");
+      // console.log("🌟 Market is Waiting for Resolution: current time >= bidding deadline");
       return { status: 'Waiting for Resolution', state: 0 };
     } 
     // 5. Default case: Market is still active (bidding period)
     else {
-      console.log("🌟 Market is Active: current time < bidding deadline");
+      // console.log("🌟 Market is Active: current time < bidding deadline");
       return { status: 'Active', state: 0 };
     }
   };
@@ -918,18 +904,18 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     const posMin = position.spreadIndex * 10;
     const posMax = position.spreadIndex * 10 + 10;
     
-    console.log('🔍 Spread Label Matching:', {
-      positionId: position.id.substring(0, 8),
-      spreadIndex: position.spreadIndex,
-      calculatedRange: `${posMin}-${posMax}`,
-      formattedRange: `${(posMin/100).toFixed(2)}-${(posMax/100).toFixed(2)} $`,
-      labels: spreadLabels.map(l => ({
-        index: l.index,
-        bounds: l.lowerBound !== undefined && l.upperBound !== undefined ? 
-          `${l.lowerBound}-${l.upperBound} (${(l.lowerBound/100).toFixed(2)}-${(l.upperBound/100).toFixed(2)} $)` : 
-          'undefined'
-      }))
-    });
+    // console.log('🔍 Spread Label Matching:', {
+    //   positionId: position.id.substring(0, 8),
+    //   spreadIndex: position.spreadIndex,
+    //   calculatedRange: `${posMin}-${posMax}`,
+    //   formattedRange: `${(posMin/100).toFixed(2)}-${(posMax/100).toFixed(2)} $`,
+    //   labels: spreadLabels.map(l => ({
+    //     index: l.index,
+    //     bounds: l.lowerBound !== undefined && l.upperBound !== undefined ? 
+    //       `${l.lowerBound}-${l.upperBound} (${(l.lowerBound/100).toFixed(2)}-${(l.upperBound/100).toFixed(2)} $)` : 
+    //       'undefined'
+    //   }))
+    // });
     
     // Find the best match
     const bestMatch = spreadLabels.find(label => {
@@ -939,13 +925,13 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     });
     
     if (bestMatch) {
-      console.log('✅ Best match found:', {
-        name: bestMatch.name,
-        index: bestMatch.index,
-        range: bestMatch.lowerBound !== undefined ? 
-          `${(bestMatch.lowerBound/100).toFixed(2)}-${(bestMatch.upperBound!/100).toFixed(2)} $` : 
-          'undefined'
-      });
+      // console.log('✅ Best match found:', {
+      //   name: bestMatch.name,
+      //   index: bestMatch.index,
+      //   range: bestMatch.lowerBound !== undefined ? 
+      //     `${(bestMatch.lowerBound/100).toFixed(2)}-${(bestMatch.upperBound!/100).toFixed(2)} $` : 
+      //     'undefined'
+      // });
     } else {
       console.log('❌ No matching label found!');
     }
@@ -962,7 +948,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     // First try to find an exact index match (most reliable)
     const exactIndexMatch = spreadLabels.find(label => label.index === position.spreadIndex);
     if (exactIndexMatch) {
-      console.log(`Found exact index match for position ${position.id.substring(0, 8)}: label.index=${exactIndexMatch.index} matches position.spreadIndex=${position.spreadIndex}`);
+      // console.log(`Found exact index match for position ${position.id.substring(0, 8)}: label.index=${exactIndexMatch.index} matches position.spreadIndex=${position.spreadIndex}`);
       return exactIndexMatch;
     }
     
@@ -975,12 +961,12 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     );
     
     if (exactBoundsMatch) {
-      console.log(`Found exact bounds match for position ${position.id.substring(0, 8)}: ${exactBoundsMatch.lowerBound}-${exactBoundsMatch.upperBound} matches position range ${posMin}-${posMax}`);
+      // console.log(`Found exact bounds match for position ${position.id.substring(0, 8)}: ${exactBoundsMatch.lowerBound}-${exactBoundsMatch.upperBound} matches position range ${posMin}-${posMax}`);
       return exactBoundsMatch;
     }
     
     // If still no match, log a warning and return undefined
-    console.warn(`No matching spread label found for position ${position.id.substring(0, 8)} with spreadIndex ${position.spreadIndex}`);
+    // console.warn(`No matching spread label found for position ${position.id.substring(0, 8)} with spreadIndex ${position.spreadIndex}`);
     return undefined;
   };
   
@@ -992,6 +978,38 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       <div className="flex flex-col lg:flex-row gap-6 w-full">
         {/* Left panel - Market Overview */}
         <div className="flex flex-col flex-grow gap-4 p-6 rounded-xl bg-gray-800/70 backdrop-blur-md w-full lg:w-3/5">
+          {/* Competition Info Banner - Show if this is a competition market */}
+          {(() => {
+            if (isCompetitionMarket(currentMarketId)) {
+              const track = getTrackByMarketId(currentMarketId);
+              if (track) {
+                return (
+                  <div className="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border border-yellow-600/30 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🏆</span>
+                        <span className="text-yellow-300 font-medium text-sm">Sui Overflow 2025 Competition</span>
+                      </div>
+                      <Link 
+                        href={`/competition/track/${track.id}`}
+                        className="text-yellow-200 hover:text-yellow-100 text-xs underline decoration-1 underline-offset-2 hover:decoration-yellow-100 transition-all"
+                      >
+                        View Track Details →
+                      </Link>
+                    </div>
+                    <div className="text-white text-sm">
+                      <span className="font-medium">{track.name} Track</span> • {track.projectCount} competing projects
+                    </div>
+                    <div className="text-yellow-200/80 text-xs mt-1">
+                      Predict which project will win the {track.name} of the Sui Overflow hackathon
+                    </div>
+                  </div>
+                );
+              }
+            }
+            return null;
+          })()}
+          
           <h2 className="text-xl font-medium text-white">{question}</h2>
           
           {/* Spreads visualization - Enhanced two-column view with colors and pricing info */}
@@ -1112,62 +1130,20 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     <span className="text-sm font-medium text-white">{realTimeMarketStatus.status}</span>
                   </div>
                   {/* Show resolved value if market is resolved - Better formatting */}
-                  {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined && (
-                    <div className="mt-2 p-2 bg-amber-900/30 rounded-md border border-amber-800/30">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-amber-400/80">Resolved Value</span>
-                        <span className="text-sm font-medium text-amber-300">{resolvedValue}</span>
-                        {(() => {
-                          // Find which spread contains the resolved value
-                          // Use the same logic as isWinningPosition to ensure consistency
-                          const findContainingSpread = () => {
-                            for (const opt of options) {
-                              const range = opt.label.split(" - ");
-                              if (range.length !== 2) continue;
-                              
-                              const lowerBound = parseFloat(range[0]);
-                              const upperBound = parseFloat(range[1]);
-                              
-                              // Special handling for 0-1 spread when resolvedValue is exactly 1
-                              if (parseInt(opt.value) === 0 && resolvedValue === 1) {
-                                return opt;
-                              }
-                              
-                              // For boundary values, check if it's the highest spread
-                              if (resolvedValue === upperBound) {
-                                const isHighestSpread = !options.some(otherOpt => {
-                                  const otherRange = otherOpt.label.split(" - ");
-                                  if (otherRange.length !== 2) return false;
-                                  return parseFloat(otherRange[0]) > upperBound;
-                                });
-                                
-                                if (isHighestSpread && resolvedValue >= lowerBound) {
-                                  return opt;
-                                }
-                              }
-                              
-                              // Normal case - value is within bounds but not exactly at upper boundary
-                              if (resolvedValue >= lowerBound && resolvedValue < upperBound) {
-                                return opt;
-                              }
-                            }
-                            return null;
-                          };
-                          
-                          const containingSpread = findContainingSpread();
-                          
-                          if (containingSpread) {
-                            return (
-                              <span className="text-xs text-white/70 mt-1">
-                                Winning spread: <span className="text-amber-400">{containingSpread.label}</span>
-                              </span>
-                            );
-                          }
-                          return null;
-                        })()}
+                  {(realTimeMarketStatus.status === 'Resolved' || marketStatusState === 1) && resolvedValue !== undefined && (() => {
+                    // Get meaningful resolution display using our utility
+                    const resolutionDisplay = getDetailedResolutionDisplay(marketId, resolvedValue);
+                    
+                    return (
+                      <div className="mt-2 p-2 bg-amber-900/30 rounded-md border border-amber-800/30">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-amber-400/80">{resolutionDisplay.title}</span>
+                          <span className="text-sm font-medium text-amber-300">{resolutionDisplay.description}</span>
+                          <span className="text-xs text-white/60 mt-1">Resolution Value: {resolutionDisplay.value}</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
                 
                 {/* Countdown to bidding deadline */}
@@ -1212,13 +1188,13 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           {/* Show claim component ONLY when resolution time is passed AND user has NOT claimed rewards yet */}
           {(() => {
             // Add debug logging for claim button conditions
-            console.log('Claim Button Debug:', {
-              marketId,
-              isResolutionPassed,
-              hasAccount: !!account,
-              hasClaimedWinnings: hasUserClaimedWinnings(),
-              positionsCount: positions.length
-            });
+            // console.log('Claim Button Debug:', {
+            //   marketId,
+            //   isResolutionPassed,
+            //   hasAccount: !!account,
+            //   hasClaimedWinnings: hasUserClaimedWinnings(),
+            //   positionsCount: positions.length
+            // });
             
             return isResolutionPassed && account && !hasUserClaimedWinnings() && positions.length > 0 && (
               <div className="p-6 rounded-xl bg-gray-800/70 backdrop-blur-md">

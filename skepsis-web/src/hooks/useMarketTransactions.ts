@@ -3,6 +3,7 @@ import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { CONSTANTS, MODULES } from '@/constants/appConstants';
 import { Position } from './useMarketPositions';
+import { parseErrorMessage } from '@/lib/errorParser';
 
 export interface TransactionResult {
     success: boolean;
@@ -56,7 +57,7 @@ export function useMarketTransactions() {
                 throw new Error(`No single coin with sufficient balance (${maxUsdcInput / 1_000_000} USDC) found`);
             }
 
-            console.log(`💰 Using coin ${coinToUse.coinObjectId} with balance ${Number(coinToUse.balance) / 1_000_000} USDC`);
+            // console.log(`💰 Using coin ${coinToUse.coinObjectId} with balance ${Number(coinToUse.balance) / 1_000_000} USDC`);
 
             // Split the max amount needed for the purchase
             const [paymentCoin] = tx.splitCoins(
@@ -106,7 +107,7 @@ export function useMarketTransactions() {
     ): Promise<Transaction> => {
         try {
             const tx = new Transaction();
-            console.log("minimum usdc output", minUsdcOutput);
+            // console.log("minimum usdc output", minUsdcOutput);
             // Call the sell_exact_shares_with_min_output function
             const positionRegistry = CONSTANTS.OBJECTS.POSITION_REGISTRY || '0x6';
             tx.moveCall({
@@ -142,7 +143,7 @@ export function useMarketTransactions() {
         walletAddress: string
     ): Promise<Transaction> => {
         try {
-            console.log(`🏆 Creating transaction to claim winnings for market ${marketId}`);
+            // console.log(`🏆 Creating transaction to claim winnings for market ${marketId}`);
             const tx = new Transaction();
 
             // Call the claim_winnings function as specified
@@ -182,9 +183,10 @@ export function useMarketTransactions() {
             });
 
             if (dryRunRes.effects.status.status === "failure") {
+                const friendlyError = parseErrorMessage(dryRunRes.effects.status.error || '');
                 return {
                     isValid: false,
-                    error: dryRunRes.effects.status.error || "Unknown error"
+                    error: friendlyError
                 };
             }
 
@@ -193,9 +195,10 @@ export function useMarketTransactions() {
                 error: null
             };
         } catch (error) {
+            const friendlyError = parseErrorMessage(error instanceof Error ? error.message : 'Error validating transaction');
             return {
                 isValid: false,
-                error: error instanceof Error ? error.message : "Error validating transaction"
+                error: friendlyError
             };
         }
     };

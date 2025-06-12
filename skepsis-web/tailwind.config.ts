@@ -15,6 +15,9 @@ const config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      scale: {
+        '102': '1.02',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

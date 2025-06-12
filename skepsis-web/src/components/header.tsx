@@ -5,6 +5,7 @@ import { FC, useContext, useEffect, useState } from "react";
 import { COIN } from "bucket-protocol-sdk";
 import { ConnectModal, useCurrentWallet } from "@mysten/dapp-kit";
 import ConnectMenu from "./ui/connectMenu";
+import SuiOverflowBanner from "./ui/suiOverflowBanner";
 import "@mysten/dapp-kit/dist/index.css";
 import { AppContext } from "@/context/AppContext";
 import { Link as LinkIcon } from "lucide-react";
@@ -66,6 +67,7 @@ const Header = () => {
                 Prediction Markets
               </span>
             </Link>
+
             <Link href="/create-market">
               <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
                 Create Market
@@ -110,6 +112,7 @@ const Header = () => {
           />
         )}
       </header>
+      <SuiOverflowBanner />
     </div>
   );
 };

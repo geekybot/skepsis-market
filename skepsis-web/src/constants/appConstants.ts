@@ -148,7 +148,7 @@ export const NETWORK_CONFIG = {
   isMainnet: false, // Set to true for mainnet deployment
 
   // Explorer URLs
-  explorerBaseUrl: 'https://testnet.sui.io',
+  explorerBaseUrl: 'https://suiscan.xyz/testnet/tx',
   mainnetExplorerBaseUrl: 'https://sui.io',
 
   // RPC URLs
@@ -197,7 +197,7 @@ export const getExplorerUrl = (txHash: string): string => {
     NETWORK_CONFIG.mainnetExplorerBaseUrl :
     NETWORK_CONFIG.explorerBaseUrl;
 
-  return `${baseUrl}/transaction/${txHash}`;
+  return `${baseUrl}/${txHash}`;
 };
 
 // For utility functions that need access to these constants

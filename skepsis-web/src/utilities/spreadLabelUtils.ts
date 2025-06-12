@@ -17,7 +17,7 @@ export const findMatchingSpreadLabel = (position: Position, spreadLabels: Spread
   // First try to find an exact index match (most reliable)
   const exactIndexMatch = spreadLabels.find(label => label.index === position.spreadIndex);
   if (exactIndexMatch) {
-    console.log("Found exact index match for position " + position.id.substring(0, 8) + ": label.index=" + exactIndexMatch.index);
+    // console.log("Found exact index match for position " + position.id.substring(0, 8) + ": label.index=" + exactIndexMatch.index);
     return exactIndexMatch;
   }
   
@@ -30,13 +30,13 @@ export const findMatchingSpreadLabel = (position: Position, spreadLabels: Spread
   );
   
   if (exactBoundsMatch) {
-    console.log("Found exact bounds match for position " + position.id.substring(0, 8) + ": " + 
-      exactBoundsMatch.lowerBound + "-" + exactBoundsMatch.upperBound);
+    // console.log("Found exact bounds match for position " + position.id.substring(0, 8) + ": " + 
+    //   exactBoundsMatch.lowerBound + "-" + exactBoundsMatch.upperBound);
     return exactBoundsMatch;
   }
   
   // If still no match, log a warning and return undefined
-  console.warn("No matching spread label found for position " + position.id.substring(0, 8) + " with spreadIndex " + position.spreadIndex);
+  // console.warn("No matching spread label found for position " + position.id.substring(0, 8) + " with spreadIndex " + position.spreadIndex);
   return undefined;
 };
 

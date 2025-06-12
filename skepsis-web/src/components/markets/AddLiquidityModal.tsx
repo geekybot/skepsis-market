@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { toast } from 'react-toastify';
+import { showTransactionSuccess } from '@/lib/transactionToasts';
 
 interface AddLiquidityModalProps {
   marketId: string;
@@ -48,7 +49,7 @@ const AddLiquidityModal: React.FC<AddLiquidityModalProps> = ({
       // Clear form and close modal
       setAmount('');
       onClose();
-      toast.success(`Added ${amount} USDC liquidity to &quot;${marketName}&quot; market`);
+      // Note: Transaction success message with hash will be shown by parent component
     } catch (error) {
       console.error('Error adding liquidity:', error);
       toast.error('Failed to add liquidity. Please try again.');

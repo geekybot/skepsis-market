@@ -1,0 +1,60 @@
+{
+  "created": "2025-06-11T19:13:15.563Z",
+  "totalMarkets": 9,
+  "markets": [
+    {
+      "trackId": "ai",
+      "trackName": "AI Track",
+      "marketId": "0xcaa789ce815ea722049a6ae868f3128a26fb084c4bec36421bf60fdf2434d056",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "cryptography",
+      "trackName": "Cryptography Track",
+      "marketId": "0xd5a9e20df4b223f6ecedbb6531c423acfec81d24147c637adcb593201b7e67cb",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "defi",
+      "trackName": "DeFi Track",
+      "marketId": "0x9b011d807c6efe2e4e0a756e5156ec62f62cb2f035266add8d40e718fc39afae",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "degen",
+      "trackName": "Degen Track",
+      "marketId": "0x4d34184f6528eb5176a0b39d6674d65d4921c966fab197a7e4394dc5ff424ae7",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "entertainment",
+      "trackName": "Entertainment & Culture Track",
+      "marketId": "0xba9dd7799a98a6a45d58cff5d8c91540cf356c28e8414d915c36e65382696c11",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "explorations",
+      "trackName": "Explorations Track",
+      "marketId": "0xde7bbcb5802d0136abe6ff98d0edbdcf5ce13ebd6eef5797e85699e36f4e5366",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "infra",
+      "trackName": "Infra & Tooling Track",
+      "marketId": "0x50add4ac669cb2bd854334e9c593047259736c3c3c52572a8f33c73de18dcfa8",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "payments",
+      "trackName": "Payments & Wallets Track",
+      "marketId": "0xa837039ed8cd8f93aca6837abaf02a66e0b5196b880c4c269266a3b4a55aa4ae",
+      "liquidityShareId": ""
+    },
+    {
+      "trackId": "storage",
+      "trackName": "Programmable Storage Track",
+      "marketId": "0x775279e850acef40f5f3729e3cf38b059179860898c8720602d1aac1d0dba94f",
+      "liquidityShareId": ""
+    }
+  ]
+}

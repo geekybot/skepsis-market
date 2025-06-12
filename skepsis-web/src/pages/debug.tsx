@@ -2,9 +2,14 @@ import React from 'react';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 import { useLiquidityShares } from '@/hooks/useLiquidityShares';
 import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
 import { useMarketService } from '@/hooks/useMarketService';
+import CacheManager from '@/components/debug/CacheManager';
+import { useOptimizedMultipleMarketsInfo } from '@/hooks/useOptimizedMarketInfo';
+import { MARKETS } from '@/constants/appConstants';
 
 const DebugPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -102,7 +107,9 @@ const DebugPage = () => {
         <meta name="description" content="Debug page for Skepsis application" />
       </Head>
       
-      <main className="min-h-screen bg-gray-900 text-white p-8">
+      <Header />
+      
+      <main className="min-h-screen bg-gray-900 text-white p-8 pt-20">
         <h1 className="text-3xl font-bold mb-4">Skepsis Application Debug</h1>
         
         <div className="grid grid-cols-1 gap-4 mb-8">
@@ -144,6 +151,12 @@ const DebugPage = () => {
           </div>
         </div>
         
+        {/* Cache Performance Section */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Cache Performance Monitor</h2>
+          <CacheManager />
+        </div>
+        
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-2">Navigation</h2>
           <div className="flex gap-4">
@@ -161,6 +174,7 @@ const DebugPage = () => {
             </a>
           </div>
         </div>
+        <Footer />
       </main>
     </>
   );

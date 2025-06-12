@@ -1,4 +1,3 @@
-import { log } from "console";
 import { useState, useEffect, useCallback } from "react";
 
 export interface Spread {
@@ -37,15 +36,12 @@ export function useMarketInfo(url: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(url + `?t=${Date.now()}`); // cache bust
-      if (!res.ok) throw new Error("Failed to fetch market info");
-      const json: MarketInfo = await res.json();
-      console.log("Fetched market info:============>", json);
-      console.log(json);
-      // Calculate spread percentages
+    setLoading(true);      setError(null);
+      try {
+        const res = await fetch(url + `?t=${Date.now()}`); // cache bust
+        if (!res.ok) throw new Error("Failed to fetch market info");
+        const json: MarketInfo = await res.json();
+        // Calculate spread percentages
       let spreads = json.spreads.details.map(s => ({ ...s }));
       const totalOutstanding = spreads.reduce((sum, s) => sum + s.outstandingShares, 0);
       if (totalOutstanding === 0) {
