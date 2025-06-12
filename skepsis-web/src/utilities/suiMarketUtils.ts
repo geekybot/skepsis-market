@@ -13,17 +13,18 @@ export function isSUIMarket(marketId: string): boolean {
 
   // Check if the market question contains SUI price prediction keywords
   const question = market.question.toLowerCase();
-  const shortTag = market.shortTag.toLowerCase();
+  const shortTag = market?.shortTag?.toLowerCase();
   
-  return (
-    question.includes('sui') && 
+  return Boolean(
+    (question.includes('sui') && 
     (question.includes('price') || question.includes('usd')) &&
     !question.includes('overflow') && // Exclude competition markets
     !question.includes('hackathon') &&
-    !question.includes('track')
-  ) || (
-    shortTag.includes('sui market') ||
-    shortTag.includes('sui price')
+    !question.includes('track')) ||
+    (shortTag && (
+      shortTag.includes('sui market') ||
+      shortTag.includes('sui price')
+    ))
   );
 }
 
@@ -35,7 +36,7 @@ export function getSUIMarkets(): Array<{marketId: string; shortTag: string; ques
     .filter(([marketId]) => isSUIMarket(marketId))
     .map(([marketId, details]) => ({
       marketId,
-      shortTag: details.shortTag,
+      shortTag: details.shortTag || 'SUI Market',
       question: details.question,
     }));
 }
