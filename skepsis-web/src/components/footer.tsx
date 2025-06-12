@@ -4,7 +4,7 @@ import Image from "next/image";
 const Footer = () => {
   return (
     <div
-      className="fixed bottom-0 left-0 w-full backdrop-blur-md bg-gradient-to-r from-indigo-950/80 to-violet-950/80 z-50"
+      className="w-full backdrop-blur-md bg-gradient-to-r from-indigo-950/80 to-violet-950/80"
       style={{
         WebkitBackdropFilter: "blur(12px)",
       }}
@@ -27,8 +27,8 @@ const Footer = () => {
           <Link href="/prediction" className="text-white/70 hover:text-white transition-all text-sm">
             Markets
           </Link>
-          <Link href="/competition" className="text-white/70 hover:text-white transition-all text-sm">
-            Competition
+          <Link href="/sui-overflow-campaign" className="text-white/70 hover:text-white transition-all text-sm">
+            Sui Overflow
           </Link>
           <Link href="/liquidity" className="text-white/70 hover:text-white transition-all text-sm">
             Liquidity

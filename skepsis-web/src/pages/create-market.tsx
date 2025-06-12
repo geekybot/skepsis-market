@@ -16,7 +16,7 @@ const CreateMarket: NextPage = () => {
 
       <Header />
       
-      <main className="min-h-screen flex flex-col px-6 max-w-7xl mx-auto pt-24 pb-16">
+      <main className="min-h-screen flex flex-col px-6 max-w-7xl mx-auto pt-36 pb-16">
         <div className="mb-8 flex justify-center items-center">
           <h1 className="text-3xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent">Create Market</h1>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
 import Header from '@/components/header';
+import Footer from '@/components/footer';
 import { AppContext } from '@/context/AppContext';
 import { toast } from 'react-toastify';
 import { 
@@ -177,7 +178,7 @@ const FaucetPage: NextPage = () => {
       {/* Header with wallet connection */}
       <Header />
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 py-8">
+      <main className="min-h-screen flex flex-col items-center justify-center px-6 py-8 pt-36">
         <div className="w-full max-w-md p-6 rounded-lg bg-[#1E1E1E]/60 backdrop-blur-lg shadow-xl">
           {/* USDC Balance Display */}
           <div className="bg-[#333333] rounded-lg p-4 mb-8 flex items-center justify-between">
@@ -280,6 +281,7 @@ const FaucetPage: NextPage = () => {
             <p>Limited to {displayAmount} {USDC_CONFIG.symbol} per request. Maximum {USDC_CONFIG.dailyLimit / 10**USDC_CONFIG.decimals} {USDC_CONFIG.symbol} per day.</p>
           </div>
         </div>
+        <Footer />
       </main>
     </>
   );

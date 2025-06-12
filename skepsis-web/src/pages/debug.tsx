@@ -2,6 +2,8 @@ import React from 'react';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 import { useLiquidityShares } from '@/hooks/useLiquidityShares';
 import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
 import { useMarketService } from '@/hooks/useMarketService';
@@ -105,7 +107,9 @@ const DebugPage = () => {
         <meta name="description" content="Debug page for Skepsis application" />
       </Head>
       
-      <main className="min-h-screen bg-gray-900 text-white p-8">
+      <Header />
+      
+      <main className="min-h-screen bg-gray-900 text-white p-8 pt-20">
         <h1 className="text-3xl font-bold mb-4">Skepsis Application Debug</h1>
         
         <div className="grid grid-cols-1 gap-4 mb-8">
@@ -170,6 +174,7 @@ const DebugPage = () => {
             </a>
           </div>
         </div>
+        <Footer />
       </main>
     </>
   );

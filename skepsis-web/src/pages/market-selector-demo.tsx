@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
 import Header from '@/components/header';
+import Footer from '@/components/footer';
 import { MarketSelectorCarousel } from '@/components/ui/MarketSelectorCarousel';
 import { MarketSelectorMarquee } from '@/components/ui/MarketSelectorMarquee';
 import { MarketSelectorHybrid } from '@/components/ui/MarketSelectorHybrid';
@@ -39,7 +40,7 @@ const MarketSelectorDemo: NextPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
         <Header />
         
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-36">
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-white mb-4">
@@ -183,6 +184,7 @@ const MarketSelectorDemo: NextPage = () => {
             </p>
           </div>
         </div>
+        <Footer />
       </div>
     </>
   );

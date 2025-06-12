@@ -19,7 +19,7 @@ export default function CompetitionPage() {
   return (
     <div>
       <Header />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 pt-36">
         {/* Hero Section */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 mb-4">

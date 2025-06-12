@@ -2,6 +2,7 @@ import React from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
 import Header from '@/components/header';
+import Footer from '@/components/footer';
 import { useContext } from 'react';
 import { AppContext } from '@/context/AppContext';
 import { User, TrendingUp, PieChart, Clock, Wallet, Star } from 'lucide-react';
@@ -26,7 +27,7 @@ const DashboardPage: NextPage = () => {
       {/* Header with wallet connection */}
       <Header />
 
-      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-24">
+      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-36">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full mb-6">
@@ -173,6 +174,7 @@ const DashboardPage: NextPage = () => {
             </div>
           </div>
         </div>
+        <Footer />
       </main>
     </>
   );

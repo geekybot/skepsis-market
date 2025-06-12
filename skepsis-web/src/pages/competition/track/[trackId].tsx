@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ExternalLink, Play, Home, Twitter } from 'lucide-react';
 import { getTrackById } from '@/constants/competitionDetails';
 import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 /**
  * Track Detail Page
@@ -24,7 +25,7 @@ export default function TrackDetailPage() {
     return (
       <div>
         <Header />
-        <div className="container mx-auto px-4 py-8 pt-24">
+        <div className="container mx-auto px-4 py-8 pt-36">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-gray-900">Track Not Found</h1>
             <p className="text-gray-700 mb-6">The competition track you're looking for doesn't exist.</p>
@@ -43,7 +44,7 @@ export default function TrackDetailPage() {
   return (
     <div>
       <Header />
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 pt-36">
         {/* Header */}
       <div className="mb-8">
         <Link href="/competition" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
@@ -202,6 +203,7 @@ export default function TrackDetailPage() {
         </div>
       </div>
     </div>
+    <Footer />
     </div>
   );
 }

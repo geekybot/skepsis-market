@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
@@ -984,9 +985,17 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
               if (track) {
                 return (
                   <div className="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border border-yellow-600/30 rounded-lg p-4 mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🏆</span>
-                      <span className="text-yellow-300 font-medium text-sm">Sui Overflow 2025 Competition</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🏆</span>
+                        <span className="text-yellow-300 font-medium text-sm">Sui Overflow 2025 Competition</span>
+                      </div>
+                      <Link 
+                        href={`/competition/track/${track.id}`}
+                        className="text-yellow-200 hover:text-yellow-100 text-xs underline decoration-1 underline-offset-2 hover:decoration-yellow-100 transition-all"
+                      >
+                        View Track Details →
+                      </Link>
                     </div>
                     <div className="text-white text-sm">
                       <span className="font-medium">{track.name} Track</span> • {track.projectCount} competing projects

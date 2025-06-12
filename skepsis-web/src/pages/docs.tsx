@@ -690,7 +690,7 @@ async function placeSkepsisTrade(marketId, tradeAmount, outcomeIndex) {
       </Head>
       <main
         className={cn(
-          "relative w-full min-h-svh h-full max-w-360 flex flex-col mx-auto pb-28 pt-20 px-4 z-10",
+          "relative w-full min-h-svh h-full max-w-360 flex flex-col mx-auto pb-8 pt-32 px-4 z-10",
           inter.className
         )}
       >

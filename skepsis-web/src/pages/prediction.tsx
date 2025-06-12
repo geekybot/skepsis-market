@@ -5,6 +5,7 @@ import PredictionMarket from '@/components/markets/PredictionMarket';
 import { AppContext } from '@/context/AppContext';
 import { useContext } from 'react';
 import Header from '@/components/header';
+import Footer from '@/components/footer';
 import { MARKETS, DEFAULT_MARKET_ID, SPREAD_COLORS } from '@/constants/appConstants';
 import { MARKET_SPREAD_LABELS, SpreadLabel } from '@/constants/marketDetails';
 import { useLiveMarketInfo } from '@/hooks/useLiveMarketInfo';
@@ -226,7 +227,7 @@ const PredictionPage: NextPage = () => {
       {/* Header with wallet connection */}
       <Header />
 
-      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-24">
+      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-36">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Skepsis Markets</h1>
           
@@ -357,6 +358,7 @@ const PredictionPage: NextPage = () => {
             </div>
           </>
         )}
+        <Footer />
       </main>
     </>
   );

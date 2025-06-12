@@ -30,7 +30,7 @@ function extractLogoUrl(logoField?: string): string | undefined {
 }
 
 // Import the complete raw projects data from the JSON file
-import rawProjectsData from '../../../projects.json';
+import rawProjectsData from '../constants/projects.json';
 
 // Process the raw projects data from Airtable  
 const rawProjects = rawProjectsData;

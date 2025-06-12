@@ -14,6 +14,7 @@ import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
 import { MarketService } from '@/services/marketService';
 import Link from 'next/link';
 import { MARKETS } from '@/constants/appConstants';
+import Footer from '@/components/footer';
 import { useMarketService } from '@/hooks/useMarketService';
 import { showTransactionSuccess } from '@/lib/transactionToasts';
 
@@ -694,7 +695,7 @@ const LiquidityPage: NextPage = () => {
       {/* Header with wallet connection */}
       <Header />
 
-      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-24">
+      <main className="min-h-screen flex flex-col px-6 py-8 max-w-7xl mx-auto pt-36">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Liquidity Management</h1>
@@ -953,6 +954,7 @@ const LiquidityPage: NextPage = () => {
             </button>
           </div>
         )}
+        <Footer />
       </main>
 
       {/* Add Liquidity Modal */}
