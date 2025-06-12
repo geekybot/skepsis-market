@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
+import { useState } from "react";
 
 const SuiOverflowBanner = () => {
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  // Don't render if dismissed
+  if (isDismissed) {
+    return null;
+  }
+
   return (
     <div className="w-full bg-gradient-to-r from-amber-50/95 to-yellow-50/95 backdrop-blur-md border-b border-amber-200/50 relative overflow-hidden shadow-sm">
       {/* Subtle background decoration */}
@@ -11,27 +19,38 @@ const SuiOverflowBanner = () => {
       <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-200/0 via-amber-300/50 to-amber-200/0"></div>
       
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-2">
-        <div className="flex items-center justify-center gap-3 text-sm">
-          <span className="text-lg animate-pulse">📢</span>
-          <span className="text-gray-800 font-medium">
-            Don't miss the 
+        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center gap-3 text-sm flex-1">
+            <span className="text-lg animate-pulse">📢</span>
+            <span className="text-gray-800 font-medium">
+              Don't miss the 
+              <Link 
+                href="/competition" 
+                className="mx-1 text-blue-700 hover:text-blue-800 font-semibold underline decoration-2 underline-offset-2 hover:decoration-blue-800 transition-all"
+              >
+                Sui Overflow Campaign
+              </Link>
+              - predict hackathon winners and earn rewards!
+            </span>
             <Link 
-              href="/competition" 
-              className="mx-1 text-blue-700 hover:text-blue-800 font-semibold underline decoration-2 underline-offset-2 hover:decoration-blue-800 transition-all"
+              href="https://sui.io/overflow" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-800 font-medium hover:bg-blue-50/70 px-2 py-1 rounded-md transition-all"
             >
-              Sui Overflow Campaign
+              <span className="text-xs">Learn More</span>
+              <ExternalLink size={12} />
             </Link>
-            - predict hackathon winners and earn rewards!
-          </span>
-          <Link 
-            href="https://sui.io/overflow" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-800 font-medium hover:bg-blue-50/70 px-2 py-1 rounded-md transition-all"
+          </div>
+          
+          {/* Close button */}
+          <button
+            onClick={() => setIsDismissed(true)}
+            className="text-gray-600 hover:text-gray-800 text-lg opacity-70 hover:opacity-100 transition-all ml-4 flex-shrink-0"
+            title="Dismiss banner"
           >
-            <span className="text-xs">Learn More</span>
-            <ExternalLink size={12} />
-          </Link>
+            ×
+          </button>
         </div>
       </div>
     </div>
