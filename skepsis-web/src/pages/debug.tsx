@@ -8,6 +8,7 @@ import { useLiquidityShares } from '@/hooks/useLiquidityShares';
 import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
 import { useMarketService } from '@/hooks/useMarketService';
 import CacheManager from '@/components/debug/CacheManager';
+import AnalyticsDebug from '@/components/debug/AnalyticsDebug';
 import { useOptimizedMultipleMarketsInfo } from '@/hooks/useOptimizedMarketInfo';
 import { MARKETS } from '@/constants/appConstants';
 
@@ -155,6 +156,12 @@ const DebugPage = () => {
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Cache Performance Monitor</h2>
           <CacheManager />
+        </div>
+        
+        {/* Analytics Debug Section */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Analytics Configuration</h2>
+          <AnalyticsDebug />
         </div>
         
         <div className="mt-8">

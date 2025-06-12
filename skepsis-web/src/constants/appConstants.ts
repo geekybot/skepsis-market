@@ -158,11 +158,14 @@ export const NETWORK_CONFIG = {
 
 // Google Analytics and GTM configuration
 export const ANALYTICS_CONFIG = {
-  // Google Tag Manager ID from environment variable
+  // Google Analytics 4 Measurement ID from environment variable
+  gaMeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '',
+  
+  // Google Tag Manager ID from environment variable (optional)
   gtmId: process.env.NEXT_PUBLIC_GTM_ID || '',
 
-  // Enable/disable analytics based on environment and if GTM ID exists
-  enabled: !!process.env.NEXT_PUBLIC_GTM_ID, // Only enable if GTM ID is provided
+  // Enable/disable analytics based on environment and if GA ID exists
+  enabled: !!(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || process.env.NEXT_PUBLIC_GTM_ID),
 
   // Additional analytics settings
   options: {
