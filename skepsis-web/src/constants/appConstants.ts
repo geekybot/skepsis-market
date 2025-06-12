@@ -191,6 +191,13 @@ export const SKEPSIS_CONFIG = {
   default_market_id: CONSTANTS.OBJECTS.MARKET,
 };
 
+// Debug logging for address resolution
+console.log("🔍 [Constants] Debug address resolution:");
+console.log(`🔍 [Constants] CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY: ${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}`);
+console.log(`🔍 [Constants] SKEPSIS_CONFIG.distribution_market_factory: ${SKEPSIS_CONFIG.distribution_market_factory}`);
+console.log(`🔍 [Constants] USDC_CONFIG.packageId: ${USDC_CONFIG.packageId}`);
+console.log(`🔍 [Constants] CONSTANTS.PACKAGES.USDC: ${CONSTANTS.PACKAGES.USDC}`);
+
 // Transaction utilities
 export const getExplorerUrl = (txHash: string): string => {
   const baseUrl = NETWORK_CONFIG.isMainnet ?

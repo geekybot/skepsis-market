@@ -18,6 +18,7 @@ interface MarketFields {
   resolved_value?: string | number;
   state?: string | number;
   funding_amount?: string | number;
+  liquidity_share?: string | number;
   market_spreads?: { 
     fields?: { 
       spreads?: { 
@@ -232,7 +233,8 @@ export function useLiveMarketsInfo(marketIds: string[]) {
       const biddingOpen = biddingDeadline > now;
       
       // Extract liquidity information
-      const totalLiquidity = Number(marketFields.funding_amount || 0);
+      // Use liquidity_share field (same as marketService.getMarketInfo)
+      const totalLiquidity = Number(marketFields.liquidity_share || marketFields.funding_amount || 0);
       const totalLiquidityDisplay = formatNumberWithCommas(totalLiquidity / 1000000);
       
       // Extract spread information

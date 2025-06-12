@@ -34,6 +34,99 @@ export interface MarketStaticDetails {
 
 // Spread metadata for all markets
 export const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
+    // Competition Markets - Sui Overflow 2025
+    // AI Track
+    '0xcaa789ce815ea722049a6ae868f3128a26fb084c4bec36421bf60fdf2434d056': [
+        { name: "OpenGraph", index: 0, lowerBound: 0, upperBound: 1, description: "AI-powered applications and tools on Sui" },
+        { name: "RaidenX", index: 1, lowerBound: 1, upperBound: 2, description: "AI-powered applications and tools on Sui" },
+        { name: "Sui Agent Kit", index: 2, lowerBound: 2, upperBound: 3, description: "AI-powered applications and tools on Sui" },
+        { name: "Suithetic", index: 3, lowerBound: 3, upperBound: 4, description: "AI-powered applications and tools on Sui" },
+        { name: "Hyvve", index: 4, lowerBound: 4, upperBound: 5, description: "AI-powered applications and tools on Sui" },
+    ],
+    
+    // Cryptography Track  
+    '0xd5a9e20df4b223f6ecedbb6531c423acfec81d24147c637adcb593201b7e67cb': [
+        { name: "Sui Sentinel", index: 0, lowerBound: 0, upperBound: 1, description: "Cryptographic innovations and privacy solutions" },
+        { name: "EpochOne E-sign", index: 1, lowerBound: 1, upperBound: 2, description: "Cryptographic innovations and privacy solutions" },
+        { name: "Passman", index: 2, lowerBound: 2, upperBound: 3, description: "Cryptographic innovations and privacy solutions" },
+        { name: "Shroud", index: 3, lowerBound: 3, upperBound: 4, description: "Cryptographic innovations and privacy solutions" },
+        { name: "Mizt", index: 4, lowerBound: 4, upperBound: 5, description: "Cryptographic innovations and privacy solutions" },
+        { name: "ZeroLeaks", index: 5, lowerBound: 5, upperBound: 6, description: "Cryptographic innovations and privacy solutions" },
+        { name: "Sui Shadow", index: 6, lowerBound: 6, upperBound: 7, description: "Cryptographic innovations and privacy solutions" },
+    ],
+    
+    // DeFi Track
+    '0x9b011d807c6efe2e4e0a756e5156ec62f62cb2f035266add8d40e718fc39afae': [
+        { name: "Deeptrade", index: 0, lowerBound: 0, upperBound: 1, description: "Decentralized Finance protocols and applications" },
+        { name: "Kamo Finance", index: 1, lowerBound: 1, upperBound: 2, description: "Decentralized Finance protocols and applications" },
+        { name: "Magma Finance", index: 2, lowerBound: 2, upperBound: 3, description: "Decentralized Finance protocols and applications" },
+        { name: "MizuPay", index: 3, lowerBound: 3, upperBound: 4, description: "Decentralized Finance protocols and applications" },
+        { name: "Surge", index: 4, lowerBound: 4, upperBound: 5, description: "Decentralized Finance protocols and applications" },
+        { name: "Native", index: 5, lowerBound: 5, upperBound: 6, description: "Decentralized Finance protocols and applications" },
+        { name: "Pismo Protocol", index: 6, lowerBound: 6, upperBound: 7, description: "Decentralized Finance protocols and applications" },
+        { name: "DeepMaker", index: 7, lowerBound: 7, upperBound: 8, description: "Decentralized Finance protocols and applications" },
+    ],
+    
+    // Degen Track
+    '0x4d34184f6528eb5176a0b39d6674d65d4921c966fab197a7e4394dc5ff424ae7': [
+        { name: "Moonbags", index: 0, lowerBound: 0, upperBound: 1, description: "Experimental and high-risk applications" },
+        { name: "Kensei", index: 1, lowerBound: 1, upperBound: 2, description: "Experimental and high-risk applications" },
+        { name: "GachaponClub", index: 2, lowerBound: 2, upperBound: 3, description: "Experimental and high-risk applications" },
+        { name: "MFC.CLUB", index: 3, lowerBound: 3, upperBound: 4, description: "Experimental and high-risk applications" },
+        { name: "Objection! AI", index: 4, lowerBound: 4, upperBound: 5, description: "Experimental and high-risk applications" },
+    ],
+    
+    // Entertainment & Culture Track
+    '0xba9dd7799a98a6a45d58cff5d8c91540cf356c28e8414d915c36e65382696c11': [
+        { name: "SWION", index: 0, lowerBound: 0, upperBound: 1, description: "Gaming, entertainment, and cultural applications" },
+        { name: "Sui Battle AR", index: 1, lowerBound: 1, upperBound: 2, description: "Gaming, entertainment, and cultural applications" },
+        { name: "SUIperCHAT", index: 2, lowerBound: 2, upperBound: 3, description: "Gaming, entertainment, and cultural applications" },
+        { name: "Exclusuive", index: 3, lowerBound: 3, upperBound: 4, description: "Gaming, entertainment, and cultural applications" },
+        { name: "Numeron", index: 4, lowerBound: 4, upperBound: 5, description: "Gaming, entertainment, and cultural applications" },
+        { name: "GiveRep", index: 5, lowerBound: 5, upperBound: 6, description: "Gaming, entertainment, and cultural applications" },
+        { name: "Daemon", index: 6, lowerBound: 6, upperBound: 7, description: "Gaming, entertainment, and cultural applications" },
+    ],
+    
+    // Explorations Track
+    '0xde7bbcb5802d0136abe6ff98d0edbdcf5ce13ebd6eef5797e85699e36f4e5366': [
+        { name: "MultiChainWalrus", index: 0, lowerBound: 0, upperBound: 1, description: "Experimental and exploratory projects" },
+        { name: "Suibotics", index: 1, lowerBound: 1, upperBound: 2, description: "Experimental and exploratory projects" },
+        { name: "Skepsis", index: 2, lowerBound: 2, upperBound: 3, description: "Experimental and exploratory projects" },
+        { name: "PactDa", index: 3, lowerBound: 3, upperBound: 4, description: "Experimental and exploratory projects" },
+        { name: "PredictPlay", index: 4, lowerBound: 4, upperBound: 5, description: "Experimental and exploratory projects" },
+    ],
+    
+    // Infra & Tooling Track
+    '0x50add4ac669cb2bd854334e9c593047259736c3c3c52572a8f33c73de18dcfa8': [
+        { name: "Noodles FI", index: 0, lowerBound: 0, upperBound: 1, description: "Infrastructure and developer tooling" },
+        { name: "Large", index: 1, lowerBound: 1, upperBound: 2, description: "Infrastructure and developer tooling" },
+        { name: "SuiSQL", index: 2, lowerBound: 2, upperBound: 3, description: "Infrastructure and developer tooling" },
+        { name: "Historical Dev Inspect", index: 3, lowerBound: 3, upperBound: 4, description: "Infrastructure and developer tooling" },
+        { name: "Sui Provenance Suite", index: 4, lowerBound: 4, upperBound: 5, description: "Infrastructure and developer tooling" },
+        { name: "Suipulse", index: 5, lowerBound: 5, upperBound: 6, description: "Infrastructure and developer tooling" },
+        { name: "MicroSui Framework", index: 6, lowerBound: 6, upperBound: 7, description: "Infrastructure and developer tooling" },
+    ],
+    
+    // Payments & Wallets Track
+    '0xa837039ed8cd8f93aca6837abaf02a66e0b5196b880c4c269266a3b4a55aa4ae': [
+        { name: "SeaWallet.ai", index: 0, lowerBound: 0, upperBound: 1, description: "Payment solutions and wallet applications" },
+        { name: "Coindrip", index: 1, lowerBound: 1, upperBound: 2, description: "Payment solutions and wallet applications" },
+        { name: "PIVY", index: 2, lowerBound: 2, upperBound: 3, description: "Payment solutions and wallet applications" },
+        { name: "Sui Multisig", index: 3, lowerBound: 3, upperBound: 4, description: "Payment solutions and wallet applications" },
+    ],
+    
+    // Programmable Storage Track
+    '0x775279e850acef40f5f3729e3cf38b059179860898c8720602d1aac1d0dba94f': [
+        { name: "Chatiwal", index: 0, lowerBound: 0, upperBound: 1, description: "Storage solutions and data management" },
+        { name: "Archimeters", index: 1, lowerBound: 1, upperBound: 2, description: "Storage solutions and data management" },
+        { name: "Walpress APP", index: 2, lowerBound: 2, upperBound: 3, description: "Storage solutions and data management" },
+        { name: "Wal0", index: 3, lowerBound: 3, upperBound: 4, description: "Storage solutions and data management" },
+        { name: "SuiSign", index: 4, lowerBound: 4, upperBound: 5, description: "Storage solutions and data management" },
+        { name: "SuiMail", index: 5, lowerBound: 5, upperBound: 6, description: "Storage solutions and data management" },
+        { name: "sui.direct", index: 6, lowerBound: 6, upperBound: 7, description: "Storage solutions and data management" },
+        { name: "WalGraph", index: 7, lowerBound: 7, upperBound: 8, description: "Storage solutions and data management" },
+    ],
+
     // SUI price prediction market for June 15, 2025
     '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e': [
         { name: "2.00 - 2.10 $", index: 0, lowerBound: 200, upperBound: 210 },
@@ -173,6 +266,97 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
         biddingDeadline: "2025-05-10T15:00:00.000Z", // Assuming Premier League ends mid-May
         resolutionTime: "2025-05-19T12:00:00.000Z",
         spreadLabels: MARKET_SPREAD_LABELS['0xc07823e6ce8bbe82cc188ef33738387735cc20d56aae5d05d6b953f3b4ca2afd'],
+    },
+
+    // Competition Markets - Sui Overflow 2025
+    // AI Track
+    '0xcaa789ce815ea722049a6ae868f3128a26fb084c4bec36421bf60fdf2434d056': {
+        shortTag: "AI Track Winner",
+        question: "Which project will win the AI Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the AI track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0xcaa789ce815ea722049a6ae868f3128a26fb084c4bec36421bf60fdf2434d056'],
+    },
+    
+    // Cryptography Track
+    '0xd5a9e20df4b223f6ecedbb6531c423acfec81d24147c637adcb593201b7e67cb': {
+        shortTag: "Cryptography Track Winner",
+        question: "Which project will win the Cryptography Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Cryptography track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0xd5a9e20df4b223f6ecedbb6531c423acfec81d24147c637adcb593201b7e67cb'],
+    },
+    
+    // DeFi Track
+    '0x9b011d807c6efe2e4e0a756e5156ec62f62cb2f035266add8d40e718fc39afae': {
+        shortTag: "DeFi Track Winner",
+        question: "Which project will win the DeFi Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the DeFi track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0x9b011d807c6efe2e4e0a756e5156ec62f62cb2f035266add8d40e718fc39afae'],
+    },
+    
+    // Degen Track
+    '0x4d34184f6528eb5176a0b39d6674d65d4921c966fab197a7e4394dc5ff424ae7': {
+        shortTag: "Degen Track Winner",
+        question: "Which project will win the Degen Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Degen track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0x4d34184f6528eb5176a0b39d6674d65d4921c966fab197a7e4394dc5ff424ae7'],
+    },
+    
+    // Entertainment & Culture Track
+    '0xba9dd7799a98a6a45d58cff5d8c91540cf356c28e8414d915c36e65382696c11': {
+        shortTag: "Entertainment Track Winner",
+        question: "Which project will win the Entertainment & Culture Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Entertainment & Culture track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0xba9dd7799a98a6a45d58cff5d8c91540cf356c28e8414d915c36e65382696c11'],
+    },
+    
+    // Explorations Track
+    '0xde7bbcb5802d0136abe6ff98d0edbdcf5ce13ebd6eef5797e85699e36f4e5366': {
+        shortTag: "Explorations Track Winner",
+        question: "Which project will win the Explorations Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Explorations track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0xde7bbcb5802d0136abe6ff98d0edbdcf5ce13ebd6eef5797e85699e36f4e5366'],
+    },
+    
+    // Infra & Tooling Track
+    '0x50add4ac669cb2bd854334e9c593047259736c3c3c52572a8f33c73de18dcfa8': {
+        shortTag: "Infra Track Winner",
+        question: "Which project will win the Infra & Tooling Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Infra & Tooling track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0x50add4ac669cb2bd854334e9c593047259736c3c3c52572a8f33c73de18dcfa8'],
+    },
+    
+    // Payments & Wallets Track
+    '0xa837039ed8cd8f93aca6837abaf02a66e0b5196b880c4c269266a3b4a55aa4ae': {
+        shortTag: "Payments Track Winner",
+        question: "Which project will win the Payments & Wallets Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Payments & Wallets track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0xa837039ed8cd8f93aca6837abaf02a66e0b5196b880c4c269266a3b4a55aa4ae'],
+    },
+    
+    // Programmable Storage Track
+    '0x775279e850acef40f5f3729e3cf38b059179860898c8720602d1aac1d0dba94f': {
+        shortTag: "Storage Track Winner",
+        question: "Which project will win the Programmable Storage Track in Sui Overflow 2025?",
+        resolutionCriteria: "Based on the official results announced by the Sui Foundation for the Programmable Storage track of Sui Overflow 2025 hackathon. The market will resolve to the project that receives the first place award in this track category.",
+        biddingDeadline: "2025-06-18T00:00:00.000Z",
+        resolutionTime: "2025-06-25T00:00:00.000Z",
+        spreadLabels: MARKET_SPREAD_LABELS['0x775279e850acef40f5f3729e3cf38b059179860898c8720602d1aac1d0dba94f'],
     },
 
     // SUI price prediction market for June 6, 2025

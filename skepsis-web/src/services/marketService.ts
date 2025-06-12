@@ -854,9 +854,16 @@ export class MarketService {
       const tx = new Transaction();
       
       // The function only takes the market ID as a parameter and USDC as a type argument
+      const targetAddress = `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`;
+      const typeArg = `${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`;
+      
+      console.log(`🔍 [MarketService] Target address: ${targetAddress}`);
+      console.log(`🔍 [MarketService] Type argument: ${typeArg}`);
+      console.log(`🔍 [MarketService] Market ID: ${marketId}`);
+      
       tx.moveCall({
-        target: `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`,
-        typeArguments: [`${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`],
+        target: targetAddress,
+        typeArguments: [typeArg],
         arguments: [
           tx.object(marketId)
         ],

@@ -5,6 +5,9 @@ import { useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
 import { useLiquidityShares } from '@/hooks/useLiquidityShares';
 import { useMarketLiquidityInfo } from '@/hooks/useMarketLiquidityInfo';
 import { useMarketService } from '@/hooks/useMarketService';
+import CacheManager from '@/components/debug/CacheManager';
+import { useOptimizedMultipleMarketsInfo } from '@/hooks/useOptimizedMarketInfo';
+import { MARKETS } from '@/constants/appConstants';
 
 const DebugPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -142,6 +145,12 @@ const DebugPage = () => {
               {logs.length === 0 && <div className="text-gray-400">No logs yet</div>}
             </div>
           </div>
+        </div>
+        
+        {/* Cache Performance Section */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Cache Performance Monitor</h2>
+          <CacheManager />
         </div>
         
         <div className="mt-8">

@@ -10,6 +10,7 @@ import { findMatchingSpreadLabel, createSyntheticOption } from '@/utilities/spre
 import { showTransactionSuccess, showTransactionInfo } from '@/lib/transactionToasts';
 import { parseClaimError, parseBuyError, parseSellError } from '@/lib/errorParser';
 import { getDetailedResolutionDisplay, getShortResolutionDisplay } from '@/lib/resolutionUtils';
+import { isCompetitionMarket, getTrackByMarketId } from '@/constants/competitionDetails';
 
 // Import custom hooks
 import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
@@ -998,6 +999,30 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       <div className="flex flex-col lg:flex-row gap-6 w-full">
         {/* Left panel - Market Overview */}
         <div className="flex flex-col flex-grow gap-4 p-6 rounded-xl bg-gray-800/70 backdrop-blur-md w-full lg:w-3/5">
+          {/* Competition Info Banner - Show if this is a competition market */}
+          {(() => {
+            if (isCompetitionMarket(currentMarketId)) {
+              const track = getTrackByMarketId(currentMarketId);
+              if (track) {
+                return (
+                  <div className="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border border-yellow-600/30 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🏆</span>
+                      <span className="text-yellow-300 font-medium text-sm">Sui Overflow 2025 Competition</span>
+                    </div>
+                    <div className="text-white text-sm">
+                      <span className="font-medium">{track.name} Track</span> • {track.projectCount} competing projects
+                    </div>
+                    <div className="text-yellow-200/80 text-xs mt-1">
+                      Predict which project will win the {track.name} of the Sui Overflow hackathon
+                    </div>
+                  </div>
+                );
+              }
+            }
+            return null;
+          })()}
+          
           <h2 className="text-xl font-medium text-white">{question}</h2>
           
           {/* Spreads visualization - Enhanced two-column view with colors and pricing info */}

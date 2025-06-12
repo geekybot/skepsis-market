@@ -179,28 +179,44 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
           <div className="p-1">
             <div className="bg-gradient-to-br from-indigo-900/50 to-violet-900/50 rounded-lg p-6 border border-indigo-700/30 hover:border-indigo-600/50 transition-all">
               <div className="flex flex-col md:flex-row gap-6">
-                {/* Market Info - Simplified to match screenshot */}
+                {/* Market Info */}
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    Unknown Market
-                  </h3>
-                  <p className="text-white/80 mb-6 line-clamp-2">
-                    No resolution criteria specified
-                  </p>
-                  
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar size={16} className="text-indigo-300" />
-                    <span className="text-white/80 text-sm">
-                      Created Invalid date
+                  {/* Market State Badge */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStateBadgeColor(activeMarket.state)}`}>
+                      {activeMarket.stateDisplay}
                     </span>
+                    {activeMarket.spreadCount && (
+                      <span className="text-indigo-300 text-sm">
+                        {activeMarket.spreadCount} options
+                      </span>
+                    )}
                   </div>
                   
-                  <div className="flex items-center gap-3 mb-8">
-                    <Calendar size={16} className="text-indigo-300" />
-                    <span className="text-white/80 text-sm">
-                      {/* Use values directly from screenshot 2 */}
-                      Resolves in over 55360 years
-                    </span>
+                  <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2">
+                    {activeMarket.title}
+                  </h3>
+                  <p className="text-white/80 mb-6 line-clamp-3 text-sm">
+                    {activeMarket.description}
+                  </p>
+                  
+                  {/* Market Timing Information */}
+                  <div className="space-y-2 mb-6">
+                    {activeMarket.bidEndTime && (
+                      <div className="flex items-center gap-3">
+                        <Calendar size={16} className="text-indigo-300" />
+                        <span className="text-white/80 text-sm">
+                          Bidding: {activeMarket.bidEndTime}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-3">
+                      <Calendar size={16} className="text-indigo-300" />
+                      <span className="text-white/80 text-sm">
+                        Resolves: {activeMarket.resolveTime}
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="mt-6">
@@ -214,7 +230,7 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
                   </div>
                 </div>
                 
-                {/* Market Stats - Simplified to match screenshot */}
+                {/* Market Stats */}
                 <div className="bg-indigo-900/30 p-5 rounded-lg border border-indigo-800/30 flex flex-col w-full md:w-60 gap-4">
                   <div>
                     <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
@@ -222,8 +238,8 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
                       <span>Market Status</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="py-1 px-6 text-emerald-300 border border-emerald-500/30 bg-emerald-500/20 rounded-full text-sm">
-                        Open
+                      <div className={`py-1 px-3 rounded-full text-sm ${getStateBadgeColor(activeMarket.state)}`}>
+                        {activeMarket.stateDisplay}
                       </div>
                     </div>
                   </div>
@@ -233,8 +249,8 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
                       <Coins size={14} />
                       <span>Liquidity</span>
                     </div>
-                    <div className="text-white font-medium text-xl">
-                      $0 USDC
+                    <div className="text-white font-medium text-lg">
+                      {formattedLiquidity}
                     </div>
                   </div>
                   
@@ -243,24 +259,22 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
                       <TrendingUp size={14} />
                       <span>Volume</span>
                     </div>
-                    <div className="text-white font-medium text-xl">
-                      $810 USDC
+                    <div className="text-white font-medium text-lg">
+                      {formattedVolume}
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
-                      <Users size={14} />
-                      <span>Bid Deadline</span>
+                  {activeMarket.range && (
+                    <div>
+                      <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
+                        <Users size={14} />
+                        <span>Range</span>
+                      </div>
+                      <div className="text-white font-medium text-sm">
+                        {activeMarket.range.min} - {activeMarket.range.max} {activeMarket.range.unit}
+                      </div>
                     </div>
-                    <div className="text-white font-medium">
-                      <span className="flex items-center">
-                        <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                        {/* Directly use the text from screenshot 1 */}
-                        over 55 years ago
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
               

@@ -8,6 +8,7 @@
     "read": "ts-node src/read-examples.ts",
     "write": "ts-node src/write-examples.ts",
     "create-market": "ts-node src/create-market.ts",
+    "create-competition": "ts-node src/create-competition-markets.ts",
     "add-liquidity": "ts-node src/add-liquidity.ts",
     "buy-shares": "ts-node src/buy-shares.ts",
     "market-info": "ts-node src/market-info.ts",

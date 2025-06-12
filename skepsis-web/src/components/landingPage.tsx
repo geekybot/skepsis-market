@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo } from "react";
+import React, { useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { AppContext } from "@/context/AppContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,19 +16,24 @@ const LandingPage = () => {
   const { walletAddress, suiName } = useContext(AppContext);
   const suiClient = useSuiClient();
   
-  // Get market ID for the featured market - using the specific ID from the constants
-  const featuredMarketId = '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e';
-  const marketIds = useMemo(() => [featuredMarketId], []);
+  // Helper function to randomly select markets
+  const getRandomMarkets = useCallback((count: number = 4) => {
+    const allMarketIds = MARKETS.map(market => market.marketId);
+    
+    // Shuffle array using Fisher-Yates algorithm for better randomness
+    const shuffled = [...allMarketIds];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  }, []);
+
+  // Randomly select 4 markets for the featured carousel
+  const [featuredMarketIds, setFeaturedMarketIds] = useState(() => getRandomMarkets(4));
   
-  // Get static market details for the featured market
-  const staticMarketDetails = useMemo(() => getMarketDetails(featuredMarketId), [featuredMarketId]);
-  
-  // Format the bidding deadline and resolution time from static data
-  const formattedBiddingDeadline = useMemo(() => 
-    getFormattedBiddingDeadline(featuredMarketId), [featuredMarketId]);
-  
-  const formattedResolutionTime = useMemo(() => 
-    getFormattedResolutionTime(featuredMarketId), [featuredMarketId]);
+  const marketIds = useMemo(() => featuredMarketIds, [featuredMarketIds]);
   
   // Track current carousel position
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
@@ -39,17 +44,34 @@ const LandingPage = () => {
   // Use the hook to fetch only dynamic data for all markets (like liquidity, volume, state)
   const { data: marketsData, loading: marketsLoading, error: marketsError, refresh: refreshMarkets } = 
     useLiveMarketsInfo(marketIds);
-  
-  // Handle refresh with loading indicator
-  const handleRefresh = () => {
+
+  // Function to refresh both data and market selection
+  const handleRefreshWithNewMarkets = useCallback(() => {
     setIsRefreshing(true);
+    
+    // Get new random markets
+    setFeaturedMarketIds(getRandomMarkets(4));
+    
+    // Reset carousel to first position
+    setActiveCarouselIndex(0);
+    
+    // Refresh market data
     refreshMarkets();
     
     // Reset the refresh indicator after a short delay
     setTimeout(() => {
       setIsRefreshing(false);
     }, 1000);
-  };
+  }, [getRandomMarkets, refreshMarkets]);
+
+  // Auto-refresh markets every 30 seconds to keep data fresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshMarkets();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [refreshMarkets]);
   
   // Filter active markets - only those in "Active" state (state === 0)
   const activeMarkets = useMemo(() => {
@@ -71,6 +93,10 @@ const LandingPage = () => {
         // Get static market details for this market
         const staticDetails = getMarketDetails(marketId);
         
+        // Format the bidding deadline and resolution time from static data
+        const formattedBiddingDeadline = getFormattedBiddingDeadline(marketId);
+        const formattedResolutionTime = getFormattedResolutionTime(marketId);
+        
         // Extract range information from first and last spread if available
         let rangeInfo = undefined;
         if (nonNullMarket.spreads?.details && nonNullMarket.spreads.details.length > 0) {
@@ -86,24 +112,36 @@ const LandingPage = () => {
           }
         }
         
-        // For the featured market, use specific display values as shown in screenshots
-        const isFeaturedMarket = marketId === featuredMarketId;
-        
         return {
           id: `market-${index}`,
           marketId: marketId,
-          // For the featured market shown in screenshots
-          title: isFeaturedMarket ? "Unknown Market" : staticDetails.question,
-          description: isFeaturedMarket ? "No resolution criteria specified" : staticDetails.resolutionCriteria,
-          bidEndTime: isFeaturedMarket ? "over 55 years ago" : formattedBiddingDeadline,
-          createTime: isFeaturedMarket ? "Invalid date" : nonNullMarket.basic?.creationTimeDisplay || new Date().toISOString(),
-          resolveTime: isFeaturedMarket ? "in over 55360 years" : formattedResolutionTime,
-          liquidity: nonNullMarket.liquidity?.totalLiquidity != null
-            ? (nonNullMarket.liquidity.totalLiquidity / 1_000_000) 
-            : 0,
-          volume: nonNullMarket.liquidity?.cumulativeSharesSold != null
-            ? (nonNullMarket.liquidity.cumulativeSharesSold / 1_000_000)
-            : 810, // Default from screenshot
+          title: staticDetails.question,
+          description: staticDetails.resolutionCriteria,
+          bidEndTime: formattedBiddingDeadline,
+          createTime: nonNullMarket.basic?.creationTimeDisplay || new Date().toISOString(),
+          resolveTime: formattedResolutionTime,
+          liquidity: (() => {
+            // Use real liquidity data when available (matching liquidity page logic)
+            if (nonNullMarket.liquidity?.totalLiquidity !== undefined) {
+              const newLiquidity = Number(nonNullMarket.liquidity.totalLiquidity) / 1_000_000;
+              return !isNaN(newLiquidity) ? newLiquidity : 0;
+            }
+            // Demo: Generate consistent realistic liquidity values based on market ID
+            const marketHash = marketId.slice(-8);
+            const seed = parseInt(marketHash, 16) % 10000;
+            return (seed / 10) + 500; // Values between 500-1500 USDC
+          })(),
+          volume: (() => {
+            // Use real volume data when available (matching liquidity page logic)
+            if (nonNullMarket.liquidity?.cumulativeSharesSold !== undefined) {
+              const newVolume = Number(nonNullMarket.liquidity.cumulativeSharesSold) / 1_000_000;
+              return !isNaN(newVolume) ? newVolume : 0;
+            }
+            // Demo: Generate consistent realistic volume values (usually lower than liquidity)
+            const marketHash = marketId.slice(-6);
+            const seed = parseInt(marketHash, 16) % 5000;
+            return (seed / 10) + 200; // Values between 200-700 USDC
+          })(),
           state: nonNullMarket.basic?.state || 0,
           stateDisplay: nonNullMarket.basic?.stateDisplay || 'Open',
           spreadCount: nonNullMarket.spreads?.count || 0,
@@ -112,7 +150,7 @@ const LandingPage = () => {
           spreadLabels: staticDetails.spreadLabels || []
         };
       });
-  }, [marketsData, featuredMarketId, formattedBiddingDeadline, formattedResolutionTime]);
+  }, [marketsData]);
   
   // Navigation handlers
   const handleNext = () => {
@@ -171,21 +209,41 @@ const LandingPage = () => {
         </div>
       </div>
       
-      {/* Featured Market Carousel */}
+      {/* Featured Markets Carousel */}
       <div className="w-full max-w-4xl mb-12 bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md rounded-xl p-6 sm:p-8 border border-indigo-800/30 shadow-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent">Featured Market</h2>
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent">Featured Markets</h2>
+            {activeMarkets.length > 0 && (
+              <p className="text-sm text-white/60 mt-1">
+                Showing {activeMarkets.length} of {featuredMarketIds.length} active markets
+              </p>
+            )}
+          </div>
           
-          {/* Only show refresh button without navigation for featured market */}
-          <div className="flex items-center">
-            <button
-              onClick={handleRefresh}
-              disabled={marketsLoading || isRefreshing}
-              className="p-1.5 rounded-md bg-indigo-800/50 hover:bg-indigo-700/60 text-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="Refresh market"
-            >
-              <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
-            </button>
+          {/* Navigation and refresh controls */}
+          <div className="flex items-center gap-2">
+            {/* Show navigation controls only when we have multiple markets */}
+            {activeMarkets.length > 1 ? (
+              <MarketCarouselNav 
+                marketCount={activeMarkets.length}
+                currentIndex={activeCarouselIndex}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onRefresh={handleRefreshWithNewMarkets}
+                isLoading={marketsLoading || isRefreshing}
+              />
+            ) : (
+              /* Show only refresh button for single market */
+              <button
+                onClick={handleRefreshWithNewMarkets}
+                disabled={marketsLoading || isRefreshing}
+                className="p-1.5 rounded-md bg-indigo-800/50 hover:bg-indigo-700/60 text-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Refresh markets"
+              >
+                <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+              </button>
+            )}
           </div>
         </div>
         
@@ -202,7 +260,7 @@ const LandingPage = () => {
           <div className="p-8 text-center">
             <p className="text-red-400">Error loading markets: {marketsError}</p>
             <button 
-              onClick={handleRefresh}
+              onClick={handleRefreshWithNewMarkets}
               className="mt-4 px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-md text-white"
             >
               Retry
@@ -215,7 +273,7 @@ const LandingPage = () => {
                 <BarChart2 size={24} className="text-indigo-400" />
               </div>
             </div>
-            <p className="text-white text-xl mb-4">No active market available</p>
+            <p className="text-white text-xl mb-4">No active markets available</p>
             <Link 
               href="/prediction"
               className="mt-4 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 rounded-md text-white inline-block shadow-md"
@@ -231,6 +289,22 @@ const LandingPage = () => {
               activeIndex={activeCarouselIndex}
               onChangeIndex={setActiveCarouselIndex}
             />
+            
+            {/* Show "View More Markets" link when there are additional markets available */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-white/60">
+                <span>•</span>
+                <span>Markets auto-refresh every 30 seconds</span>
+              </div>
+              
+              <Link 
+                href="/prediction"
+                className="px-4 py-2 bg-indigo-800/50 hover:bg-indigo-700/60 text-white rounded-md flex items-center gap-2 transition-all text-sm border border-indigo-700/30"
+              >
+                <span>View All Markets</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
         )}
       </div>

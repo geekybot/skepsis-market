@@ -27,6 +27,9 @@ const Footer = () => {
           <Link href="/prediction" className="text-white/70 hover:text-white transition-all text-sm">
             Markets
           </Link>
+          <Link href="/competition" className="text-white/70 hover:text-white transition-all text-sm">
+            Competition
+          </Link>
           <Link href="/liquidity" className="text-white/70 hover:text-white transition-all text-sm">
             Liquidity
           </Link>

@@ -8,6 +8,7 @@ import Header from '@/components/header';
 import { MARKETS, DEFAULT_MARKET_ID, SPREAD_COLORS } from '@/constants/appConstants';
 import { MARKET_SPREAD_LABELS, SpreadLabel } from '@/constants/marketDetails';
 import { useLiveMarketInfo } from '@/hooks/useLiveMarketInfo';
+import { useOptimizedMarketInfo } from '@/hooks/useOptimizedMarketInfo';
 import { useRouter } from 'next/router';
 import { useSuiClient } from '@mysten/dapp-kit';
 import { MarketService } from '@/services/marketService';
@@ -18,7 +19,41 @@ import { MarketSelectorClean } from '@/components/ui/MarketSelectorClean';
 const PredictionPage: NextPage = () => {
   const { walletAddress, suiName } = useContext(AppContext);
   const router = useRouter();
-  const [selectedMarketId, setSelectedMarketId] = useState(DEFAULT_MARKET_ID);
+  
+  // Initialize market ID more intelligently 
+  const [selectedMarketId, setSelectedMarketId] = useState(() => {
+    // On client-side, try to get the market from URL immediately if available
+    if (typeof window !== 'undefined' && window.location.search) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const marketParam = urlParams.get('market');
+      if (marketParam) {
+        const isValidMarket = MARKETS.some(m => m.marketId === marketParam);
+        if (isValidMarket) {
+          return marketParam;
+        }
+      }
+    }
+    return DEFAULT_MARKET_ID;
+  });
+  
+  // Track if we've processed the router query to avoid unnecessary re-renders
+  const [hasProcessedRouter, setHasProcessedRouter] = useState(false);
+  
+  // Process router query when ready
+  useEffect(() => {
+    if (!router.isReady || hasProcessedRouter) return;
+    
+    const { market } = router.query;
+    
+    if (market && typeof market === 'string') {
+      const isValidMarket = MARKETS.some(m => m.marketId === market);
+      if (isValidMarket && selectedMarketId !== market) {
+        setSelectedMarketId(market);
+      }
+    }
+    
+    setHasProcessedRouter(true);
+  }, [router.isReady, router.query.market, hasProcessedRouter, selectedMarketId]);
   
   // Local loading state to ensure immediate UI feedback on market change
   const [isChangingMarket, setIsChangingMarket] = useState(false);
@@ -52,75 +87,80 @@ const PredictionPage: NextPage = () => {
     totalPositionsValue: hookPositionsValue
   } = useMarketPositions(suiClient, selectedMarketId, walletAddress || null, spreadPrices);
   
-  // State to track positions with updated values based on spread prices
-  const [updatedPositions, setUpdatedPositions] = useState<Position[]>([]);
-  const [totalPositionValue, setTotalPositionValue] = useState<number>(0);      // Update position values whenever spread prices or positions change
+  // Use positions directly from the hook to avoid dual calculation
+  // The hook already handles spread price integration consistently
+  const [totalPositionValue, setTotalPositionValue] = useState<number>(0);
+  
+  // Debug logging for position value consistency
   useEffect(() => {
-    if (positions.length > 0 && Object.keys(spreadPrices).length > 0) {
-      // Update position values using current spread prices
-      const updatedPositionsWithPrices = positions.map(position => {
-        // If we have a price for this spread index, use it to calculate the value
-        const spreadPrice = spreadPrices[position.spreadIndex];
-        
-        if (spreadPrice !== undefined) {
-          // IMPORTANT FIX: Both sharesAmount and spreadPrice are in raw units (with 6 decimal places)
-          // sharesAmount is already scaled down by 1,000,000 in the useMarketPositions hook
-          // spreadPrice needs to be divided by 1,000,000 to convert to USDC units
-          // We need one more division by 1,000,000 to get the correct final value
-          const value = position.sharesAmount * (spreadPrice / 1_000_000);
-          // Scale down by 1,000,000 to get the correct display value in dollars
-          const scaledValue = value / 1_000_000;
-          // Ensure value is properly rounded to 3 decimal places max
-          return {
-            ...position,
-            value: Math.round(scaledValue * 1000) / 1000
-          };
-        }
-        // Keep the original value if no price is available
-        return position;
+    if (positions.length > 0) {
+      console.log("🔍 Position values update:", {
+        positionCount: positions.length,
+        spreadPricesCount: Object.keys(spreadPrices).length,
+        positions: positions.map(p => ({
+          spreadIndex: p.spreadIndex,
+          shares: p.sharesAmount,
+          value: p.value,
+          spreadPrice: spreadPrices[p.spreadIndex]
+        }))
       });
-      
-      setUpdatedPositions(updatedPositionsWithPrices);
-      
-      // Calculate total value of all positions
-      const total = updatedPositionsWithPrices.reduce((sum, pos) => sum + pos.value, 0);
-      setTotalPositionValue(total);
-    } else {
-      setUpdatedPositions(positions);
-      const total = positions.reduce((sum, pos) => sum + pos.value, 0);
-      setTotalPositionValue(total);
     }
   }, [positions, spreadPrices]);
   
-  // Check for market ID in URL query parameters
+  // Update total position value when hook provides new position data
   useEffect(() => {
+    if (positions.length > 0) {
+      const total = positions.reduce((sum, pos) => sum + pos.value, 0);
+      setTotalPositionValue(total);
+    } else {
+      setTotalPositionValue(0);
+    }
+  }, [positions]);
+  
+  // Handle URL changes (navigation between markets) - only after router is processed
+  useEffect(() => {
+    // Wait for Next.js router to be ready and ensure we've processed the initial route
+    if (!router.isReady || !hasProcessedRouter) return;
+    
     const { market } = router.query;
-    // console.log("🔍 Market from URL query:", market);
     if (market && typeof market === 'string') {
       // Verify that the market ID is valid
       const isValidMarket = MARKETS.some(m => m.marketId === market);
-      // console.log("🔍 Is valid market:", isValidMarket, "marketId:", market);
-      if (isValidMarket) {
+      if (isValidMarket && selectedMarketId !== market) {
         setSelectedMarketId(market);
       }
     }
-  }, [router.query]);
+  }, [router.query.market, selectedMarketId, hasProcessedRouter]);
   
-  // Dynamically load the selected market data using the hook
+  // Dynamically load the selected market data using the optimized hook for better performance
   const { 
     data: marketData, 
     loading: marketLoading, 
     error: marketError,
-    refresh: refreshMarketData
-  } = useLiveMarketInfo(selectedMarketId);
+    refresh: refreshMarketData,
+    cacheStats
+  } = useOptimizedMarketInfo(selectedMarketId);
+
+  // Log cache efficiency for performance monitoring
+  useEffect(() => {
+    if (cacheStats) {
+      console.log(`📊 Cache Performance for ${selectedMarketId}:`, {
+        staticFromCache: cacheStats.staticFromCache,
+        dynamicFromCache: cacheStats.dynamicFromCache,
+        timingFromCache: cacheStats.timingFromCache,
+        fetchTime: `${cacheStats.fetchTime}ms`
+      });
+    }
+  }, [cacheStats, selectedMarketId]);
   
   // Automatically refresh spread prices when market data is loaded or market ID changes
   useEffect(() => {
-    if (marketData && !marketLoading) {
-      // Only refresh prices if we have market data and aren't already refreshing
+    if (marketData && !marketLoading && !refreshingPrices) {
+      // Only refresh prices if we have market data, aren't loading, and aren't already refreshing
+      console.log("🔄 Auto-refreshing spread prices for market:", selectedMarketId);
       refreshSpreadPrices();
     }
-  }, [marketData, selectedMarketId, marketLoading]);
+  }, [marketData, selectedMarketId]); // Keep dependencies minimal to prevent loops
 
   // Add state to track if spread prices are being refreshed
   const [refreshingPrices, setRefreshingPrices] = useState(false);
@@ -144,12 +184,18 @@ const PredictionPage: NextPage = () => {
 
   // Function to directly fetch just the spread prices using get_all_spread_prices
   const refreshSpreadPrices = async () => {
-    if (!selectedMarketId || refreshingPrices) return;
+    if (!selectedMarketId || refreshingPrices) {
+      console.log("⏭️ Skipping spread price refresh:", { 
+        hasMarketId: !!selectedMarketId, 
+        isRefreshing: refreshingPrices 
+      });
+      return;
+    }
     
     setRefreshingPrices(true);
+    console.log("🔄 Starting spread price refresh for market:", selectedMarketId);
+    
     try {
-      // console.log("🔄 [PredictionPage] Fetching spread prices for market:", selectedMarketId);
-      
       // Use our marketService to get the prices
       const marketService = new MarketService(suiClient);
       const result = await marketService.getAllSpreadPrices(selectedMarketId);
@@ -192,23 +238,31 @@ const PredictionPage: NextPage = () => {
         
         if (validPricesCount > 0) {
           // Update the state with our valid prices
+          console.log("📊 Updating spread prices:", {
+            previousPriceCount: Object.keys(spreadPrices).length,
+            newPriceCount: validPricesCount,
+            samplePrices: Object.entries(priceMap).slice(0, 3).map(([idx, price]) => 
+              `spread ${idx}: ${price} (${(price/1_000_000).toFixed(6)} USDC)`
+            )
+          });
           setSpreadPrices(priceMap);
-          // console.log(`✅ [PredictionPage] Updated ${validPricesCount} spread prices successfully`);
+          console.log("✅ Spread prices updated successfully");
           
           // If there were some invalid prices, log a warning
           if (validPricesCount < result.indices.length) {
-            // console.warn(`⚠️ [PredictionPage] Found ${result.indices.length - validPricesCount} invalid spread prices`);
+            console.warn(`⚠️ Found ${result.indices.length - validPricesCount} invalid spread prices`);
           }
         } else {
-          // console.error("❌ [PredictionPage] No valid prices found in the response");
+          console.error("❌ No valid prices found in the response");
         }
       } else {
-        // console.error("❌ [PredictionPage] Failed to get spread prices:", result.error || "Missing indices or prices");
+        console.error("❌ Failed to get spread prices:", result.error || "Missing indices or prices");
       }
     } catch (error) {
-      // console.error("❌ [PredictionPage] Error refreshing spread prices:", error);
+      console.error("❌ Error refreshing spread prices:", error);
     } finally {
       // Always reset the refreshing flag to allow future refreshes
+      console.log("🔄 Spread price refresh completed");
       setRefreshingPrices(false);
     }
   };
@@ -286,9 +340,9 @@ const PredictionPage: NextPage = () => {
               <PredictionMarket 
                 key={selectedMarketId} // Force component remount when marketId changes
                 marketId={selectedMarketId}
-                question={marketData.basic.question || selectedMarketBasicInfo.name}
+                question={marketData.question || selectedMarketBasicInfo.name}
                 spreadPrices={spreadPrices}
-                options={marketData.spreads.details.map((spread, index) => {
+                options={marketData.spreads?.map((spread, index) => {
                   // Get metadata for this market and spread if available
                   const spreadLabels = MARKET_SPREAD_LABELS[selectedMarketId] || [];
                   // Find the correct spread metadata by matching spreadIndex instead of using array index
@@ -308,17 +362,20 @@ const PredictionPage: NextPage = () => {
                   
                   const priceDisplay = hasRefreshedPrice 
                     ? (price / 1_000_000).toFixed(3)
-                    : spread.buyPriceDisplay ? Number(spread.buyPriceDisplay).toFixed(3) : "0.000";
+                    : spread.buyPrice ? (spread.buyPrice / 1_000_000).toFixed(3) : "0.000";
+                  
+                  // Generate displayRange fallback
+                  const displayRange = `${spread.lowerBound}-${spread.upperBound}`;
                   
                   return {
-                    id: spread.id || `spread-${spread.spreadIndex}`,
+                    id: `spread-${spread.spreadIndex}`,
                     // Use custom name if available, otherwise use displayRange
-                    label: spreadMetadata?.name || spread.displayRange,
+                    label: spreadMetadata?.name || displayRange,
                     // Keep the original range description in metadata
-                    originalRange: spread.displayRange,
+                    originalRange: displayRange,
                     value: spread.spreadIndex.toString(),
                     buyPrice: priceDisplay,
-                    sellPrice: spread.sellPriceDisplay || null,
+                    sellPrice: spread.sellPrice ? (spread.sellPrice / 1_000_000).toFixed(3) : null,
                     percentage: spread.percentage,
                     color: SPREAD_COLORS[index % SPREAD_COLORS.length], // Cycle through colors
                     // Include metadata for detailed descriptions with proper type handling
@@ -328,26 +385,25 @@ const PredictionPage: NextPage = () => {
                       lowerBound: spreadMetadata?.lowerBound !== undefined ? spreadMetadata.lowerBound : spread.spreadIndex * 10,
                       upperBound: spreadMetadata?.upperBound !== undefined ? spreadMetadata.upperBound : spread.spreadIndex * 10 + 10,
                       description: spreadMetadata?.description || '',
-                      rangeDescription: spreadMetadata?.rangeDescription || spread.displayRange
+                      rangeDescription: spreadMetadata?.rangeDescription || displayRange
                     } as SpreadLabel,
                     // Flag to indicate this price was refreshed
                     priceRefreshed: hasRefreshedPrice
                   };
-                })}
-                resolutionCriteria={marketData.basic.resolutionCriteria || "Not specified"}
+                }) || []}
+                resolutionCriteria={marketData.resolutionCriteria || "Not specified"}
                 resolver="Skepsis Protocol"
                 onTransactionComplete={refreshMarketData}
-                marketStatus={marketData.basic.stateDisplay}
-                marketStatusState={marketData.basic.state}
+                marketStatus={marketData.stateDisplay}
+                marketStatusState={marketData.marketState}
                 
-                biddingDeadline={marketData.timing.biddingDeadlineDisplay}
-                resolvedValue={marketData.timing.resolvedValue}
+                biddingDeadline={marketData.biddingDeadlineDisplay}
+                resolutionTime={marketData.resolutionTimeDisplay}
+                resolvedValue={marketData.resolvedValue}
                 marketTiming={{
-                  createdAt: marketData.basic.creationTimeDisplay,
-                  updatedAt: marketData.basic.creationTimeDisplay, // No specific updated time available
-                  biddingStart: marketData.basic.creationTimeDisplay, // Use creation time as bidding start
-                  biddingEnd: marketData.timing.biddingDeadlineDisplay,
-                  resolutionDate: marketData.timing.resolutionTimeDisplay
+                  createdAt: new Date(Date.now()).toISOString(), // Use current time as fallback
+                  biddingEnd: marketData.biddingDeadlineDisplay,
+                  resolutionDate: marketData.resolutionTimeDisplay
                 }}
               />
             </div>
