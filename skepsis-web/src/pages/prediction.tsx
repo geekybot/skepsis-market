@@ -60,7 +60,6 @@ const PredictionPage: NextPage = () => {
   
   // Add debug logging for better troubleshooting and handle market changes
   useEffect(() => {
-    // console.log("🔍 Current selectedMarketId:", selectedMarketId);
     // Set temporary loading state to provide immediate feedback
     setIsChangingMarket(true);
     
@@ -91,20 +90,9 @@ const PredictionPage: NextPage = () => {
   // The hook already handles spread price integration consistently
   const [totalPositionValue, setTotalPositionValue] = useState<number>(0);
   
-  // Debug logging for position value consistency
+  // Track position value changes for state updates
   useEffect(() => {
-    if (positions.length > 0) {
-      console.log("🔍 Position values update:", {
-        positionCount: positions.length,
-        spreadPricesCount: Object.keys(spreadPrices).length,
-        positions: positions.map(p => ({
-          spreadIndex: p.spreadIndex,
-          shares: p.sharesAmount,
-          value: p.value,
-          spreadPrice: spreadPrices[p.spreadIndex]
-        }))
-      });
-    }
+    // Position values are handled by the hook
   }, [positions, spreadPrices]);
   
   // Update total position value when hook provides new position data
@@ -141,23 +129,15 @@ const PredictionPage: NextPage = () => {
     cacheStats
   } = useOptimizedMarketInfo(selectedMarketId);
 
-  // Log cache efficiency for performance monitoring
+  // Monitor cache performance for optimization
   useEffect(() => {
-    if (cacheStats) {
-      console.log(`📊 Cache Performance for ${selectedMarketId}:`, {
-        staticFromCache: cacheStats.staticFromCache,
-        dynamicFromCache: cacheStats.dynamicFromCache,
-        timingFromCache: cacheStats.timingFromCache,
-        fetchTime: `${cacheStats.fetchTime}ms`
-      });
-    }
+    // Cache statistics are monitored by the performance monitor
   }, [cacheStats, selectedMarketId]);
   
   // Automatically refresh spread prices when market data is loaded or market ID changes
   useEffect(() => {
     if (marketData && !marketLoading && !refreshingPrices) {
       // Only refresh prices if we have market data, aren't loading, and aren't already refreshing
-      console.log("🔄 Auto-refreshing spread prices for market:", selectedMarketId);
       refreshSpreadPrices();
     }
   }, [marketData, selectedMarketId]); // Keep dependencies minimal to prevent loops
@@ -170,13 +150,10 @@ const PredictionPage: NextPage = () => {
 
   // Handle market change from dropdown
   const handleMarketChange = (marketId: string) => {
-    // console.log("🔄 Market selection changed to:", marketId);
     // Reset data to avoid showing stale data during transition
     if (selectedMarketId !== marketId) {
-      // console.log("🔄 Updating selectedMarketId state");
       setSelectedMarketId(marketId);
       // Update the URL without refreshing the page
-      // console.log("🔄 Updating URL to:", `/prediction?market=${marketId}`);
       router.push(`/prediction?market=${marketId}`, undefined, { shallow: true });
     }
   };
@@ -185,15 +162,10 @@ const PredictionPage: NextPage = () => {
   // Function to directly fetch just the spread prices using get_all_spread_prices
   const refreshSpreadPrices = async () => {
     if (!selectedMarketId || refreshingPrices) {
-      console.log("⏭️ Skipping spread price refresh:", { 
-        hasMarketId: !!selectedMarketId, 
-        isRefreshing: refreshingPrices 
-      });
       return;
     }
     
     setRefreshingPrices(true);
-    console.log("🔄 Starting spread price refresh for market:", selectedMarketId);
     
     try {
       // Use our marketService to get the prices
@@ -205,14 +177,6 @@ const PredictionPage: NextPage = () => {
       // Always use the returned indices and prices, even if success is false
       // This ensures we have fallback values in case of errors
       if (result.indices && result.indices.length > 0 && result.prices && result.prices.length > 0) {
-        // console.log("📊 [PredictionPage] Spread prices received:", {
-        //   success: result.success,
-        //   indicesCount: result.indices.length,
-        //   pricesCount: result.prices.length,
-        //   sampleIndices: result.indices.slice(0, 3),
-        //   samplePrices: result.prices.slice(0, 3).map(p => `${p} (${p/1_000_000} USDC)`),
-        //   error: result.error || 'none'
-        // });
         
         // Create a mapping from spread index to price
         const priceMap: {[spreadIndex: number]: number} = {};
@@ -230,28 +194,13 @@ const PredictionPage: NextPage = () => {
             if (index >= 0 && index < 100 && price >= 0) {
               priceMap[index] = price;
               validPricesCount++;
-            } else {
-              // console.warn(`⚠️ [PredictionPage] Skipping invalid spread price: index=${index}, price=${price}`);
             }
           }
         }
         
         if (validPricesCount > 0) {
           // Update the state with our valid prices
-          console.log("📊 Updating spread prices:", {
-            previousPriceCount: Object.keys(spreadPrices).length,
-            newPriceCount: validPricesCount,
-            samplePrices: Object.entries(priceMap).slice(0, 3).map(([idx, price]) => 
-              `spread ${idx}: ${price} (${(price/1_000_000).toFixed(6)} USDC)`
-            )
-          });
           setSpreadPrices(priceMap);
-          console.log("✅ Spread prices updated successfully");
-          
-          // If there were some invalid prices, log a warning
-          if (validPricesCount < result.indices.length) {
-            console.warn(`⚠️ Found ${result.indices.length - validPricesCount} invalid spread prices`);
-          }
         } else {
           console.error("❌ No valid prices found in the response");
         }
@@ -262,7 +211,6 @@ const PredictionPage: NextPage = () => {
       console.error("❌ Error refreshing spread prices:", error);
     } finally {
       // Always reset the refreshing flag to allow future refreshes
-      console.log("🔄 Spread price refresh completed");
       setRefreshingPrices(false);
     }
   };

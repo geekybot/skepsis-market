@@ -227,7 +227,7 @@ export class MarketService {
           error: `Market ${marketId} not found`
         };
       }
-      console.log(marketObject.data);
+      //console.log(marketObject.data);
       // Create our result object
       const marketResult: any = {
         success: true,
@@ -363,7 +363,7 @@ export class MarketService {
 
 
       // Generate mock spread prices based on the number of spreads in the market
-      console.log(`🔢 Setting default price values for spreads`);
+      //console.log(`🔢 Setting default price values for spreads`);
       const spreadCount = marketResult.spreads.count || 10;
       const spreadPrices = this.generateMockSpreadPrices(marketId, spreadCount);
 
@@ -393,7 +393,7 @@ export class MarketService {
           }
         }
       }
-      console.log("Market Result: ", marketResult);
+      //console.log("Market Result: ", marketResult);
       return marketResult;
     } catch (error) {
       console.error('Error getting market info:', error);
@@ -466,12 +466,12 @@ export class MarketService {
           txb.pure.u64(sharesAmountWithDecimals),
         ],
       });
-      console.log("=======>>>>>>>>>>>>>>");
-      console.log("target: ", `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`);
-      console.log("marketId: ", marketId);
-      console.log("spreadIndex: ", spreadIndex);
-      console.log("sharesAmountWithDecimals: ", sharesAmountWithDecimals);
-      console.log("=======>>>>>>>>>>>>>>");
+      //console.log("=======>>>>>>>>>>>>>>");
+      //console.log("target: ", `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_buy_quote`);
+      //console.log("marketId: ", marketId);
+      //console.log("spreadIndex: ", spreadIndex);
+      //console.log("sharesAmountWithDecimals: ", sharesAmountWithDecimals);
+      //console.log("=======>>>>>>>>>>>>>>");
       // Use devInspectTransactionBlock to query without executing a transaction
       const result = await this.client.devInspectTransactionBlock({
         transactionBlock: txb,
@@ -483,8 +483,8 @@ export class MarketService {
         const returnValues = result.results[0].returnValues;
         if (returnValues && returnValues.length >= 1) {
           try {
-            console.log('\nBuy Quote Information:');
-            console.log('--------------------');
+            //console.log('\nBuy Quote Information:');
+            //console.log('--------------------');
 
             try {
               // Parse quote (u64)
@@ -494,7 +494,7 @@ export class MarketService {
                 for (let i = 0; i < Math.min(quoteBytes.length, 8); i++) {
                   quote += quoteBytes[i] * Math.pow(256, i);
                 }
-                console.log(`Quote: ${quote / 1_000_000} USDC (${quote} units with 6 decimals)`);
+                //console.log(`Quote: ${quote / 1_000_000} USDC (${quote} units with 6 decimals)`);
                 return {
                   price: quote, // Convert to USDC
                   fee: 0, // Raw value for further processing
@@ -508,7 +508,7 @@ export class MarketService {
             console.error('Failed to parse return values:', parseError);
           }
         } else {
-          console.log('No return values in the response');
+          //console.log('No return values in the response');
         }
       }
 
@@ -701,7 +701,7 @@ export class MarketService {
         }
       }
     }
-    console.log("============>>>>>>>", `Existing LiquidityShare ID for market ${marketId}:`, existingLiquidityShareId);
+    //console.log("============>>>>>>>", `Existing LiquidityShare ID for market ${marketId}:`, existingLiquidityShareId);
     
     // Create transaction
     const tx = new Transaction();
@@ -728,7 +728,7 @@ export class MarketService {
 
     // Call the appropriate function based on whether user has an existing position
     if (existingLiquidityShareId) {
-      console.log(`User has existing liquidity share (${existingLiquidityShareId}) for market ${marketId}`);
+      //console.log(`User has existing liquidity share (${existingLiquidityShareId}) for market ${marketId}`);
       
       // Call add_liquidity_to_existing_position
       tx.moveCall({
@@ -743,7 +743,7 @@ export class MarketService {
         ],
       });
     } else {
-      console.log(`User doesn't have existing liquidity share for market ${marketId}`);
+      //console.log(`User doesn't have existing liquidity share for market ${marketId}`);
       
       // Call add_liquidity for new position
       tx.moveCall({
@@ -844,7 +844,7 @@ export class MarketService {
    */
   async getAllSpreadPrices(marketId: string): Promise<SpreadPriceResponse> {
     try {
-      console.log(`📊 [MarketService] Fetching spread prices for market: ${marketId}`);
+      //console.log(`📊 [MarketService] Fetching spread prices for market: ${marketId}`);
       
       if (!marketId) {
         throw new Error('Market ID is required');
@@ -857,9 +857,9 @@ export class MarketService {
       const targetAddress = `${SKEPSIS_CONFIG.distribution_market_factory}::${MARKET_CONSTANTS.MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`;
       const typeArg = `${USDC_CONFIG.packageId}::${MODULES.USDC}::USDC`;
       
-      console.log(`🔍 [MarketService] Target address: ${targetAddress}`);
-      console.log(`🔍 [MarketService] Type argument: ${typeArg}`);
-      console.log(`🔍 [MarketService] Market ID: ${marketId}`);
+      //console.log(`🔍 [MarketService] Target address: ${targetAddress}`);
+      //console.log(`🔍 [MarketService] Type argument: ${typeArg}`);
+      //console.log(`🔍 [MarketService] Market ID: ${marketId}`);
       
       tx.moveCall({
         target: targetAddress,
@@ -896,20 +896,20 @@ export class MarketService {
         throw new Error('Incomplete return values for spread prices');
       }
       
-      console.log(`🟢 [MarketService] Raw return values received from blockchain`);
+      //console.log(`🟢 [MarketService] Raw return values received from blockchain`);
       
       // The return type is (vector<u64>, vector<u64>) - first array is indices, second is prices
       
       // Enhanced parsing for indices (vector<u64>) with better error handling
       const indicesValue = returnValues[0];
       let indices: number[] = [];
-      console.log(`🔍 [MarketService] Parsing indices from return values`);
+      //console.log(`🔍 [MarketService] Parsing indices from return values`);
       
-      console.log(returnValues[1]);
+      //console.log(returnValues[1]);
       
       if (indicesValue && indicesValue.length > 0 && Array.isArray(indicesValue[0])) {
         try {
-          console.log(`🔍 [MarketService] Parsing indices from byte array`);
+          //console.log(`🔍 [MarketService] Parsing indices from byte array`);
           
           // Each u64 is 8 bytes in little-endian format
           const indicesBytes = indicesValue[0];
@@ -923,7 +923,7 @@ export class MarketService {
           // First byte represents the vector length
           const numIndices = indicesBytes[0];
           
-          console.log(`🔢 [MarketService] Found ${numIndices} indices to parse (using vector length byte)`);
+          //console.log(`🔢 [MarketService] Found ${numIndices} indices to parse (using vector length byte)`);
           
           // Parse each u64 from the byte array 
           for (let i = 0; i < numIndices; i++) {
@@ -940,7 +940,7 @@ export class MarketService {
             indices.push(spreadIndex);
           }
           
-          console.log(`✅ [MarketService] Successfully parsed ${indices.length} indices:`, indices);
+          //console.log(`✅ [MarketService] Successfully parsed ${indices.length} indices:`, indices);
           
           // Validate indices are in a reasonable range
           const invalidIndices = indices.filter(idx => idx < 0 || idx > 1000);
@@ -968,7 +968,7 @@ export class MarketService {
       
       if (pricesValue && pricesValue.length > 0 && Array.isArray(pricesValue[0])) {
         try {
-          console.log(`🔍 [MarketService] Parsing prices from byte array`);
+          //console.log(`🔍 [MarketService] Parsing prices from byte array`);
           
           // Each u64 is 8 bytes in little-endian format
           const pricesBytes = pricesValue[0];
@@ -982,7 +982,7 @@ export class MarketService {
           // First byte represents the vector length
           const numPrices = pricesBytes[0];
           
-          console.log(`🔢 [MarketService] Found ${numPrices} prices to parse (using vector length byte)`);
+          //console.log(`🔢 [MarketService] Found ${numPrices} prices to parse (using vector length byte)`);
           
           // Parse each u64 from the byte array using little-endian format
           for (let i = 0; i < numPrices; i++) {
@@ -1007,7 +1007,7 @@ export class MarketService {
             }
           }
           
-          console.log(`✅ [MarketService] Successfully parsed ${prices.length} prices`);
+          //console.log(`✅ [MarketService] Successfully parsed ${prices.length} prices`);
           
           // Validate prices are in a reasonable range for USDC (between 0 and 1,000,000,000)
           // This would be 0 to 1,000 USDC with 6 decimals
@@ -1028,14 +1028,14 @@ export class MarketService {
             if (prices.length > indices.length) {
               // Trim extra prices
               prices = prices.slice(0, indices.length);
-              console.log(`✂️ [MarketService] Trimmed extra prices to match indices length`);
+              //console.log(`✂️ [MarketService] Trimmed extra prices to match indices length`);
             } else {
               // Add fallback prices for missing entries
               const originalLength = prices.length;
               while (prices.length < indices.length) {
                 prices.push(100000); // Default 0.1 USDC with 6 decimals
               }
-              console.log(`➕ [MarketService] Added ${indices.length - originalLength} default prices to match indices`);
+              //console.log(`➕ [MarketService] Added ${indices.length - originalLength} default prices to match indices`);
             }
           }
         } catch (error) {
@@ -1050,12 +1050,12 @@ export class MarketService {
         console.warn(`⚠️ [MarketService] Using fallback prices due to invalid format`);
       }
       
-      console.log(`📊 [MarketService] Final spread prices:`, {
-        indicesCount: indices.length,
-        pricesCount: prices.length,
-        sampleIndices: indices.slice(0, 3),
-        samplePrices: prices.slice(0, 3).map(p => `${p} (${p/1_000_000} USDC)`)
-      });
+      // console.log(`📊 [MarketService] Final spread prices:`, {
+      //   indicesCount: indices.length,
+      //   pricesCount: prices.length,
+      //   sampleIndices: indices.slice(0, 3),
+      //   samplePrices: prices.slice(0, 3).map(p => `${p} (${p/1_000_000} USDC)`)
+      // });
       
       return {
         success: true,
@@ -1071,7 +1071,7 @@ export class MarketService {
       
       // Extract error message in a type-safe way
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log(`⚠️ [MarketService] Using fallback spread prices due to error: ${errorMessage}`);
+      //console.log(`⚠️ [MarketService] Using fallback spread prices due to error: ${errorMessage}`);
       
       return {
         success: false,

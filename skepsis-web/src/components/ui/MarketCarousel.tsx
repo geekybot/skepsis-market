@@ -138,11 +138,11 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
     ? `$${activeMarket.liquidity.toLocaleString()} USDC` 
     : activeMarket.liquidity || 'Unknown';
   
-  const formattedVolume = activeMarket.volume 
+  const formattedVolume = activeMarket.volume !== undefined
     ? (typeof activeMarket.volume === 'number' 
       ? `$${activeMarket.volume.toLocaleString()} USDC` 
       : activeMarket.volume) 
-    : 'Not available';
+    : '$0 USDC';
 
   // Get market state for badge color
   const getStateBadgeColor = (state: number) => {
@@ -263,18 +263,6 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
                       {formattedVolume}
                     </div>
                   </div>
-                  
-                  {activeMarket.range && (
-                    <div>
-                      <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
-                        <Users size={14} />
-                        <span>Range</span>
-                      </div>
-                      <div className="text-white font-medium text-sm">
-                        {activeMarket.range.min} - {activeMarket.range.max} {activeMarket.range.unit}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
               

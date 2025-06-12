@@ -35,7 +35,6 @@ const Countdown = ({ targetDate, label, onComplete }: {
   useEffect(() => {
     // Validate the date first to prevent Invalid time value errors
     if (!targetDate || isNaN(targetDate.getTime())) {
-      // console.error("Invalid target date provided to Countdown:", targetDate);
       setIsCompleted(true);
       return;
     }
@@ -179,15 +178,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   
   // Log marketTiming props to debug timing information
-  // console.log("🕰️ [PredictionMarket] Market Timing Debug:", {
-  //   marketId,
-  //   marketTiming,
-  //   biddingDeadline,
-  //   resolutionTime,
-  //   marketStatus,
-  //   marketStatusState
-  // });
-  
   // Set default values for critical date fields if they're undefined
   // First try to get from marketTiming, then use a fallback date in the future
   const defaultBiddingDeadline = biddingDeadline || 
@@ -195,18 +185,10 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     
   const defaultResolutionTime = resolutionTime || 
     (marketTiming?.resolutionDate ? marketTiming.resolutionDate : null);
-    // console.log("🕰️ [PredictionMarket] Default Dates Debug:", defaultResolutionTime);
     
   
   // Add more debugging to identify the source of null values
   // console.log("🔍 [PredictionMarket] Props Debug:");
-  // console.log("🔍 marketId:", marketId);
-  // console.log("🔍 biddingDeadline (raw):", biddingDeadline);
-  // console.log("🔍 marketTiming?.biddingEnd:", marketTiming?.biddingEnd);
-  // console.log("🔍 defaultBiddingDeadline (calculated):", defaultBiddingDeadline);
-  // console.log("🔍 resolutionTime (raw):", resolutionTime);
-  // console.log("🔍 marketTiming?.resolutionDate:", marketTiming?.resolutionDate);
-  // console.log("🔍 defaultResolutionTime (calculated):", defaultResolutionTime);
   
   // Add fallbacks for testing - if both are null, use future dates
   // This ensures the component functions even with missing data
@@ -215,10 +197,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     
   const finalResolutionTime = defaultResolutionTime || 
     (new Date(Date.now() + 172800000).toISOString()); // 2 days from now as fallback
-    
-  // console.log("🔍 [PredictionMarket] Final values with fallbacks:");
-  // console.log("🔍 finalBiddingDeadline:", finalBiddingDeadline);
-  // console.log("🔍 finalResolutionTime:", finalResolutionTime);
   
   // State to track the current market
   const [currentMarketId, setCurrentMarketId] = useState<string>(marketId);
@@ -859,24 +837,24 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     let biddingEndDate = null;
     
     // Log structured market timing information for debugging
-    console.log("🌟 [Market State Calculation]", {
-      now: now.toISOString(),
-      rawState: state,
-      marketId,
-      biddingDeadline: defaultBiddingDeadline,
-      resolutionTime: defaultResolutionTime,
-      marketStatusState
-    });
+    // console.log("🌟 [Market State Calculation]", {
+    //   now: now.toISOString(),
+    //   rawState: state,
+    //   marketId,
+    //   biddingDeadline: defaultBiddingDeadline,
+    //   resolutionTime: defaultResolutionTime,
+    //   marketStatusState
+    // });
     
     // 1. First check if the market has been explicitly resolved (state = 1)
     if (state === 1 || marketStatusState === 1) {
-      console.log("🌟 Market is Resolved: explicit state = 1");
+      // console.log("🌟 Market is Resolved: explicit state = 1");
       return { status: 'Resolved', state: 1 };
     }
     
     // 2. Check for special states like Canceled
     if (state === 2 || marketStatusState === 2) {
-      console.log("🌟 Market is Canceled: explicit state = 2");
+      // console.log("🌟 Market is Canceled: explicit state = 2");
       return { status: 'Canceled', state: 2 };
     }
     
@@ -895,24 +873,24 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       console.error('🌟 Error parsing market timing dates:', e);
     }
     
-    console.log("🌟 Parsed dates for calculation:", {
-      biddingEndDate: biddingEndDate?.toISOString() || "Not available",
-      resolutionDate: resolutionDate?.toISOString() || "Not available"
-    });
+    // console.log("🌟 Parsed dates for calculation:", {
+    //   biddingEndDate: biddingEndDate?.toISOString() || "Not available",
+    //   resolutionDate: resolutionDate?.toISOString() || "Not available"
+    // });
     
     // 3. Check if resolution time has passed
     if (resolutionDate && now >= resolutionDate) {
-      console.log("🌟 Market is Waiting for Resolution: current time >= resolution time");
+      // console.log("🌟 Market is Waiting for Resolution: current time >= resolution time");
       return { status: 'Waiting for Resolution', state: 0 };
     } 
     // 4. Check if bidding deadline has passed but resolution time hasn't
     else if (biddingEndDate && now >= biddingEndDate) {
-      console.log("🌟 Market is Waiting for Resolution: current time >= bidding deadline");
+      // console.log("🌟 Market is Waiting for Resolution: current time >= bidding deadline");
       return { status: 'Waiting for Resolution', state: 0 };
     } 
     // 5. Default case: Market is still active (bidding period)
     else {
-      console.log("🌟 Market is Active: current time < bidding deadline");
+      // console.log("🌟 Market is Active: current time < bidding deadline");
       return { status: 'Active', state: 0 };
     }
   };
@@ -925,18 +903,18 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     const posMin = position.spreadIndex * 10;
     const posMax = position.spreadIndex * 10 + 10;
     
-    console.log('🔍 Spread Label Matching:', {
-      positionId: position.id.substring(0, 8),
-      spreadIndex: position.spreadIndex,
-      calculatedRange: `${posMin}-${posMax}`,
-      formattedRange: `${(posMin/100).toFixed(2)}-${(posMax/100).toFixed(2)} $`,
-      labels: spreadLabels.map(l => ({
-        index: l.index,
-        bounds: l.lowerBound !== undefined && l.upperBound !== undefined ? 
-          `${l.lowerBound}-${l.upperBound} (${(l.lowerBound/100).toFixed(2)}-${(l.upperBound/100).toFixed(2)} $)` : 
-          'undefined'
-      }))
-    });
+    // console.log('🔍 Spread Label Matching:', {
+    //   positionId: position.id.substring(0, 8),
+    //   spreadIndex: position.spreadIndex,
+    //   calculatedRange: `${posMin}-${posMax}`,
+    //   formattedRange: `${(posMin/100).toFixed(2)}-${(posMax/100).toFixed(2)} $`,
+    //   labels: spreadLabels.map(l => ({
+    //     index: l.index,
+    //     bounds: l.lowerBound !== undefined && l.upperBound !== undefined ? 
+    //       `${l.lowerBound}-${l.upperBound} (${(l.lowerBound/100).toFixed(2)}-${(l.upperBound/100).toFixed(2)} $)` : 
+    //       'undefined'
+    //   }))
+    // });
     
     // Find the best match
     const bestMatch = spreadLabels.find(label => {
@@ -946,13 +924,13 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     });
     
     if (bestMatch) {
-      console.log('✅ Best match found:', {
-        name: bestMatch.name,
-        index: bestMatch.index,
-        range: bestMatch.lowerBound !== undefined ? 
-          `${(bestMatch.lowerBound/100).toFixed(2)}-${(bestMatch.upperBound!/100).toFixed(2)} $` : 
-          'undefined'
-      });
+      // console.log('✅ Best match found:', {
+      //   name: bestMatch.name,
+      //   index: bestMatch.index,
+      //   range: bestMatch.lowerBound !== undefined ? 
+      //     `${(bestMatch.lowerBound/100).toFixed(2)}-${(bestMatch.upperBound!/100).toFixed(2)} $` : 
+      //     'undefined'
+      // });
     } else {
       console.log('❌ No matching label found!');
     }
@@ -969,7 +947,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     // First try to find an exact index match (most reliable)
     const exactIndexMatch = spreadLabels.find(label => label.index === position.spreadIndex);
     if (exactIndexMatch) {
-      console.log(`Found exact index match for position ${position.id.substring(0, 8)}: label.index=${exactIndexMatch.index} matches position.spreadIndex=${position.spreadIndex}`);
+      // console.log(`Found exact index match for position ${position.id.substring(0, 8)}: label.index=${exactIndexMatch.index} matches position.spreadIndex=${position.spreadIndex}`);
       return exactIndexMatch;
     }
     
@@ -982,12 +960,12 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     );
     
     if (exactBoundsMatch) {
-      console.log(`Found exact bounds match for position ${position.id.substring(0, 8)}: ${exactBoundsMatch.lowerBound}-${exactBoundsMatch.upperBound} matches position range ${posMin}-${posMax}`);
+      // console.log(`Found exact bounds match for position ${position.id.substring(0, 8)}: ${exactBoundsMatch.lowerBound}-${exactBoundsMatch.upperBound} matches position range ${posMin}-${posMax}`);
       return exactBoundsMatch;
     }
     
     // If still no match, log a warning and return undefined
-    console.warn(`No matching spread label found for position ${position.id.substring(0, 8)} with spreadIndex ${position.spreadIndex}`);
+    // console.warn(`No matching spread label found for position ${position.id.substring(0, 8)} with spreadIndex ${position.spreadIndex}`);
     return undefined;
   };
   
@@ -1201,13 +1179,13 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           {/* Show claim component ONLY when resolution time is passed AND user has NOT claimed rewards yet */}
           {(() => {
             // Add debug logging for claim button conditions
-            console.log('Claim Button Debug:', {
-              marketId,
-              isResolutionPassed,
-              hasAccount: !!account,
-              hasClaimedWinnings: hasUserClaimedWinnings(),
-              positionsCount: positions.length
-            });
+            // console.log('Claim Button Debug:', {
+            //   marketId,
+            //   isResolutionPassed,
+            //   hasAccount: !!account,
+            //   hasClaimedWinnings: hasUserClaimedWinnings(),
+            //   positionsCount: positions.length
+            // });
             
             return isResolutionPassed && account && !hasUserClaimedWinnings() && positions.length > 0 && (
               <div className="p-6 rounded-xl bg-gray-800/70 backdrop-blur-md">

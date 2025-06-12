@@ -109,10 +109,9 @@ export const cacheMonitor = new CachePerformanceMonitor();
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   setInterval(() => {
     const summary = cacheMonitor.getSummary();
-    console.log('🔍 Cache Performance Update:', summary);
     
     if (cacheMonitor.isPerformanceDegraded()) {
-      console.warn('⚠️ Cache performance degraded, consider investigation');
+      // Performance monitoring could be logged to external service here
     }
   }, 5 * 60 * 1000);
 }

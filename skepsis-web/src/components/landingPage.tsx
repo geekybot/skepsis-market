@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { ArrowRight, BarChart2, Clock, DollarSign, PieChart, LineChart, RefreshCw, Users, Shield } from "lucide-react";
 import { useSuiClient } from "@mysten/dapp-kit";
-import { useLiveMarketsInfo } from "@/hooks/useLiveMarketsInfo";
+import { useMarketService } from "@/hooks/useMarketService";
 import { MARKETS } from "@/constants/appConstants";
 import { MARKET_DETAILS, getMarketDetails, getFormattedBiddingDeadline, getFormattedResolutionTime } from "@/constants/marketDetails";
 import MarketCarousel from "./ui/MarketCarousel";
@@ -41,9 +41,31 @@ const LandingPage = () => {
   // State to track loading refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Use the hook to fetch only dynamic data for all markets (like liquidity, volume, state)
-  const { data: marketsData, loading: marketsLoading, error: marketsError, refresh: refreshMarkets } = 
-    useLiveMarketsInfo(marketIds);
+  // Use the market service to fetch data (same as liquidity page)
+  const { getAllMarketsInfo, isLoading: marketsLoading } = useMarketService();
+  const [marketsData, setMarketsData] = useState<any[]>([]);
+  const [marketsError, setMarketsError] = useState<string | null>(null);
+
+  // Function to fetch market data using the same service as liquidity page
+  const refreshMarkets = useCallback(async () => {
+    if (!getAllMarketsInfo) return;
+    
+    try {
+      setMarketsError(null);
+      const response = await getAllMarketsInfo(marketIds);
+      
+      if (response.success && response.markets) {
+        setMarketsData(response.markets);
+      } else {
+        setMarketsError('Failed to fetch market data');
+        setMarketsData([]);
+      }
+    } catch (error) {
+      console.error('Error fetching markets:', error);
+      setMarketsError(error instanceof Error ? error.message : 'Unknown error');
+      setMarketsData([]);
+    }
+  }, [getAllMarketsInfo, marketIds]);
 
   // Function to refresh both data and market selection
   const handleRefreshWithNewMarkets = useCallback(() => {
@@ -55,14 +77,16 @@ const LandingPage = () => {
     // Reset carousel to first position
     setActiveCarouselIndex(0);
     
-    // Refresh market data
-    refreshMarkets();
-    
     // Reset the refresh indicator after a short delay
     setTimeout(() => {
       setIsRefreshing(false);
     }, 1000);
-  }, [getRandomMarkets, refreshMarkets]);
+  }, [getRandomMarkets]);
+
+  // Fetch data when marketIds change
+  useEffect(() => {
+    refreshMarkets();
+  }, [refreshMarkets]);
 
   // Auto-refresh markets every 30 seconds to keep data fresh
   useEffect(() => {
@@ -78,7 +102,7 @@ const LandingPage = () => {
     if (!marketsData || marketsData.length === 0) return [];
     
     // Filter markets that are ONLY in active state (state 0)
-    return marketsData
+    const filteredMarkets = marketsData
       .filter(market => 
         market != null && 
         market.success && 
@@ -121,23 +145,31 @@ const LandingPage = () => {
           createTime: nonNullMarket.basic?.creationTimeDisplay || new Date().toISOString(),
           resolveTime: formattedResolutionTime,
           liquidity: (() => {
-            // Use real liquidity data when available (matching liquidity page logic)
+            // Check for totalLiquidity first (preferred field)
             if (nonNullMarket.liquidity?.totalLiquidity !== undefined) {
-              const newLiquidity = Number(nonNullMarket.liquidity.totalLiquidity) / 1_000_000;
-              return !isNaN(newLiquidity) ? newLiquidity : 0;
+              const liquidityValue = Number(nonNullMarket.liquidity.totalLiquidity) / 1_000_000;
+              return !isNaN(liquidityValue) ? liquidityValue : 0;
             }
-            // Demo: Generate consistent realistic liquidity values based on market ID
+            
+            // Check for totalShares (fallback field from the API response we saw)
+            if (nonNullMarket.liquidity?.totalShares !== undefined) {
+              const liquidityValue = Number(nonNullMarket.liquidity.totalShares) / 1_000_000;
+              return !isNaN(liquidityValue) ? liquidityValue : 0;
+            }
+            
+            // Demo fallback: Generate consistent realistic liquidity values based on market ID
             const marketHash = marketId.slice(-8);
             const seed = parseInt(marketHash, 16) % 10000;
             return (seed / 10) + 500; // Values between 500-1500 USDC
           })(),
           volume: (() => {
-            // Use real volume data when available (matching liquidity page logic)
+            // Use the EXACT same logic as the liquidity page for volume
             if (nonNullMarket.liquidity?.cumulativeSharesSold !== undefined) {
-              const newVolume = Number(nonNullMarket.liquidity.cumulativeSharesSold) / 1_000_000;
-              return !isNaN(newVolume) ? newVolume : 0;
+              // Same division as liquidity page: / 1_000_000
+              const volumeValue = Number(nonNullMarket.liquidity.cumulativeSharesSold) / 1_000_000;
+              return !isNaN(volumeValue) ? volumeValue : 0;
             }
-            // Demo: Generate consistent realistic volume values (usually lower than liquidity)
+            // Demo fallback: Generate consistent realistic volume values (usually lower than liquidity)
             const marketHash = marketId.slice(-6);
             const seed = parseInt(marketHash, 16) % 5000;
             return (seed / 10) + 200; // Values between 200-700 USDC
@@ -150,6 +182,8 @@ const LandingPage = () => {
           spreadLabels: staticDetails.spreadLabels || []
         };
       });
+    
+    return filteredMarkets;
   }, [marketsData]);
   
   // Navigation handlers

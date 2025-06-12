@@ -394,9 +394,6 @@ export class OptimizedMarketService {
     const targetAddress = `${CONSTANTS.PACKAGES.DISTRIBUTION_MARKET_FACTORY}::${MODULES.DISTRIBUTION_MARKET}::get_all_spread_prices`;
     const typeArg = `${CONSTANTS.PACKAGES.USDC}::${MODULES.USDC}::USDC`;
     
-    console.log(`🔍 [OptimizedMarketService] Target address: ${targetAddress}`);
-    console.log(`🔍 [OptimizedMarketService] Type argument: ${typeArg}`);
-    console.log(`🔍 [OptimizedMarketService] Market ID: ${marketId}`);
     
     tx.moveCall({
       target: targetAddress,

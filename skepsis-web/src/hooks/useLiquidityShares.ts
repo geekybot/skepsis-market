@@ -67,8 +67,8 @@ export const useLiquidityShares = (
         },
       });
       
-      console.log(`🔍 POSITION DEBUG - Server-side filtering applied for type ${liquidityShareType}`);
-      console.log(`🔍 POSITION DEBUG - Found ${liquidityShares.length} liquidity shares with efficient filtering`);
+      // console.log(`🔍 POSITION DEBUG - Server-side filtering applied for type ${liquidityShareType}`);
+      // console.log(`🔍 POSITION DEBUG - Found ${liquidityShares.length} liquidity shares with efficient filtering`);
 
       // Process liquidity shares
       const shares: LiquidityShare[] = [];
@@ -77,10 +77,10 @@ export const useLiquidityShares = (
 
       // Initialize sharesByMarket with all available markets (setting default to 0)
       // Log debugging info to help diagnose position display issues
-      console.log(`🔍 POSITION DEBUG - Initializing positions for ${MARKETS.length} markets`);
+      // console.log(`🔍 POSITION DEBUG - Initializing positions for ${MARKETS.length} markets`);
       
       if (!Array.isArray(MARKETS) || MARKETS.length === 0) {
-        console.error("🚨 CRITICAL ERROR - MARKETS is not an array or is empty");
+        // console.error("🚨 CRITICAL ERROR - MARKETS is not an array or is empty");
       }
       
       // Ensure we properly set positions for all markets
@@ -90,7 +90,7 @@ export const useLiquidityShares = (
           
           // Log a few entries for debugging
           if (index < 5) {
-            console.log(`🔍 POSITION DEBUG - Setting default position for market ${market.marketId}`);
+            // console.log(`🔍 POSITION DEBUG - Setting default position for market ${market.marketId}`);
           }
         } else {
           console.error(`🚨 CRITICAL ERROR - Invalid market structure at index ${index}:`, market);
@@ -110,12 +110,12 @@ export const useLiquidityShares = (
           
           // Only log in development environment to avoid cluttering the console
           if (process.env.NODE_ENV !== 'production') {
-            console.log(`Found liquidity share for market ${marketId}:`, {
-              shareId: shareObj.data.objectId,
-              sharesRaw,
-              shareAmount,
-              fields
-            });
+            // console.log(`Found liquidity share for market ${marketId}:`, {
+            //   shareId: shareObj.data.objectId,
+            //   sharesRaw,
+            //   shareAmount,
+            //   fields
+            // });
           }
           
           // Create the liquidity share object with all necessary info
@@ -149,19 +149,19 @@ export const useLiquidityShares = (
       }
 
       // Verify we have mapped all markets correctly
-      console.log(`FILTERING RESULTS - Using server-side filtering:`);
-      console.log(`Total liquidity shares found: ${shares.length}`);
-      console.log(`Expected number of markets: ${MARKETS.length}`);
+      // console.log(`FILTERING RESULTS - Using server-side filtering:`);
+      // console.log(`Total liquidity shares found: ${shares.length}`);
+      // console.log(`Expected number of markets: ${MARKETS.length}`);
       
       // Log the sharesByMarket object to verify the mapping
       Object.entries(sharesByMarket).forEach(([marketId, amount]) => {
         const marketName = MARKETS.find(m => m.marketId === marketId)?.name || 'Unknown Market';
         const marketState = marketStates ? marketStates[marketId] : 'unknown';
         if (amount > 0) {
-          console.log(`Market: ${marketName} (ID: ${marketId})`);
-          console.log(`- State: ${marketState}`);
-          console.log(`- User Liquidity: ${amount}`);
-          console.log(`- Can Withdraw: ${marketState !== undefined && marketState !== 0 ? 'YES' : 'NO'}`);
+          // console.log(`Market: ${marketName} (ID: ${marketId})`);
+          // console.log(`- State: ${marketState}`);
+          // console.log(`- User Liquidity: ${amount}`);
+          // console.log(`- Can Withdraw: ${marketState !== undefined && marketState !== 0 ? 'YES' : 'NO'}`);
         }
       });
 

@@ -86,7 +86,6 @@ export function useLiveMarketInfo(marketId: string) {
   
   // Update useEffect hook
   useEffect(() => {
-    // console.log("🔍 useLiveMarketInfo - marketId changed:", marketId);
     setData(null);
     setLoading(true);
     setError(null);
@@ -100,7 +99,6 @@ export function useLiveMarketInfo(marketId: string) {
       const marketService = new MarketService(suiClient);
       return await marketService.getAllSpreadPrices(marketId);
     } catch (error) {
-      // console.error(`Error getting spread prices:`, error);
       const fallbackIndices = Array.from({ length: 10 }, (_, i) => i);
       const fallbackPrices = Array(10).fill(100000); // Default 0.1 USDC with 6 decimals
       
@@ -168,9 +166,6 @@ export function useLiveMarketInfo(marketId: string) {
         
         // Timing info
         if ('bidding_deadline' in fields) {
-          // console.log("==============================================");
-          // console.log(`Bidding deadline field found: ${fields.bidding_deadline}`);
-          
           const biddingDeadline = Number(fields.bidding_deadline);
           result.timing.biddingDeadline = biddingDeadline;
           result.timing.biddingDeadlineDisplay = new Date(biddingDeadline).toISOString();
@@ -257,7 +252,6 @@ export function useLiveMarketInfo(marketId: string) {
       
       // Add pricing info to the spreads
       if (spreadPrices && spreadPrices.indices && spreadPrices.prices) {
-        console.log(`📊 [useLiveMarketInfo] Processing ${spreadPrices.indices.length} spread prices`);
         
         // Validate we have both indices and prices with the same length
         if (spreadPrices.indices.length === spreadPrices.prices.length) {
@@ -286,15 +280,9 @@ export function useLiveMarketInfo(marketId: string) {
                 spread.sellPrice = null;
                 spread.sellPriceDisplay = "N/A";
               }
-            } else {
-              console.warn(`⚠️ [useLiveMarketInfo] Invalid spread data at index ${i}: spreadIndex=${spreadIndex}, price=${price}`);
             }
           }
-        } else {
-          console.error(`❌ [useLiveMarketInfo] Mismatch between indices length (${spreadPrices.indices.length}) and prices length (${spreadPrices.prices.length})`);
         }
-      } else {
-        console.warn(`⚠️ [useLiveMarketInfo] No valid spread prices received`);
       }
 
       // Calculate spread percentages based on outstandingShares
@@ -329,7 +317,7 @@ export function useLiveMarketInfo(marketId: string) {
   }, [marketId, suiClient, getAllSpreadPrices]);
 
   useEffect(() => {
-    console.log("🔍 Fetching market data for marketId:", marketId);
+    // console.log("🔍 Fetching market data for marketId:", marketId);
     
     // First set loading state to true
     setLoading(true);
@@ -337,7 +325,7 @@ export function useLiveMarketInfo(marketId: string) {
     // Add a small delay to ensure UI state is updated before the potentially heavy fetch
     const fetchTimeout = setTimeout(() => {
       fetchMarketInfo().then(() => {
-        console.log("✅ Finished fetching data for marketId:", marketId);
+        // console.log("✅ Finished fetching data for marketId:", marketId);
       }).catch(err => {
         console.error("❌ Error fetching data for marketId:", marketId, err);
       });
