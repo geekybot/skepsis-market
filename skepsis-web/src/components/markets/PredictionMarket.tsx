@@ -11,6 +11,8 @@ import { findMatchingSpreadLabel, createSyntheticOption } from '@/utilities/spre
 import { showTransactionSuccess, showTransactionInfo } from '@/lib/transactionToasts';
 import { parseClaimError, parseBuyError, parseSellError } from '@/lib/errorParser';
 import { getDetailedResolutionDisplay, getShortResolutionDisplay } from '@/lib/resolutionUtils';
+import { useLiveCoinPrice } from '@/hooks/useLiveCoinPrice';
+import { isSUIMarket } from '@/utilities/suiMarketUtils';
 import { isCompetitionMarket, getTrackByMarketId } from '@/constants/competitionDetails';
 
 // Import custom hooks
@@ -202,6 +204,24 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   // State to track the current market
   const [currentMarketId, setCurrentMarketId] = useState<string>(marketId);
   
+  // Check if current market is a SUI price prediction market
+  const isSUI = isSUIMarket(currentMarketId);
+  
+  // State to track if SUI price banner is dismissed
+  const [suiBannerDismissed, setSuiBannerDismissed] = useState(false);
+  
+  // Hook for live SUI price (only fetch if this is a SUI market)
+  const { 
+    price: suiPrice, 
+    isLoading: priceLoading, 
+    error: priceError,
+    refresh: refreshPrice,
+    isStale: priceIsStale
+  } = useLiveCoinPrice('SUI', {
+    enableAutoRefresh: isSUI,
+    refreshInterval: 30000, // 30 seconds
+  });
+  
   // Effect to detect and handle marketId changes
   useEffect(() => {
     if (currentMarketId !== marketId) {
@@ -356,6 +376,9 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
     setSelectedOption(null);
     setSelectedSpreadIndex(-1);
     setSelectedPosition(null);
+    
+    // Reset SUI banner dismiss state when switching markets
+    setSuiBannerDismissed(false);
     
     // Notify parent component if callback provided
     if (onMarketChange) {
@@ -1009,6 +1032,45 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
             }
             return null;
           })()}
+
+          {/* Live SUI Price Banner - Show if this is a SUI price prediction market */}
+          {isSUI && suiPrice && !priceError && !suiBannerDismissed && (
+            <div className="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border border-blue-600/20 rounded-lg p-3 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm">💰</span>
+                  <span className="text-blue-300 text-sm font-medium">Live SUI:</span>
+                  <span className="text-white font-semibold">
+                    ${suiPrice.price.toFixed(3)}
+                  </span>
+                  <div className={cn(
+                    "flex items-center gap-1 text-sm",
+                    suiPrice.change24h >= 0 ? "text-green-400" : "text-red-400"
+                  )}>
+                    <span>{suiPrice.change24h >= 0 ? '↗' : '↘'}</span>
+                    <span>{suiPrice.change24h.toFixed(1)}%</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={refreshPrice}
+                    disabled={priceLoading}
+                    className="text-blue-300 hover:text-blue-200 text-xs opacity-70 hover:opacity-100 transition-all disabled:opacity-50"
+                    title="Refresh price"
+                  >
+                    {priceLoading ? '⟳' : '↻'}
+                  </button>
+                  <button
+                    onClick={() => setSuiBannerDismissed(true)}
+                    className="text-gray-400 hover:text-white text-sm opacity-70 hover:opacity-100 transition-all ml-1"
+                    title="Dismiss banner"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           <h2 className="text-xl font-medium text-white">{question}</h2>
           
