@@ -100,7 +100,7 @@ export const LivePriceDisplay: React.FC<LivePriceDisplayProps> = ({
   if (compact) {
     return (
       <div className={cn(
-        "flex items-center gap-2 px-2 py-1 rounded-md bg-gray-700/50 border border-gray-600/30",
+        "flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-md bg-gray-700/50 border border-gray-600/30",
         isStale && "opacity-75",
         className
       )}>
@@ -109,14 +109,14 @@ export const LivePriceDisplay: React.FC<LivePriceDisplayProps> = ({
             <span className="text-xs font-medium text-blue-400">SUI</span>
           </div>
         )}
-        <span className="text-white font-medium text-sm">
+        <span className="text-white font-medium text-xs sm:text-sm">
           {formatPrice(price.price)}
         </span>
         <div className={cn(
-          "flex items-center gap-1",
+          "flex items-center gap-0.5 sm:gap-1",
           isPositiveChange ? "text-green-400" : "text-red-400"
         )}>
-          <TrendIcon size={12} />
+          <TrendIcon size={10} className="sm:w-3 sm:h-3" />
           <span className="text-xs">{formatChange(price.change24h)}</span>
         </div>
       </div>
@@ -125,24 +125,24 @@ export const LivePriceDisplay: React.FC<LivePriceDisplayProps> = ({
 
   return (
     <div className={cn(
-      "flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-gray-800/60 border border-gray-600/30",
+      "flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg bg-gray-800/60 border border-gray-600/30",
       isStale && "opacity-75",
       className
     )}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {showIcon && (
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30">
-            <span className="text-blue-400 font-bold text-sm">SUI</span>
+          <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600/20 border border-blue-500/30">
+            <span className="text-blue-400 font-bold text-xs sm:text-sm">SUI</span>
           </div>
         )}
         
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <span className="text-white font-semibold text-lg">
+            <span className="text-white font-semibold text-base sm:text-lg">
               {formatPrice(price.price)}
             </span>
             {isLoading && (
-              <RefreshCw size={14} className="text-gray-400 animate-spin" />
+              <RefreshCw size={12} className="text-gray-400 animate-spin sm:w-3.5 sm:h-3.5" />
             )}
           </div>
           
@@ -151,8 +151,8 @@ export const LivePriceDisplay: React.FC<LivePriceDisplayProps> = ({
               "flex items-center gap-1",
               isPositiveChange ? "text-green-400" : "text-red-400"
             )}>
-              <TrendIcon size={14} />
-              <span className="text-sm font-medium">
+              <TrendIcon size={12} className="sm:w-3.5 sm:h-3.5" />
+              <span className="text-xs sm:text-sm font-medium">
                 {formatChange(price.change24h)}
               </span>
             </div>
@@ -161,34 +161,36 @@ export const LivePriceDisplay: React.FC<LivePriceDisplayProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-1">
-        <div className="text-gray-400 text-xs">
+      <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
+        <div className="text-gray-400 text-xs order-2 sm:order-1">
           {getTimeAgo(price.lastUpdated)}
         </div>
         
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            disabled={isLoading}
-            className={cn(
-              "flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors",
-              isLoading 
-                ? "text-gray-500 cursor-not-allowed"
-                : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-            )}
-            title="Refresh price"
-          >
-            <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        )}
-        
-        {isStale && (
-          <div className="text-yellow-400 text-xs flex items-center gap-1">
-            <AlertCircle size={10} />
-            <span>Stale</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 order-1 sm:order-2">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isLoading}
+              className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors",
+                isLoading 
+                  ? "text-gray-500 cursor-not-allowed"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+              )}
+              title="Refresh price"
+            >
+              <RefreshCw size={10} className={cn("sm:w-3 sm:h-3", isLoading ? "animate-spin" : "")} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          )}
+          
+          {isStale && (
+            <div className="text-yellow-400 text-xs flex items-center gap-1">
+              <AlertCircle size={8} className="sm:w-2.5 sm:h-2.5" />
+              <span>Stale</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

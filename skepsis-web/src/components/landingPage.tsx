@@ -200,43 +200,43 @@ const LandingPage = () => {
   return (
     <div className="w-full flex flex-col items-center gap-12">
       {/* Hero Section */}
-      <div className="w-full max-w-4xl flex flex-col items-center text-center py-12">
-        <div className="relative z-10 mb-10 flex flex-col items-center justify-center">
-          <div className="absolute -z-10 w-[250px] h-[250px] bg-blue-500/20 rounded-full blur-[80px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="w-full max-w-4xl flex flex-col items-center text-center py-8 sm:py-12 px-4">
+        <div className="relative z-10 mb-8 sm:mb-10 flex flex-col items-center justify-center">
+          <div className="absolute -z-10 w-[180px] h-[180px] sm:w-[250px] sm:h-[250px] bg-blue-500/20 rounded-full blur-[60px] sm:blur-[80px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center w-44 h-44 mx-auto mb-6 bg-gradient-to-br from-indigo-900/30 to-violet-900/30 rounded-full p-2 shadow-lg border border-indigo-800/20 animate-pulse-slow hover:border-indigo-700/40 transition-all duration-300">
+            <div className="flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 lg:w-44 lg:h-44 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-indigo-900/30 to-violet-900/30 rounded-full p-2 shadow-lg border border-indigo-800/20 animate-pulse-slow hover:border-indigo-700/40 transition-all duration-300">
               <Image 
                 src="/images/skepsis-transparent.png" 
                 alt="Skepsis Logo" 
-                width={160}
-                height={160}
-                className="object-contain hover:scale-105 transition-transform duration-300"
+                width={120}
+                height={120}
+                className="object-contain hover:scale-105 transition-transform duration-300 w-28 h-28 sm:w-36 sm:h-36 lg:w-40 lg:h-40"
                 priority
               />
             </div>
-            <h2 className="text-xl sm:text-2xl font-medium text-amber-400 tracking-wider text-center mt-2 px-8 py-1.5 rounded-full bg-gradient-to-r from-indigo-900/30 to-violet-900/30 border border-amber-400/20 shadow-sm">COLLECTIVE KNOWLEDGE SYNTHESIS</h2>
+            <h2 className="text-sm sm:text-lg lg:text-xl font-medium text-amber-400 tracking-wider text-center mt-2 px-4 sm:px-6 lg:px-8 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-indigo-900/30 to-violet-900/30 border border-amber-400/20 shadow-sm">COLLECTIVE KNOWLEDGE SYNTHESIS</h2>
           </div>
         </div>
-        <div className="relative z-10 mb-8">
-          <div className="absolute -z-10 w-[600px] h-[150px] bg-purple-500/20 rounded-full blur-[100px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent mb-6 leading-tight">
+        <div className="relative z-10 mb-6 sm:mb-8">
+          <div className="absolute -z-10 w-[300px] h-[100px] sm:w-[600px] sm:h-[150px] bg-purple-500/20 rounded-full blur-[60px] sm:blur-[100px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight px-2">
             Predict Continuous Outcomes
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-white/90 mb-6 sm:mb-8 lg:mb-10 max-w-2xl mx-auto leading-relaxed px-4">
             A decentralized prediction market platform that allows you to express nuanced beliefs about future events through continuous numerical outcomes.
           </p>
         </div>
-        <div className="flex gap-4 flex-wrap justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto sm:justify-center">
           <Link
             href="/prediction"
-            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white py-3 px-6 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-indigo-900/30"
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-indigo-900/30 text-sm sm:text-base"
           >
             <span>Explore Markets</span>
-            <ArrowRight size={18} />
+            <ArrowRight size={16} className="sm:w-4 sm:h-4" />
           </Link>
           <Link
             href="/liquidity"
-            className="bg-white/10 backdrop-blur-sm hover:bg-white/15 text-white py-3 px-6 rounded-lg transition-colors border border-white/20"
+            className="bg-white/10 backdrop-blur-sm hover:bg-white/15 text-white py-3 px-6 rounded-lg transition-colors border border-white/20 text-center text-sm sm:text-base"
           >
             Provide Liquidity
           </Link>
@@ -244,12 +244,12 @@ const LandingPage = () => {
       </div>
       
       {/* Featured Markets Carousel */}
-      <div className="w-full max-w-4xl mb-12 bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md rounded-xl p-6 sm:p-8 border border-indigo-800/30 shadow-lg">
-        <div className="flex justify-between items-center mb-6">
+      <div className="w-full max-w-4xl mb-8 sm:mb-12 bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md rounded-xl p-4 sm:p-6 lg:p-8 border border-indigo-800/30 shadow-lg mx-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
           <div className="flex flex-col">
-            <h2 className="text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent">Featured Markets</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gradient bg-gradient-to-r from-indigo-200 via-violet-100 to-indigo-200 bg-clip-text text-transparent">Featured Markets</h2>
             {activeMarkets.length > 0 && (
-              <p className="text-sm text-white/60 mt-1">
+              <p className="text-xs sm:text-sm text-white/60 mt-1">
                 Showing {activeMarkets.length} of {featuredMarketIds.length} active markets
               </p>
             )}
@@ -344,20 +344,20 @@ const LandingPage = () => {
       </div>
       
       {/* Main Content Tabs */}
-      <div className="w-full max-w-4xl mb-12">
+      <div className="w-full max-w-4xl mb-8 sm:mb-12 px-4">
         <Tabs defaultValue="how-it-works" className="w-full">
-          <TabsList className="w-full mb-6 grid grid-cols-3 h-auto p-1 rounded-lg bg-indigo-900/30 border border-indigo-800/40">
-            <TabsTrigger value="how-it-works" className="py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600 data-[state=active]:text-white rounded-md">How It Works</TabsTrigger>
-            <TabsTrigger value="features" className="py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600 data-[state=active]:text-white rounded-md">Features</TabsTrigger>
-            <TabsTrigger value="use-cases" className="py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600 data-[state=active]:text-white rounded-md">Use Cases</TabsTrigger>
+          <TabsList className="w-full mb-4 sm:mb-6 grid grid-cols-3 h-auto p-1 rounded-lg bg-indigo-900/30 border border-indigo-800/40">
+            <TabsTrigger value="how-it-works" className="py-2 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600 data-[state=active]:text-white rounded-md">How It Works</TabsTrigger>
+            <TabsTrigger value="features" className="py-2 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600 data-[state=active]:text-white rounded-md">Features</TabsTrigger>
+            <TabsTrigger value="use-cases" className="py-2 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-violet-600 data-[state=active]:text-white rounded-md">Use Cases</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="how-it-works" className="space-y-6">
-            <div className="rounded-xl bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md p-8 border border-indigo-800/30 shadow-lg">
+          <TabsContent value="how-it-works" className="space-y-4 sm:space-y-6">
+            <div className="rounded-xl bg-gradient-to-br from-indigo-950/40 to-violet-950/40 backdrop-blur-md p-4 sm:p-6 lg:p-8 border border-indigo-800/30 shadow-lg">
               <div className="relative">
-                <div className="absolute -z-10 w-[300px] h-[100px] bg-blue-500/10 rounded-full blur-[60px] top-0 right-0"></div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-200 to-violet-200 bg-clip-text text-transparent mb-5">Continuous Outcome Markets</h3>
-                <p className="text-white/90 mb-6 text-lg leading-relaxed">
+                <div className="absolute -z-10 w-[200px] h-[80px] sm:w-[300px] sm:h-[100px] bg-blue-500/10 rounded-full blur-[40px] sm:blur-[60px] top-0 right-0"></div>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-indigo-200 to-violet-200 bg-clip-text text-transparent mb-3 sm:mb-5">Continuous Outcome Markets</h3>
+                <p className="text-white/90 mb-4 sm:mb-6 text-sm sm:text-base lg:text-lg leading-relaxed">
                   Unlike traditional binary prediction markets that only offer yes/no outcomes, 
                   Skepsis lets you predict across a range of possible outcomes with various confidence levels.
                 </p>

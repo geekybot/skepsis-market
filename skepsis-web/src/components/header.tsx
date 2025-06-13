@@ -8,7 +8,7 @@ import ConnectMenu from "./ui/connectMenu";
 import SuiOverflowBanner from "./ui/suiOverflowBanner";
 import "@mysten/dapp-kit/dist/index.css";
 import { AppContext } from "@/context/AppContext";
-import { Link as LinkIcon } from "lucide-react";
+import { Link as LinkIcon, Menu, X } from "lucide-react";
 
 // import SlideInMenu from "./slideInMenu";
 // import RpcSetting from "./rpcSetting";
@@ -17,6 +17,7 @@ const Header = () => {
   const { walletAddress, suiName, refreshWalletState } = useContext(AppContext);
   const { currentWallet } = useCurrentWallet();
   const [previousWalletId, setPreviousWalletId] = useState<string | undefined>(undefined);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Listen for wallet changes
   useEffect(() => {
@@ -33,6 +34,30 @@ const Header = () => {
     }
   }, [currentWallet, previousWalletId, refreshWalletState]);
 
+  // Close mobile menu when clicking outside or on a link
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsMobileMenuOpen(false);
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
+
+  const navigationLinks = [
+    { href: "/", label: "Home" },
+    { href: "/prediction", label: "Markets" },
+    { href: "/create-market", label: "Create Market" },
+    { href: "/liquidity", label: "Liquidity" },
+    { href: "/faucet", label: "Faucet" },
+    { href: "/docs", label: "Docs" },
+  ];
+
   return (
     <div
       className="fixed top-0 left-0 w-full backdrop-blur-md bg-gradient-to-r from-indigo-950/90 to-violet-950/90 z-50 shadow-md shadow-indigo-900/20 border-b border-indigo-800/20"
@@ -40,78 +65,97 @@ const Header = () => {
         WebkitBackdropFilter: "blur(16px)",
       }}
     >
-      <header className="w-full max-w-360 mx-auto h-20 flex items-center justify-between pt-4 pb-3 px-4">
+      <header className="w-full max-w-360 mx-auto h-16 sm:h-20 flex items-center justify-between pt-3 pb-3 px-4">
         {/* Logo Link */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
-            <div className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-indigo-900/70 to-violet-900/70 rounded-lg shadow-sm">
+            <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-indigo-900/70 to-violet-900/70 rounded-lg shadow-sm">
               <Image 
                 src="/images/skepsis-transparent.png" 
                 alt="Skepsis Logo" 
-                width={32} 
-                height={32} 
-                className="object-contain group-hover:scale-110 transition-transform duration-200"
+                width={28} 
+                height={28} 
+                className="object-contain group-hover:scale-110 transition-transform duration-200 sm:w-8 sm:h-8"
                 priority={true}
               />
             </div>
-            <span className="text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent drop-shadow-sm">Skepsis</span>
+            <span className="text-lg sm:text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent drop-shadow-sm">Skepsis</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-5">
-            <Link href="/">
-              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
-                Home
-              </span>
-            </Link>
-            <Link href="/prediction">
-              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
-                Prediction Markets
-              </span>
-            </Link>
-
-            <Link href="/create-market">
-              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
-                Create Market
-              </span>
-            </Link>
-            <Link href="/liquidity">
-              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
-                Liquidity
-              </span>
-            </Link>
-            <Link href="/faucet">
-              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
-                Faucet
-              </span>
-            </Link>
-            <Link href="/docs">
-              <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
-                Docs
-              </span>
-            </Link>
+          
+          {/* Desktop Navigation - hidden on mobile */}
+          <nav className="hidden lg:flex items-center gap-5">
+            {navigationLinks.map((link) => (
+              <Link key={link.href} href={link.href}>
+                <span className="text-sm font-medium text-white/80 hover:text-white transition-all hover:drop-shadow-sm">
+                  {link.label}
+                </span>
+              </Link>
+            ))}
           </nav>
         </div>
 
-        {/* Connect Button */}
-        {walletAddress ? (
-          <ConnectMenu walletAddress={walletAddress} suiName={suiName} />
-        ) : (
-          <ConnectModal
-            trigger={
-              <button
-                className="outline-none ring-0 xl:button-animate-105 overflow-hidden"
-                disabled={!!walletAddress}
-              >
-                <div className="px-5 py-3 flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-colors shadow-md shadow-indigo-900/20">
-                  <span className="text-sm font-medium text-white">
-                    {walletAddress ? "Connected" : "Connect Wallet"}
-                  </span>
-                  <LinkIcon size={17} className="text-white" />
-                </div>
-              </button>
-            }
-          />
-        )}
+        {/* Right side - Mobile menu button + Connect Button */}
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Button - only visible on mobile */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMobileMenuOpen(!isMobileMenuOpen);
+            }}
+            className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <X size={20} className="text-white" />
+            ) : (
+              <Menu size={20} className="text-white" />
+            )}
+          </button>
+
+          {/* Connect Button */}
+          {walletAddress ? (
+            <ConnectMenu walletAddress={walletAddress} suiName={suiName} />
+          ) : (
+            <ConnectModal
+              trigger={
+                <button
+                  className="outline-none ring-0 xl:button-animate-105 overflow-hidden"
+                  disabled={!!walletAddress}
+                >
+                  <div className="px-3 py-2 sm:px-5 sm:py-3 flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-colors shadow-md shadow-indigo-900/20">
+                    <span className="text-xs sm:text-sm font-medium text-white">
+                      {walletAddress ? "Connected" : "Connect"}
+                    </span>
+                    <LinkIcon size={14} className="text-white sm:w-4 sm:h-4" />
+                  </div>
+                </button>
+              }
+            />
+          )}
+        </div>
       </header>
+
+      {/* Mobile Navigation Menu - collapsible */}
+      <div className={cn(
+        "lg:hidden overflow-hidden transition-all duration-300 ease-in-out border-t border-indigo-800/30",
+        isMobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+      )}>
+        <nav className="px-4 py-3 bg-indigo-950/80 backdrop-blur-sm">
+          <div className="flex flex-col space-y-1">
+            {navigationLinks.map((link) => (
+              <Link 
+                key={link.href} 
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block py-3 px-3 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all text-sm font-medium"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </div>
+
       <SuiOverflowBanner />
     </div>
   );

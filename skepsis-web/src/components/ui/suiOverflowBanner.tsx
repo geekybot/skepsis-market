@@ -18,11 +18,11 @@ const SuiOverflowBanner = () => {
       <div className="absolute top-0 right-1/3 w-24 h-full bg-gradient-to-b from-yellow-200/20 to-transparent transform skew-x-12"></div>
       <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-200/0 via-amber-300/50 to-amber-200/0"></div>
       
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center justify-center gap-3 text-sm flex-1">
-            <span className="text-lg animate-pulse">📢</span>
-            <span className="text-gray-800 font-medium">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-3 sm:px-4 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm flex-1 min-w-0">
+            <span className="text-base sm:text-lg animate-pulse flex-shrink-0">📢</span>
+            <span className="text-gray-800 font-medium truncate sm:text-clip">
               Don't miss the 
               <Link 
                 href="/competition" 
@@ -36,7 +36,7 @@ const SuiOverflowBanner = () => {
               href="https://sui.io/overflow" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-800 font-medium hover:bg-blue-50/70 px-2 py-1 rounded-md transition-all"
+              className="hidden sm:inline-flex items-center gap-1 text-blue-700 hover:text-blue-800 font-medium hover:bg-blue-50/70 px-2 py-1 rounded-md transition-all flex-shrink-0"
             >
               <span className="text-xs">Learn More</span>
               <ExternalLink size={12} />
@@ -46,7 +46,7 @@ const SuiOverflowBanner = () => {
           {/* Close button */}
           <button
             onClick={() => setIsDismissed(true)}
-            className="text-gray-600 hover:text-gray-800 text-lg opacity-70 hover:opacity-100 transition-all ml-4 flex-shrink-0"
+            className="text-gray-600 hover:text-gray-800 text-base sm:text-lg opacity-70 hover:opacity-100 transition-all ml-2 sm:ml-4 flex-shrink-0 touch-target flex items-center justify-center"
             title="Dismiss banner"
           >
             ×

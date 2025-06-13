@@ -158,7 +158,7 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
     <div 
       ref={carouselRef} 
       className="relative overflow-hidden"
-      style={{ minHeight: '300px' }}
+      style={{ minHeight: '280px' }}
     >
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
@@ -176,90 +176,90 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
           }}
           className="w-full"
         >
-          <div className="p-1">
-            <div className="bg-gradient-to-br from-indigo-900/50 to-violet-900/50 rounded-lg p-6 border border-indigo-700/30 hover:border-indigo-600/50 transition-all">
-              <div className="flex flex-col md:flex-row gap-6">
+          <div className="p-0.5 sm:p-1">
+            <div className="bg-gradient-to-br from-indigo-900/50 to-violet-900/50 rounded-lg p-4 sm:p-6 border border-indigo-700/30 hover:border-indigo-600/50 transition-all">
+              <div className="flex flex-col gap-4 sm:gap-6">
                 {/* Market Info */}
                 <div className="flex-1">
                   {/* Market State Badge */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStateBadgeColor(activeMarket.state)}`}>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
+                    <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border ${getStateBadgeColor(activeMarket.state)}`}>
                       {activeMarket.stateDisplay}
                     </span>
                     {activeMarket.spreadCount && (
-                      <span className="text-indigo-300 text-sm">
+                      <span className="text-indigo-300 text-xs sm:text-sm">
                         {activeMarket.spreadCount} options
                       </span>
                     )}
                   </div>
                   
-                  <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 line-clamp-2">
                     {activeMarket.title}
                   </h3>
-                  <p className="text-white/80 mb-6 line-clamp-3 text-sm">
+                  <p className="text-white/80 mb-4 sm:mb-6 line-clamp-3 text-xs sm:text-sm">
                     {activeMarket.description}
                   </p>
                   
                   {/* Market Timing Information */}
-                  <div className="space-y-2 mb-6">
+                  <div className="space-y-2 mb-4 sm:mb-6">
                     {activeMarket.bidEndTime && (
-                      <div className="flex items-center gap-3">
-                        <Calendar size={16} className="text-indigo-300" />
-                        <span className="text-white/80 text-sm">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Calendar size={14} className="text-indigo-300 sm:w-4 sm:h-4" />
+                        <span className="text-white/80 text-xs sm:text-sm">
                           Bidding: {activeMarket.bidEndTime}
                         </span>
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-3">
-                      <Calendar size={16} className="text-indigo-300" />
-                      <span className="text-white/80 text-sm">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Calendar size={14} className="text-indigo-300 sm:w-4 sm:h-4" />
+                      <span className="text-white/80 text-xs sm:text-sm">
                         Resolves: {activeMarket.resolveTime}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="mt-6">
+                  <div className="mt-4 sm:mt-6">
                     <Link 
                       href={`/prediction?market=${activeMarket.marketId}`}
-                      className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md flex items-center gap-2 w-fit transition-all text-lg"
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md flex items-center justify-center gap-2 w-full sm:w-fit transition-all text-sm sm:text-base lg:text-lg"
                     >
                       <span>Trade Now</span>
-                      <ArrowRight size={18} />
+                      <ArrowRight size={16} className="sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                     </Link>
                   </div>
                 </div>
                 
                 {/* Market Stats */}
-                <div className="bg-indigo-900/30 p-5 rounded-lg border border-indigo-800/30 flex flex-col w-full md:w-60 gap-4">
-                  <div>
-                    <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
-                      <TrendingUp size={14} />
+                <div className="bg-indigo-900/30 p-3 sm:p-4 lg:p-5 rounded-lg border border-indigo-800/30 flex flex-row sm:flex-col w-full gap-3 sm:gap-4 overflow-x-auto sm:overflow-x-visible">
+                  <div className="min-w-[120px] sm:min-w-0">
+                    <div className="text-indigo-300 text-xs sm:text-sm mb-1 flex items-center gap-1 sm:gap-2">
+                      <TrendingUp size={12} className="sm:w-3.5 sm:h-3.5" />
                       <span>Market Status</span>
                     </div>
                     <div className="flex items-center">
-                      <div className={`py-1 px-3 rounded-full text-sm ${getStateBadgeColor(activeMarket.state)}`}>
+                      <div className={`py-1 px-2 sm:px-3 rounded-full text-xs sm:text-sm ${getStateBadgeColor(activeMarket.state)}`}>
                         {activeMarket.stateDisplay}
                       </div>
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
-                      <Coins size={14} />
+                  <div className="min-w-[120px] sm:min-w-0">
+                    <div className="text-indigo-300 text-xs sm:text-sm mb-1 flex items-center gap-1 sm:gap-2">
+                      <Coins size={12} className="sm:w-3.5 sm:h-3.5" />
                       <span>Liquidity</span>
                     </div>
-                    <div className="text-white font-medium text-lg">
+                    <div className="text-white font-medium text-sm sm:text-base lg:text-lg">
                       {formattedLiquidity}
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="text-indigo-300 text-sm mb-1 flex items-center gap-2">
-                      <TrendingUp size={14} />
+                  <div className="min-w-[120px] sm:min-w-0">
+                    <div className="text-indigo-300 text-xs sm:text-sm mb-1 flex items-center gap-1 sm:gap-2">
+                      <TrendingUp size={12} className="sm:w-3.5 sm:h-3.5" />
                       <span>Volume</span>
                     </div>
-                    <div className="text-white font-medium text-lg">
+                    <div className="text-white font-medium text-sm sm:text-base lg:text-lg">
                       {formattedVolume}
                     </div>
                   </div>
@@ -267,18 +267,18 @@ const MarketCarousel: React.FC<MarketCarouselProps> = ({ markets, activeIndex: e
               </div>
               
               {/* Add the COLLECTIVE KNOWLEDGE SYNTHESIS footer */}
-              <div className="mt-6 pt-4 flex items-center justify-center border-t border-indigo-800/30">
+              <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 flex items-center justify-center border-t border-indigo-800/30">
                 <div className="flex items-center">
-                  <div className="w-6 h-6 mr-3">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3">
                     <Image 
                       src="/images/skepsis-transparent.png" 
                       alt="Skepsis Logo" 
-                      width={24} 
-                      height={24}
-                      className="object-contain"
+                      width={20} 
+                      height={20}
+                      className="object-contain sm:w-5 sm:h-5 lg:w-6 lg:h-6"
                     />
                   </div>
-                  <span className="text-amber-400 text-sm tracking-wider">COLLECTIVE KNOWLEDGE SYNTHESIS</span>
+                  <span className="text-amber-400 text-xs sm:text-sm tracking-wider">COLLECTIVE KNOWLEDGE SYNTHESIS</span>
                 </div>
               </div>
             </div>
