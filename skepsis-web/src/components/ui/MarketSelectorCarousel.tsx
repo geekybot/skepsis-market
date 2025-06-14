@@ -143,10 +143,10 @@ export const MarketSelectorCarousel: React.FC<MarketSelectorCarouselProps> = ({
       {showLeftArrow && (
         <button
           onClick={scrollLeft}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700/80 hover:bg-gray-600/80 border border-white/10 flex items-center justify-center transition-all duration-200 z-10"
+          className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-700/80 hover:bg-gray-600/80 border border-white/10 flex items-center justify-center transition-all duration-200 z-10"
           aria-label="Scroll left"
         >
-          <ChevronLeft size={16} className="text-white" />
+          <ChevronLeft size={14} className="text-white sm:w-4 sm:h-4" />
         </button>
       )}
 
@@ -199,10 +199,10 @@ export const MarketSelectorCarousel: React.FC<MarketSelectorCarouselProps> = ({
       {showRightArrow && (
         <button
           onClick={scrollRight}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700/80 hover:bg-gray-600/80 border border-white/10 flex items-center justify-center transition-all duration-200 z-10"
+          className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-700/80 hover:bg-gray-600/80 border border-white/10 flex items-center justify-center transition-all duration-200 z-10"
           aria-label="Scroll right"
         >
-          <ChevronRight size={16} className="text-white" />
+          <ChevronRight size={14} className="text-white sm:w-4 sm:h-4" />
         </button>
       )}
     </div>

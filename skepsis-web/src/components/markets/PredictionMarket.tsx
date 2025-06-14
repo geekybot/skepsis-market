@@ -20,6 +20,11 @@ import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
 import { useMarketQuotes } from '@/hooks/useMarketQuotes';
 import { useMarketTransactions } from '@/hooks/useMarketTransactions';
 
+// Import chat components
+import { ChatWindow } from '@/components/chat';
+
+// ...existing code...
+
 // Countdown component to display time remaining
 const Countdown = ({ targetDate, label, onComplete }: { 
   targetDate: Date, 
@@ -157,6 +162,7 @@ interface PredictionMarketProps {
     biddingEnd?: string;
     resolutionDate?: string;
   };
+  showChat?: boolean; // Option to show/hide chat
 }
 
 export const PredictionMarket: React.FC<PredictionMarketProps> = ({
@@ -174,7 +180,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   biddingDeadline,
   resolvedValue,
   spreadPrices,
-  marketTiming
+  marketTiming,
+  showChat = true
 }) => {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
@@ -770,39 +777,38 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       return false;
     }
     
-    // Find the spread option for this position
-    const option = options.find(opt => parseInt(opt.value) === position.spreadIndex);
-    if (!option) return false;
+    // Get market spread labels for this market
+    const marketSpreadLabels = MARKET_SPREAD_LABELS[currentMarketId];
+    if (!marketSpreadLabels) return false;
     
-    // Check if the resolved value falls within this spread's range
-    const range = option.label.split(" - ");
-    if (range.length !== 2) return false;
+    // Find the spread label that matches this position's spread index
+    const spreadLabel = marketSpreadLabels.find(label => label.index === position.spreadIndex);
+    if (!spreadLabel || spreadLabel.lowerBound === undefined || spreadLabel.upperBound === undefined) {
+      return false;
+    }
     
-    const lowerBound = parseFloat(range[0]);
-    const upperBound = parseFloat(range[1]);
+    // Use the bounds from the spread label configuration
+    // This should match the smart contract's find_winning_spread logic
+    const lowerBound = spreadLabel.lowerBound;
+    const upperBound = spreadLabel.upperBound;
     
-    // Special handling for 0-1 spread when resolvedValue is exactly 1
-    if (position.spreadIndex === 0 && resolvedValue === 1) {
-      // For 0-1 spread, include exactly 1 in the range
+    // Smart contract logic: resolved_value > lower_bound && resolved_value <= upper_bound
+    // Special handling for edge cases:
+    
+    // If this is the first spread (index 0) and resolved value is at or below lower bound
+    if (position.spreadIndex === 0 && resolvedValue <= lowerBound) {
       return true;
     }
     
-    // For other spreads, use half-open interval [lowerBound, upperBound)
-    // This ensures that the upper bound is exclusive except for the highest spread
-    if (resolvedValue === upperBound) {
-      // For boundary values, only consider it part of the current spread if there's no next spread
-      // Check if this is the last/highest spread
-      const isHighestSpread = !options.some(opt => {
-        const otherRange = opt.label.split(" - ");
-        if (otherRange.length !== 2) return false;
-        return parseFloat(otherRange[0]) > upperBound;
-      });
-      
-      return isHighestSpread && resolvedValue >= lowerBound;
+    // If this is the last spread and resolved value is at or above upper bound
+    const isLastSpread = !marketSpreadLabels.some(label => label.index > position.spreadIndex);
+    if (isLastSpread && resolvedValue >= upperBound) {
+      return true;
     }
     
-    // Normal case - value is within bounds but not exactly at upper boundary
-    return resolvedValue >= lowerBound && resolvedValue < upperBound;
+    // Normal case: check if resolved value falls within this spread's bounds
+    // Using smart contract logic: resolved_value > lower_bound && resolved_value <= upper_bound
+    return resolvedValue > lowerBound && resolvedValue <= upperBound;
   };
   
   // Function to calculate position value based on whether it's winning or not
@@ -1113,7 +1119,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                     <span className="text-xs">{option.percentage.toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between items-center w-full z-10">
-                    <span className="text-xs text-white/70">{option.originalRange || option.metadata?.rangeDescription || ''}</span>
                     <span className="text-xs text-white/70">Buy: {option.buyPrice}</span>
                   </div>
                   
@@ -1148,7 +1153,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   <div className="flex flex-col">
                     <span className="text-sm text-white font-medium leading-tight">{option.label}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/60">{option.originalRange || option.metadata?.rangeDescription || ''}</span>
                       <span className="text-xs bg-gray-700/70 text-white/80 px-1.5 rounded-sm">{option.percentage.toFixed(1)}%</span>
                     </div>
                     {option.metadata?.description && (
@@ -1263,18 +1267,34 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                 <div className="text-center p-3 rounded-xl bg-amber-700/30 text-white font-medium mb-4">
                   Resolution time has passed
                 </div>
-                <button
-                  onClick={handleClaimReward}
-                  disabled={isLoading || txLoading}
-                  className={cn(
-                    "w-full py-3 rounded-xl font-medium text-white transition-all",
-                    isLoading || txLoading
-                      ? "bg-gray-500 cursor-not-allowed" 
-                      : "bg-amber-600 hover:bg-amber-500"
-                  )}
-                >
-                  {isLoading || txLoading ? "Processing..." : "Claim Rewards"}
-                </button>
+                {(() => {
+                  // Calculate total claimable amount from all winning positions
+                  const totalClaimable = positions.reduce((sum, pos) => {
+                    return sum + (isWinningPosition(pos) ? getPositionValue(pos) : 0);
+                  }, 0);
+                  
+                  return (
+                    <div className="flex flex-col items-center gap-2">
+                      {totalClaimable > 0 && (
+                        <div className="text-center text-green-400 font-medium">
+                          Claimable: ${totalClaimable.toFixed(2)}
+                        </div>
+                      )}
+                      <button
+                        onClick={handleClaimReward}
+                        disabled={isLoading || txLoading}
+                        className={cn(
+                          "w-full py-3 rounded-xl font-medium text-white transition-all",
+                          isLoading || txLoading
+                            ? "bg-gray-500 cursor-not-allowed" 
+                            : "bg-green-600 hover:bg-green-500"
+                        )}
+                      >
+                        {isLoading || txLoading ? "Processing..." : "Claim Rewards"}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}
@@ -1426,7 +1446,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         key={position.id} 
                         className={cn(
                           "p-3 rounded-xl transition-all",
-                          winning ? "bg-amber-900/40 border border-amber-700/50" : "bg-gray-700/50"
+                          winning ? "bg-green-900/40 border border-green-700/50" : "bg-gray-700/50"
                         )}
                       >
                         <div className="flex justify-between items-center mb-2">
@@ -1434,14 +1454,11 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                             <div className="flex items-center">
                               <div className="text-white">{option?.label || `Spread #${position.spreadIndex}`}</div>
                               {winning && (
-                                <span className="ml-2 text-xs bg-amber-600 text-white px-2 py-0.5 rounded-full">
+                                <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded-full">
                                   Winner
                                 </span>
                               )}
                             </div>
-                            {option?.metadata?.rangeDescription && (
-                              <div className="text-white/60 text-xs">{option.metadata.rangeDescription}</div>
-                            )}
                           </div>
                           <div className="flex-col items-end text-right">
                             <div className="text-white">{position.sharesAmount.toFixed(2)} shares</div>
@@ -1453,7 +1470,10 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         
                         {/* Show claim button only for winners and only if not claimed already */}
                         {winning && !userHasClaimed && (
-                          <div className="mt-2 flex justify-end">
+                          <div className="mt-2 flex flex-col items-end gap-1">
+                            <div className="text-xs text-green-400 font-medium">
+                              Claimable: ${positionValue.toFixed(2)}
+                            </div>
                             <button
                               onClick={handleClaimReward}
                               disabled={isLoading || txLoading}
@@ -1461,7 +1481,7 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                                 "px-4 py-1 rounded-lg font-medium text-sm text-white transition-all",
                                 isLoading || txLoading
                                   ? "bg-gray-600 cursor-not-allowed" 
-                                  : "bg-amber-600 hover:bg-amber-500"
+                                  : "bg-green-600 hover:bg-green-500"
                               )}
                             >
                               {isLoading || txLoading ? "Processing..." : "Claim Reward"}
@@ -1502,9 +1522,6 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                         <div className="flex justify-between items-center mb-1">
                           <div className="flex-col">
                             <div className="text-white">{option?.label || `Spread #${position.spreadIndex}`}</div>
-                            {option?.metadata?.rangeDescription && (
-                              <div className="text-white/60 text-xs">{option.metadata.rangeDescription}</div>
-                            )}
                           </div>
                           <div className="flex justify-end items-center gap-2">
                             <div className="text-white text-center">{position.sharesAmount.toFixed(2)}</div>
@@ -1566,6 +1583,27 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           )}
         </div>
       </div>
+
+      {/* Chat Section - Full width below the main trading interface */}
+      {showChat && (
+        <div className="w-full">
+          <div className="p-6 rounded-xl bg-gray-800/70 backdrop-blur-md">
+            <h2 className="text-xl font-medium text-white mb-4 flex items-center gap-2">
+              <span>💬</span>
+              Market Discussion
+            </h2>
+            <div className="h-[72rem]">
+              <ChatWindow
+                marketId={currentMarketId}
+                marketName={question}
+                position="relative"
+                showUserList={true}
+                className="h-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

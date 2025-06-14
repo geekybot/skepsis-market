@@ -127,6 +127,60 @@ export const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
         { name: "WalGraph", index: 7, lowerBound: 7, upperBound: 8, description: "Storage solutions and data management" },
     ],
 
+    // SUI price prediction market for June 14, 2025 (NEW)
+    '0x7bbc037c1146c512a351f8620fc2c59f3b75257302e412aadc1a1d13828a45d2': [
+        { name: "2.00 - 2.10 $", index: 0, lowerBound: 200, upperBound: 210 },
+        { name: "2.10 - 2.20 $", index: 1, lowerBound: 210, upperBound: 220 },
+        { name: "2.20 - 2.30 $", index: 2, lowerBound: 220, upperBound: 230 },
+        { name: "2.30 - 2.40 $", index: 3, lowerBound: 230, upperBound: 240 },
+        { name: "2.40 - 2.50 $", index: 4, lowerBound: 240, upperBound: 250 },
+        { name: "2.50 - 2.60 $", index: 5, lowerBound: 250, upperBound: 260 },
+        { name: "2.60 - 2.70 $", index: 6, lowerBound: 260, upperBound: 270 },
+        { name: "2.70 - 2.80 $", index: 7, lowerBound: 270, upperBound: 280 },
+        { name: "2.80 - 2.90 $", index: 8, lowerBound: 280, upperBound: 290 },
+        { name: "2.90 - 3.00 $", index: 9, lowerBound: 290, upperBound: 300 },
+        { name: "3.00 - 3.10 $", index: 10, lowerBound: 300, upperBound: 310 },
+        { name: "3.10 - 3.20 $", index: 11, lowerBound: 310, upperBound: 320 },
+        { name: "3.20 - 3.30 $", index: 12, lowerBound: 320, upperBound: 330 },
+        { name: "3.30 - 3.40 $", index: 13, lowerBound: 330, upperBound: 340 },
+        { name: "3.40 - 3.50 $", index: 14, lowerBound: 340, upperBound: 350 },
+        { name: "3.50 - 3.60 $", index: 15, lowerBound: 350, upperBound: 360 },
+        { name: "3.60 - 3.70 $", index: 16, lowerBound: 360, upperBound: 370 },
+        { name: "3.70 - 3.80 $", index: 17, lowerBound: 370, upperBound: 380 },
+        { name: "3.80 - 3.90 $", index: 18, lowerBound: 380, upperBound: 390 },
+        { name: "3.90 - 4.00 $", index: 19, lowerBound: 390, upperBound: 400 },
+        { name: "4.00 - 4.10 $", index: 20, lowerBound: 400, upperBound: 410 },
+        { name: "4.10 - 4.20 $", index: 21, lowerBound: 410, upperBound: 420 },
+        { name: "4.20 - 4.30 $", index: 22, lowerBound: 420, upperBound: 430 },
+        { name: "4.30 - 4.40 $", index: 23, lowerBound: 430, upperBound: 440 },
+        { name: "4.40 - 4.50 $", index: 24, lowerBound: 440, upperBound: 450 },
+        { name: "4.50 - 4.60 $", index: 25, lowerBound: 450, upperBound: 460 },
+        { name: "4.60 - 4.70 $", index: 26, lowerBound: 460, upperBound: 470 },
+        { name: "4.70 - 4.80 $", index: 27, lowerBound: 470, upperBound: 480 },
+        { name: "4.80 - 4.90 $", index: 28, lowerBound: 480, upperBound: 490 },
+        { name: "4.90 - 5.00 $", index: 29, lowerBound: 490, upperBound: 500 },
+        { name: "5.00 - 5.10 $", index: 30, lowerBound: 500, upperBound: 510 },
+        { name: "5.10 - 5.20 $", index: 31, lowerBound: 510, upperBound: 520 },
+        { name: "5.20 - 5.30 $", index: 32, lowerBound: 520, upperBound: 530 },
+        { name: "5.30 - 5.40 $", index: 33, lowerBound: 530, upperBound: 540 },
+        { name: "5.40 - 5.50 $", index: 34, lowerBound: 540, upperBound: 550 },
+        { name: "5.50 - 5.60 $", index: 35, lowerBound: 550, upperBound: 560 },
+        { name: "5.60 - 5.70 $", index: 36, lowerBound: 560, upperBound: 570 },
+        { name: "5.70 - 5.80 $", index: 37, lowerBound: 570, upperBound: 580 },
+        { name: "5.80 - 5.90 $", index: 38, lowerBound: 580, upperBound: 590 },
+        { name: "5.90 - 6.00 $", index: 39, lowerBound: 590, upperBound: 600 },
+        { name: "6.00 - 6.10 $", index: 40, lowerBound: 600, upperBound: 610 },
+        { name: "6.10 - 6.20 $", index: 41, lowerBound: 610, upperBound: 620 },
+        { name: "6.20 - 6.30 $", index: 42, lowerBound: 620, upperBound: 630 },
+        { name: "6.30 - 6.40 $", index: 43, lowerBound: 630, upperBound: 640 },
+        { name: "6.40 - 6.50 $", index: 44, lowerBound: 640, upperBound: 650 },
+        { name: "6.50 - 6.60 $", index: 45, lowerBound: 650, upperBound: 660 },
+        { name: "6.60 - 6.70 $", index: 46, lowerBound: 660, upperBound: 670 },
+        { name: "6.70 - 6.80 $", index: 47, lowerBound: 670, upperBound: 680 },
+        { name: "6.80 - 6.90 $", index: 48, lowerBound: 680, upperBound: 690 },
+        { name: "6.90 - 7.00 $", index: 49, lowerBound: 690, upperBound: 700 }
+    ],
+
     // SUI price prediction market for June 15, 2025
     '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e': [
         { name: "2.00 - 2.10 $", index: 0, lowerBound: 200, upperBound: 210 },
@@ -228,6 +282,16 @@ export const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
  * Key is the market ID
  */
 export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
+    // SUI price prediction market for June 14, 2025 (NEW)
+    '0x7bbc037c1146c512a351f8620fc2c59f3b75257302e412aadc1a1d13828a45d2': {
+        shortTag: "SUI Price June 14",
+        question: "What will be the Price of SUI in USD on 10:25:00 AM UTC, June 14, 2025?",
+        resolutionCriteria: "Based on the price reported by CoinMarketCap on June 14, 2025 at 10:25:00 AM UTC.",
+        biddingDeadline: 1749957000000, // Saturday, 14 June 2025 08:30:00 UTC
+        resolutionTime: 1749957120000, // Saturday, 14 June 2025 08:31:00 UTC
+        spreadLabels: MARKET_SPREAD_LABELS['0x7bbc037c1146c512a351f8620fc2c59f3b75257302e412aadc1a1d13828a45d2'],
+    },
+
     // SUI price prediction market for June 15, 2025
     '0x88380bd613be8b11c04daab2dbd706e18f9067db5fa5139f3b92030c960bbf7e': {
         shortTag: "SUI Market, 15th June 2025",
@@ -359,14 +423,6 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
         spreadLabels: MARKET_SPREAD_LABELS['0x775279e850acef40f5f3729e3cf38b059179860898c8720602d1aac1d0dba94f'],
     },
 
-    // SUI price prediction market for June 6, 2025
-    // '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41': {
-    //     question: "What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?",
-    //     resolutionCriteria: "Based on the price reported by CoinMarketCap on June 6, 2025 at 11:30 AM UTC.",
-    //     biddingDeadline: "2025-06-05T11:30:00.000Z",
-    //     resolutionTime: "2025-06-06T11:30:00.000Z",
-    //     spreadLabels: MARKET_SPREAD_LABELS['0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41'],
-    // },
 };
 
 /**

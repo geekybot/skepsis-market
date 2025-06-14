@@ -261,7 +261,7 @@ const PredictionPage: NextPage = () => {
             selectedMarketId={selectedMarketId}
             onMarketChange={handleMarketChange}
             isLoading={marketLoading || isChangingMarket}
-            speed={40}
+            speed={80}
             direction="left"
             className="w-full"
           />
@@ -291,6 +291,7 @@ const PredictionPage: NextPage = () => {
                 marketId={selectedMarketId}
                 question={marketData.question || selectedMarketBasicInfo.name}
                 spreadPrices={spreadPrices}
+                showChat={true} // Enable chat for all markets
                 options={marketData.spreads?.map((spread, index) => {
                   // Get metadata for this market and spread if available
                   const spreadLabels = MARKET_SPREAD_LABELS[selectedMarketId] || [];
@@ -315,13 +316,15 @@ const PredictionPage: NextPage = () => {
                   
                   // Generate displayRange fallback
                   const displayRange = `${spread.lowerBound}-${spread.upperBound}`;
+                  // Format the range properly for dollar values (convert from cents to dollars)
+                  const formattedRange = `${(spread.lowerBound / 100).toFixed(2)} - ${(spread.upperBound / 100).toFixed(2)} $`;
                   
                   return {
                     id: `spread-${spread.spreadIndex}`,
                     // Use custom name if available, otherwise use displayRange
                     label: spreadMetadata?.name || displayRange,
-                    // Keep the original range description in metadata
-                    originalRange: displayRange,
+                    // Keep the original range description in metadata - use formatted dollar values
+                    originalRange: formattedRange,
                     value: spread.spreadIndex.toString(),
                     buyPrice: priceDisplay,
                     sellPrice: spread.sellPrice ? (spread.sellPrice / 1_000_000).toFixed(3) : null,

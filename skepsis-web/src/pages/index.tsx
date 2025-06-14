@@ -17,7 +17,7 @@ export default function Home() {
       </Head>
       <main
         className={cn(
-          "relative w-full min-h-svh h-full max-w-360 flex flex-col items-center mx-auto pb-8 pt-32 px-4 z-10",
+          "relative w-full min-h-svh h-full max-w-360 flex flex-col items-center mx-auto pb-6 sm:pb-8 pt-24 sm:pt-28 lg:pt-32 px-2 sm:px-4 z-10",
           inter.className
         )}
       >

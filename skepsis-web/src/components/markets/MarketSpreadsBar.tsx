@@ -168,9 +168,6 @@ const MarketSpreadsBar: React.FC<MarketSpreadsBarProps> = ({
                 <div>
                   <span className="text-xs text-white">
                     {safeMetadata.name || spread.displayRange}
-                    {safeMetadata.rangeDescription && (
-                      <span className="text-xs text-white/60 ml-1">({safeMetadata.rangeDescription})</span>
-                    )}
                   </span>
                 </div>
               </div>
