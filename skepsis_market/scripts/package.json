@@ -14,6 +14,7 @@
     "market-info": "ts-node src/market-info.ts",
     "read-all-states": "ts-node src/read-all-states.ts",
     "deploy": "ts-node src/deploy.ts",
+    "resolve-market": "ts-node src/resolve-market.ts",
     "clean": "rm -rf dist"
   },
   "keywords": [

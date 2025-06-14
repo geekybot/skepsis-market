@@ -316,13 +316,15 @@ const PredictionPage: NextPage = () => {
                   
                   // Generate displayRange fallback
                   const displayRange = `${spread.lowerBound}-${spread.upperBound}`;
+                  // Format the range properly for dollar values (convert from cents to dollars)
+                  const formattedRange = `${(spread.lowerBound / 100).toFixed(2)} - ${(spread.upperBound / 100).toFixed(2)} $`;
                   
                   return {
                     id: `spread-${spread.spreadIndex}`,
                     // Use custom name if available, otherwise use displayRange
                     label: spreadMetadata?.name || displayRange,
-                    // Keep the original range description in metadata
-                    originalRange: displayRange,
+                    // Keep the original range description in metadata - use formatted dollar values
+                    originalRange: formattedRange,
                     value: spread.spreadIndex.toString(),
                     buyPrice: priceDisplay,
                     sellPrice: spread.sellPrice ? (spread.sellPrice / 1_000_000).toFixed(3) : null,
