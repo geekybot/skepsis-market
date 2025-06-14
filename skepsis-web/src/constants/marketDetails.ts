@@ -359,14 +359,6 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
         spreadLabels: MARKET_SPREAD_LABELS['0x775279e850acef40f5f3729e3cf38b059179860898c8720602d1aac1d0dba94f'],
     },
 
-    // SUI price prediction market for June 6, 2025
-    // '0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41': {
-    //     question: "What will be the Price of SUI in USD on 11:30 AM UTC, June 6, 2025?",
-    //     resolutionCriteria: "Based on the price reported by CoinMarketCap on June 6, 2025 at 11:30 AM UTC.",
-    //     biddingDeadline: "2025-06-05T11:30:00.000Z",
-    //     resolutionTime: "2025-06-06T11:30:00.000Z",
-    //     spreadLabels: MARKET_SPREAD_LABELS['0xc71f0a56588683576990d57279db73aaa931ff2e3a2e6a26044c2ca96fec3d41'],
-    // },
 };
 
 /**

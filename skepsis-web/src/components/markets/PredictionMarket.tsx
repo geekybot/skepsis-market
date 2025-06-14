@@ -20,6 +20,11 @@ import { useMarketPositions, Position } from '@/hooks/useMarketPositions';
 import { useMarketQuotes } from '@/hooks/useMarketQuotes';
 import { useMarketTransactions } from '@/hooks/useMarketTransactions';
 
+// Import chat components
+import { ChatWindow } from '@/components/chat';
+
+// ...existing code...
+
 // Countdown component to display time remaining
 const Countdown = ({ targetDate, label, onComplete }: { 
   targetDate: Date, 
@@ -157,6 +162,7 @@ interface PredictionMarketProps {
     biddingEnd?: string;
     resolutionDate?: string;
   };
+  showChat?: boolean; // Option to show/hide chat
 }
 
 export const PredictionMarket: React.FC<PredictionMarketProps> = ({
@@ -174,7 +180,8 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
   biddingDeadline,
   resolvedValue,
   spreadPrices,
-  marketTiming
+  marketTiming,
+  showChat = true
 }) => {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
@@ -1566,6 +1573,27 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
           )}
         </div>
       </div>
+
+      {/* Chat Section - Full width below the main trading interface */}
+      {showChat && (
+        <div className="w-full">
+          <div className="p-6 rounded-xl bg-gray-800/70 backdrop-blur-md">
+            <h2 className="text-xl font-medium text-white mb-4 flex items-center gap-2">
+              <span>💬</span>
+              Market Discussion
+            </h2>
+            <div className="h-[72rem]">
+              <ChatWindow
+                marketId={currentMarketId}
+                marketName={question}
+                position="relative"
+                showUserList={true}
+                className="h-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

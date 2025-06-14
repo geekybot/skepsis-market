@@ -291,6 +291,7 @@ const PredictionPage: NextPage = () => {
                 marketId={selectedMarketId}
                 question={marketData.question || selectedMarketBasicInfo.name}
                 spreadPrices={spreadPrices}
+                showChat={true} // Enable chat for all markets
                 options={marketData.spreads?.map((spread, index) => {
                   // Get metadata for this market and spread if available
                   const spreadLabels = MARKET_SPREAD_LABELS[selectedMarketId] || [];

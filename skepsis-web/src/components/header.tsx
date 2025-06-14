@@ -55,6 +55,7 @@ const Header = () => {
     { href: "/create-market", label: "Create Market" },
     { href: "/liquidity", label: "Liquidity" },
     { href: "/faucet", label: "Faucet" },
+    { href: "/chat-demo", label: "Chat Demo" },
     { href: "/docs", label: "Docs" },
   ];
 
