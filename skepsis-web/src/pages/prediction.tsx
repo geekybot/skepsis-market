@@ -261,7 +261,7 @@ const PredictionPage: NextPage = () => {
             selectedMarketId={selectedMarketId}
             onMarketChange={handleMarketChange}
             isLoading={marketLoading || isChangingMarket}
-            speed={40}
+            speed={80}
             direction="left"
             className="w-full"
           />
