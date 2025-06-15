@@ -33,12 +33,12 @@ const SuiOverflowBanner = () => {
               - predict hackathon winners and earn rewards!
             </span>
             <Link 
-              href="https://sui.io/overflow" 
+              href="https://vote.sui.io/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-1 text-blue-700 hover:text-blue-800 font-medium hover:bg-blue-50/70 px-2 py-1 rounded-md transition-all flex-shrink-0"
             >
-              <span className="text-xs">Learn More</span>
+              <span className="text-xs">Vote Now</span>
               <ExternalLink size={12} />
             </Link>
           </div>
