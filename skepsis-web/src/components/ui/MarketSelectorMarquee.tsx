@@ -8,6 +8,71 @@ import { useLiveCoinPrice } from '@/hooks/useLiveCoinPrice';
 import { isSUIMarket } from '@/utilities/suiMarketUtils';
 
 /**
+ * Determine market status based on bidding deadline, resolution time, and market state
+ */
+function getMarketStatus(marketId: string): {
+  status: 'active' | 'waiting-resolution' | 'resolved';
+  colorClass: string;
+  hexColor: string;
+  label: string;
+} {
+  const marketDetails = MARKET_DETAILS[marketId];
+  if (!marketDetails) {
+    return { 
+      status: 'active', 
+      colorClass: 'bg-gray-500', 
+      hexColor: '#6b7280',
+      label: 'Unknown' 
+    };
+  }
+
+  const now = new Date();
+  let biddingDeadline: Date | null = null;
+  let resolutionTime: Date | null = null;
+
+  // Parse dates
+  try {
+    if (marketDetails.biddingDeadline) {
+      biddingDeadline = new Date(marketDetails.biddingDeadline);
+    }
+    if (marketDetails.resolutionTime) {
+      resolutionTime = new Date(marketDetails.resolutionTime);
+    }
+  } catch (e) {
+    console.error('Error parsing market dates:', e);
+  }
+
+  // Check if bidding is still open
+  const biddingOpen = biddingDeadline ? now < biddingDeadline : true;
+  
+  // Check if resolution time has passed
+  const resolutionPassed = resolutionTime ? now >= resolutionTime : false;
+
+  if (biddingOpen) {
+    return { 
+      status: 'active', 
+      colorClass: 'bg-green-500', 
+      hexColor: '#10b981',
+      label: 'Active' 
+    };
+  } else if (!resolutionPassed) {
+    return { 
+      status: 'waiting-resolution', 
+      colorClass: 'bg-orange-500', 
+      hexColor: '#f97316',
+      label: 'Waiting' 
+    };
+  } else {
+    return { 
+      status: 'resolved', 
+      colorClass: 'bg-blue-500', 
+      hexColor: '#3b82f6',
+      label: 'Resolved' 
+    };
+  }
+}
+
+/**
  * MarketSelectorMarquee - A continuous scrolling marquee for market selection
  * 
  * Features:
@@ -99,6 +164,7 @@ export const MarketSelectorMarquee: React.FC<MarketSelectorMarqueeProps> = ({
             const shortTag = marketDetails?.shortTag || market.name;
             const isSelected = market.marketId === selectedMarketId;
             const isSUI = isSUIMarket(market.marketId);
+            const marketStatus = getMarketStatus(market.marketId);
 
             // Format live price for SUI markets - ultra compact
             const formatLivePrice = () => {
@@ -134,10 +200,19 @@ export const MarketSelectorMarquee: React.FC<MarketSelectorMarqueeProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600/80 to-blue-500/80 animate-pulse" />
                   )}
                   
-                  <span className="relative z-10 flex items-center gap-1">
-                    {isSelected && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {/* Market Status Indicator */}
+                    <div className="flex items-center gap-1">
+                      <div 
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: marketStatus.hexColor }}
+                        title={`Status: ${marketStatus.label}`}
+                      />
+                      {isSelected && (
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      )}
+                    </div>
+                    
                     <span>{shortTag}</span>
                     {isSUI && formatLivePrice()}
                     {isSelected && isLoading && (
@@ -184,6 +259,32 @@ export const MarketSelectorMarquee: React.FC<MarketSelectorMarqueeProps> = ({
             </span>
           )}
         </div>
+        
+        {/* Market Status Legend */}
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1">
+            <div 
+              className="w-1.5 h-1.5 rounded-full" 
+              style={{ backgroundColor: '#10b981' }}
+            />
+            <span>Active</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div 
+              className="w-1.5 h-1.5 rounded-full" 
+              style={{ backgroundColor: '#f97316' }}
+            />
+            <span>Waiting</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div 
+              className="w-1.5 h-1.5 rounded-full" 
+              style={{ backgroundColor: '#3b82f6' }}
+            />
+            <span>Resolved</span>
+          </div>
+        </div>
+        
         <div className="flex items-center gap-1">
           <span>Speed:</span>
           <span className="text-white/80">{speed}px/s</span>
