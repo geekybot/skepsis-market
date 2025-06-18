@@ -687,6 +687,16 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
       return;
     }
     
+    // Check if user has any winning positions
+    const totalClaimable = positions.reduce((sum, pos) => {
+      return sum + (isWinningPosition(pos) ? getPositionValue(pos) : 0);
+    }, 0);
+    
+    if (totalClaimable <= 0) {
+      toast.error('No winning positions to claim rewards from');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       setTxLoading(true);
@@ -1275,22 +1285,26 @@ export const PredictionMarket: React.FC<PredictionMarketProps> = ({
                   
                   return (
                     <div className="flex flex-col items-center gap-2">
-                      {totalClaimable > 0 && (
+                      {totalClaimable > 0 ? (
                         <div className="text-center text-green-400 font-medium">
                           Claimable: ${totalClaimable.toFixed(2)}
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-400 font-medium">
+                          No winning positions to claim
                         </div>
                       )}
                       <button
                         onClick={handleClaimReward}
-                        disabled={isLoading || txLoading}
+                        disabled={isLoading || txLoading || totalClaimable <= 0}
                         className={cn(
                           "w-full py-3 rounded-xl font-medium text-white transition-all",
-                          isLoading || txLoading
+                          isLoading || txLoading || totalClaimable <= 0
                             ? "bg-gray-500 cursor-not-allowed" 
                             : "bg-green-600 hover:bg-green-500"
                         )}
                       >
-                        {isLoading || txLoading ? "Processing..." : "Claim Rewards"}
+                        {isLoading || txLoading ? "Processing..." : totalClaimable > 0 ? "Claim Rewards" : "No Rewards to Claim"}
                       </button>
                     </div>
                   );
