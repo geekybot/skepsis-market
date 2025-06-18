@@ -66,6 +66,27 @@ export default function CompetitionPage() {
         </div>
       </div>
 
+      {/* Campaign Ended Banner */}
+      <div className="mb-8">
+        <div className="bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-200 rounded-lg p-6 max-w-4xl mx-auto shadow-md">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Clock className="h-6 w-6 text-amber-600" />
+              <h2 className="text-xl font-bold text-amber-800">Campaign Ended</h2>
+            </div>
+            <p className="text-amber-700 mb-2 text-lg font-medium">
+              The Sui Overflow 2025 prediction campaign has concluded!
+            </p>
+            <p className="text-amber-600 text-sm">
+              All markets will be resolved on <span className="font-semibold">June 25th, 2025</span> when the official hackathon results are announced.
+            </p>
+            <p className="text-amber-600 text-sm mt-2">
+              Stay tuned to claim your rewards if your predictions were correct! 🏆
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Competition Tracks Grid */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-6 text-center">Competition Tracks</h2>
