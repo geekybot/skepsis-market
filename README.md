@@ -1,5 +1,31 @@
 # Skepsis: Decentralized Continuous Outcome Prediction Markets
 
+> **📢 Response to Sui Overflow Judges Feedback**
+> 
+> Thank you for the positive review: *"Well executed hackathon project"* and valuable feedback on our prediction market implementation. Here's our progress addressing your comments:
+> 
+> **✅ UI/UX Improvements:**
+> - Fixed Bitcoin/SUI UI inconsistencies - now properly displays SUI markets throughout
+> - Enhanced frontend with real-time status indicators and improved market navigation
+> - Continuing UX development with user feedback collection and data-driven improvements
+> 
+> **🔧 Move Development Progress:**
+> - Appreciated the positive feedback on our Move implementation
+> - Test coverage expansion in progress to demonstrate our pricing model's robustness
+> - **Core Features in Development:**
+>   - Dynamic spread creation for more flexible market types
+>   - Composable market creation system supporting bounded/open continuous markets
+>   - Plug-and-play UI components for seamless market integration
+> 
+> **🎯 Advanced Market Features (Roadmap):**
+> - **Configurable Reward Zones:** Market creators can set "proximity to truth" ranges (e.g., ±20% spreads with curve-based rewards)
+> - **Concentrated Liquidity Pools:** Enhanced capital efficiency for market makers
+> - **Flexible Resolution Logic:** Creators define winning conditions beyond simple point-based resolution
+> 
+> **📊 User-Centric Development:** Extensive user feedback collection ongoing to shape the optimal prediction market UX
+
+---
+
 Skepsis is a decentralized prediction market platform built on the Sui blockchain that enables trading on continuous numerical outcome spaces rather than just binary outcomes. This repository contains both the smart contract implementation (`skepsis_market`) and the web frontend (`skepsis-web`).
 
 ## Motivation
