@@ -289,6 +289,40 @@ export const MARKET_SPREAD_LABELS: Record<string, SpreadLabel[]> = {
         { name: "6.90 - 7.00 $", index: 49, lowerBound: 690, upperBound: 700 },
     ],
 
+    // Athens Temperature Prediction Market
+    '0x58f8128cae80129415532bb257e53fe2aa41c328c91af0277038ac32902cbe17': [
+        { name: "20 - 21 °C", index: 0, lowerBound: 20, upperBound: 21 },
+        { name: "21 - 22 °C", index: 1, lowerBound: 21, upperBound: 22 },
+        { name: "22 - 23 °C", index: 2, lowerBound: 22, upperBound: 23 },
+        { name: "23 - 24 °C", index: 3, lowerBound: 23, upperBound: 24 },
+        { name: "24 - 25 °C", index: 4, lowerBound: 24, upperBound: 25 },
+        { name: "25 - 26 °C", index: 5, lowerBound: 25, upperBound: 26 },
+        { name: "26 - 27 °C", index: 6, lowerBound: 26, upperBound: 27 },
+        { name: "27 - 28 °C", index: 7, lowerBound: 27, upperBound: 28 },
+        { name: "28 - 29 °C", index: 8, lowerBound: 28, upperBound: 29 },
+        { name: "29 - 30 °C", index: 9, lowerBound: 29, upperBound: 30 },
+        { name: "30 - 31 °C", index: 10, lowerBound: 30, upperBound: 31 },
+        { name: "31 - 32 °C", index: 11, lowerBound: 31, upperBound: 32 },
+        { name: "32 - 33 °C", index: 12, lowerBound: 32, upperBound: 33 },
+        { name: "33 - 34 °C", index: 13, lowerBound: 33, upperBound: 34 },
+        { name: "34 - 35 °C", index: 14, lowerBound: 34, upperBound: 35 },
+        { name: "35 - 36 °C", index: 15, lowerBound: 35, upperBound: 36 },
+        { name: "36 - 37 °C", index: 16, lowerBound: 36, upperBound: 37 },
+        { name: "37 - 38 °C", index: 17, lowerBound: 37, upperBound: 38 },
+        { name: "38 - 39 °C", index: 18, lowerBound: 38, upperBound: 39 },
+        { name: "39 - 40 °C", index: 19, lowerBound: 39, upperBound: 40 },
+        { name: "40 - 41 °C", index: 20, lowerBound: 40, upperBound: 41 },
+        { name: "41 - 42 °C", index: 21, lowerBound: 41, upperBound: 42 },
+        { name: "42 - 43 °C", index: 22, lowerBound: 42, upperBound: 43 },
+        { name: "43 - 44 °C", index: 23, lowerBound: 43, upperBound: 44 },
+        { name: "44 - 45 °C", index: 24, lowerBound: 44, upperBound: 45 },
+        { name: "45 - 46 °C", index: 25, lowerBound: 45, upperBound: 46 },
+        { name: "46 - 47 °C", index: 26, lowerBound: 46, upperBound: 47 },
+        { name: "47 - 48 °C", index: 27, lowerBound: 47, upperBound: 48 },
+        { name: "48 - 49 °C", index: 28, lowerBound: 48, upperBound: 49 },
+        { name: "49 - 50 °C", index: 29, lowerBound: 49, upperBound: 50 }
+    ],
+
     // Champions League winner market
     '0x25045de4fea843911dcd9a386509e39f994bba17e8fa2dd0a3574daac5a72fff': [
         { name: "Inter Milan Win", index: 0, lowerBound: 0, upperBound: 1 },
@@ -340,6 +374,16 @@ export const MARKET_DETAILS: Record<string, MarketStaticDetails> = {
         biddingDeadline: 1750831200000, // Saturday, 25 June 2025 06:00:00 UTC
         resolutionTime: 1750852800000, // Saturday, 25 June 2025 12:00:00 UTC
         spreadLabels: MARKET_SPREAD_LABELS['0x1801f18cbbdf7c54b7c72e454d53f24eb0e1be879efd31b509e16341b9e308dc'],
+    },
+
+    // Athens Temperature Prediction Market
+    '0x58f8128cae80129415532bb257e53fe2aa41c328c91af0277038ac32902cbe17': {
+        shortTag: "Athens Temperature June 30",
+        question: "What will be the highest temperature recorded in Athens on June 30, 2025 (in Celsius)?",
+        resolutionCriteria: "Based on the highest temperature recorded in Athens, Greece on June 30, 2025 as reported by official meteorological sources. The market will resolve to the temperature range that contains the highest daily temperature recorded.",
+        biddingDeadline: 1751097600000, // Sunday, 29 June 2025 12:00:00 UTC
+        resolutionTime: 1751270400000, // Tuesday, 1 July 2025 12:00:00 UTC
+        spreadLabels: MARKET_SPREAD_LABELS['0x58f8128cae80129415532bb257e53fe2aa41c328c91af0277038ac32902cbe17'],
     },
 
     // UCL 2025 prediction market

@@ -36,16 +36,17 @@ async function main() {
 
   // Market parameters - you can customize these
   const marketParams = {
-    question: "What will be the Price of SUI in USD on 12:00:00 UTC, June 25, 2025?",
-    resolutionCriteria: "Based on the price reported by CoinMarketCap on June 25, 2025 at 12:00:00 UTC.",
-    steps: 50, // Number of buckets/spreads
-    lowerBound: 200, // Minimum value (e.g., 0%)
-    upperBound: 700, // Maximum value (e.g., 100%)
-    initialLiquidity: 30000_000_000, // 1000 USDC (minimum requirement is 1000 USDC)
-    // Calculate timestamps (in milliseconds) for deadlines
-    resolutionTimeMs: 1750852800000, // Saturday, 14 June 2025 10:25:00 AM UTC
-    biddingDeadlineMs: 1750831200000, // Saturday, 14 June 2025 10:25:00 AM UTC
-  };
+      question: "What will be the highest temperature recorded in Athens on June 30, 2025 (in Celsius)?",
+      resolutionCriteria: "Based on the highest temperature reported by AccuWeather.com for Athens, Greece on June 30, 2025. The market will resolve to the maximum temperature recorded during the 24-hour period (00:00 to 23:59 UTC).",
+      steps: 30, // Number of buckets/spreads
+      lowerBound: 20, // Minimum value (20°C)
+      upperBound: 50, // Maximum value (50°C)
+      initialLiquidity: 30000_000_000, // 30,000 USDC (minimum requirement is 1000 USDC)
+      // Calculate timestamps (in milliseconds) for deadlines
+      resolutionTimeMs: 1751371200000, // Tuesday, 1 July 2025 12:00:00 UTC
+      biddingDeadlineMs: 1751198400000, // Sunday, 29 June 2025 12:00:00 UTC
+    };
+
   
   console.log('\n📊 Market Parameters:');
   console.log(`Question: ${marketParams.question}`);
